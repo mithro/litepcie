@@ -145,7 +145,16 @@ class PIPETXPacketizer(LiteXModule):
     - PCIe Base Spec 4.0, Section 4.2.3: Framing
     """
 
-    def __init__(self):
+    def __init__(self, enable_skp=False, skp_interval=1180):
+        """
+        Parameters
+        ----------
+        enable_skp : bool, optional
+            Enable SKP ordered set generation for clock compensation (default: False)
+        skp_interval : int, optional
+            Number of symbols between SKP ordered sets (default: 1180)
+            PCIe spec requires SKP every 1180-1538 symbols
+        """
         # DLL-facing input (64-bit packets)
         self.sink = stream.Endpoint(phy_layout(64))
 
@@ -154,6 +163,12 @@ class PIPETXPacketizer(LiteXModule):
         self.pipe_tx_datak = Signal()
 
         # # #
+
+        # SKP generation (if enabled)
+        self.enable_skp = enable_skp
+        if enable_skp:
+            self.skp_counter = Signal(max=skp_interval + 1)
+            self.skp_interval = skp_interval
 
         # FSM for packetization
         self.submodules.fsm = FSM(reset_state="IDLE")
