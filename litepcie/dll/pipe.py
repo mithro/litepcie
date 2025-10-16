@@ -514,6 +514,10 @@ class PIPEInterface(LiteXModule):
         PIPE data width (8 for PIPE 3.0 8-bit mode)
     gen : int
         PCIe generation (1 for Gen1/2.5GT/s, 2 for Gen2/5.0GT/s)
+    enable_skp : bool, optional
+        Enable SKP ordered set generation/detection (default: False)
+    skp_interval : int, optional
+        Symbols between SKP ordered sets (default: 1180)
 
     Attributes
     ----------
@@ -568,7 +572,7 @@ class PIPEInterface(LiteXModule):
     - docs/pipe-interface-spec.md
     """
 
-    def __init__(self, data_width=8, gen=1):
+    def __init__(self, data_width=8, gen=1, enable_skp=False, skp_interval=1180):
         if data_width != 8:
             raise ValueError("Only 8-bit PIPE mode supported currently")
         if gen not in [1, 2]:
@@ -599,7 +603,10 @@ class PIPEInterface(LiteXModule):
         # # #
 
         # TX Path: DLL packets → PIPE symbols
-        self.submodules.tx_packetizer = tx_packetizer = PIPETXPacketizer()
+        self.submodules.tx_packetizer = tx_packetizer = PIPETXPacketizer(
+            enable_skp=enable_skp,
+            skp_interval=skp_interval,
+        )
 
         # Connect DLL TX sink to packetizer
         self.comb += self.dll_tx_sink.connect(tx_packetizer.sink)

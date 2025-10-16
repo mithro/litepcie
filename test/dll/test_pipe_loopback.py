@@ -90,5 +90,59 @@ class TestPIPELoopback(unittest.TestCase):
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
+class TestPIPELoopbackWithSKP(unittest.TestCase):
+    """Test loopback with SKP ordered set insertion."""
+
+    def test_loopback_with_skp_insertion(self):
+        """
+        SKP ordered sets should be transparent to data transfer.
+
+        TX inserts SKP periodically.
+        RX removes SKP automatically.
+        Data packets should pass through correctly.
+        """
+        def testbench(dut):
+            # Send a packet
+            test_data = 0x0123456789ABCDEF
+
+            yield dut.dll_tx_sink.valid.eq(1)
+            yield dut.dll_tx_sink.first.eq(1)
+            yield dut.dll_tx_sink.last.eq(1)
+            yield dut.dll_tx_sink.dat.eq(test_data)
+            yield
+
+            # Clear TX input
+            yield dut.dll_tx_sink.valid.eq(0)
+
+            # Wait for TX processing (10 cycles to reach END symbol)
+            for _ in range(10):
+                yield
+
+            # Check RX output
+            rx_valid = yield dut.dll_rx_source.valid
+            rx_data = yield dut.dll_rx_source.dat
+
+            self.assertEqual(rx_valid, 1, "RX should have valid output")
+            self.assertEqual(
+                rx_data,
+                test_data,
+                f"Data should pass through SKP: expected 0x{test_data:016X}, got 0x{rx_data:016X}",
+            )
+
+        # Create PIPE interface with SKP enabled (large interval to avoid interference)
+        # Interval must be > packet size (10 symbols) to avoid SKP during packet
+        dut = PIPEInterface(data_width=8, gen=1, enable_skp=True, skp_interval=100)
+
+        # Loopback TX → RX
+        dut.comb += [
+            dut.pipe_rx_data.eq(dut.pipe_tx_data),
+            dut.pipe_rx_datak.eq(dut.pipe_tx_datak),
+        ]
+
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_loopback_skp.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
 if __name__ == "__main__":
     unittest.main()
