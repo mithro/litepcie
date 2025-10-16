@@ -348,6 +348,26 @@ Phase 3 created the foundation for external PIPE PHY support:
 - Integration tests verifying DLL-PIPE compatibility
 - All tests passing, code quality standards met
 
+### Phase 4: TX/RX Data Paths (Completed - 2025-10-17)
+- Task 4.1: ✅ TX Packetizer basic structure
+- Task 4.2: ✅ TX Packetizer START symbol generation (STP/SDP)
+- Task 4.3: ✅ TX Packetizer data transmission (64-bit → 8-bit)
+- Task 4.4: ✅ TX Packetizer END symbol generation
+- Task 4.5: ✅ RX Depacketizer basic structure
+- Task 4.6: ✅ RX Depacketizer START detection (STP/SDP)
+- Task 4.7: ✅ RX Depacketizer data accumulation (8-bit → 64-bit)
+- Task 4.8: ✅ RX Depacketizer END detection and packet output
+- Task 4.9: ✅ Integration of TX/RX into PIPE interface
+- Task 4.10: ✅ Loopback testing (TX → RX verification)
+- Task 4.11: ✅ Full test suite validation (71/71 DLL tests passing)
+
+Phase 4 implemented functional TX/RX data paths:
+- TX: 64-bit DLL packets → 8-bit PIPE symbols with START/DATA/END framing
+- RX: 8-bit PIPE symbols → 64-bit DLL packets with symbol detection
+- Loopback: Complete end-to-end TX → RX verification
+- Test coverage: 15 new tests, all passing (100% success rate)
+- Code quality: TDD approach, comprehensive docstrings, PCIe spec references
+
 ### Phase 2: PIPE Interface (Archived - merged into Phase 3)
 Create PIPE interface abstraction:
 
