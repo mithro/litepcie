@@ -1,0 +1,29 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort (import sorting)
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+]
+
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "F405",  # undefined name from star imports (migen convention)
+    "F403",  # unable to detect undefined names (migen convention)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Unused imports OK in __init__.py
+
+[tool.ruff.lint.isort]
+known-first-party = ["litepcie"]
+section-order = ["future", "standard-library", "third-party", "litex", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+"litex" = ["migen", "litex"]
