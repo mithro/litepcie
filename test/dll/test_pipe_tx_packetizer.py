@@ -112,5 +112,61 @@ class TestPIPETXPacketizerStart(unittest.TestCase):
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
+class TestPIPETXPacketizerData(unittest.TestCase):
+    """Test DATA transmission."""
+
+    def test_tx_transmits_data_bytes(self):
+        """
+        TX should transmit 8 data bytes after START symbol.
+
+        Data transmission:
+        - Converts 64-bit word to 8 sequential bytes
+        - Byte order: LSB-first (little-endian)
+        - Data bytes have datak=0 (not K-characters)
+
+        Timing:
+        - Cycle 0: IDLE detects packet start (valid & first)
+        - Cycle 1: START symbol appears, transition to DATA
+        - Cycles 2-9: 8 data bytes appear (byte 0-7)
+        - Cycle 10: Return to IDLE
+
+        Reference: PCIe Spec 4.0, Section 4.2.2: Symbol Encoding
+        """
+        def testbench(dut):
+            # Send 64-bit data packet
+            # Data: 0x0123456789ABCDEF
+            # Expected bytes (LSB-first): 0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01
+            tlp_data = 0x0123456789ABCDEF
+            yield dut.sink.valid.eq(1)
+            yield dut.sink.first.eq(1)
+            yield dut.sink.last.eq(0)
+            yield dut.sink.dat.eq(tlp_data)
+            yield
+
+            # Clear first flag
+            yield dut.sink.first.eq(0)
+
+            # Cycle 1: START symbol (STP) appears
+            yield
+            tx_data = (yield dut.pipe_tx_data)
+            tx_datak = (yield dut.pipe_tx_datak)
+            self.assertEqual(tx_data, 0xFB, "Should send STP")
+            self.assertEqual(tx_datak, 1, "STP should be K-character")
+
+            # Cycles 2-9: Check 8 data bytes (LSB-first)
+            expected_bytes = [0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01]
+            for i, expected in enumerate(expected_bytes):
+                yield
+                tx_data = (yield dut.pipe_tx_data)
+                tx_datak = (yield dut.pipe_tx_datak)
+                self.assertEqual(tx_data, expected, f"Byte {i} should be 0x{expected:02X}")
+                self.assertEqual(tx_datak, 0, f"Byte {i} should not be K-char")
+
+        dut = PIPETXPacketizer()
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_tx_data.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
 if __name__ == "__main__":
     unittest.main()

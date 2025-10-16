@@ -167,6 +167,21 @@ class PIPETXPacketizer(LiteXModule):
             is_dllp.eq((first_byte & 0xC0) == 0x00),
         ]
 
+        # Byte counter for DATA state (0-7 for 8 bytes)
+        byte_counter = Signal(3)
+
+        # Array for byte selection (little-endian ordering)
+        byte_array = Array([
+            self.sink.dat[0:8],    # Byte 0 (LSB)
+            self.sink.dat[8:16],   # Byte 1
+            self.sink.dat[16:24],  # Byte 2
+            self.sink.dat[24:32],  # Byte 3
+            self.sink.dat[32:40],  # Byte 4
+            self.sink.dat[40:48],  # Byte 5
+            self.sink.dat[48:56],  # Byte 6
+            self.sink.dat[56:64],  # Byte 7 (MSB)
+        ])
+
         self.fsm.act("IDLE",
             # When packet starts, transition to START and output START symbol
             If(self.sink.valid & self.sink.first,
@@ -179,6 +194,7 @@ class PIPETXPacketizer(LiteXModule):
                     NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
                     NextValue(self.pipe_tx_datak, 1),
                 ),
+                NextValue(byte_counter, 0),
                 NextState("DATA")
             ).Else(
                 # Default: output idle (data=0, K=0)
@@ -188,11 +204,19 @@ class PIPETXPacketizer(LiteXModule):
         )
 
         self.fsm.act("DATA",
-            # TODO: Implement data transmission
-            # For now, go back to IDLE
-            NextValue(self.pipe_tx_data, 0x00),
+            # Transmit data bytes from sink.dat
+            # Output current byte (data, not K-character)
+            NextValue(self.pipe_tx_data, byte_array[byte_counter]),
             NextValue(self.pipe_tx_datak, 0),
-            NextState("IDLE")
+
+            # Increment byte counter
+            NextValue(byte_counter, byte_counter + 1),
+
+            # After 8 bytes (counter reaches 7, then increments to 0), return to IDLE
+            # Note: Counter reaches 7 on the last byte, then goes back to IDLE
+            If(byte_counter == 7,
+                NextState("IDLE")
+            )
         )
 
 
