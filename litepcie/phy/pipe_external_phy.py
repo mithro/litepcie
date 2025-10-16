@@ -144,22 +144,25 @@ class PIPEExternalPHY(LiteXModule):
         self.dll_tx = ClockDomainsRenamer("pcie")(DLLTX(data_width=64))
         self.dll_rx = ClockDomainsRenamer("pcie")(DLLRX(data_width=64))
 
-        # Connect TX datapath to DLL
-        # TODO: Implement proper connection (layout conversion needed)
+        # TODO: Connect TX datapath to DLL
+        # Requires layout converter: datapath.source uses phy_layout(dat, be),
+        # but dll_tx.tlp_sink expects [("data", 64)]
         # self.comb += self.tx_datapath.source.connect(self.dll_tx.tlp_sink)
 
-        # Connect DLL to RX datapath
-        # TODO: Implement proper connection (layout conversion needed)
+        # TODO: Connect DLL to RX datapath
+        # Requires layout converter: dll_rx.tlp_source outputs [("data", 64)],
+        # but rx_datapath.sink expects phy_layout(dat, be)
         # self.comb += self.dll_rx.tlp_source.connect(self.rx_datapath.sink)
 
         # PIPE Interface (in "pcie" clock domain)
         self.pipe = ClockDomainsRenamer("pcie")(PIPEInterface(data_width=8, gen=1))
 
-        # Connect DLL to PIPE interface
-        # TODO: Implement proper connection (currently placeholder)
+        # TODO: Connect DLL to PIPE interface
+        # Requires layout converter: DLL uses [("data", 64)], PIPE uses phy_layout(64)
+        # Also requires 64-bit to 8-bit width conversion for PIPE symbols
         # self.comb += [
-        #     self.dll_tx.pipe_source.connect(self.pipe.dll_tx_sink),
-        #     self.pipe.dll_rx_source.connect(self.dll_rx.pipe_sink),
+        #     self.dll_tx.phy_source.connect(self.pipe.dll_tx_sink),
+        #     self.pipe.dll_rx_source.connect(self.dll_rx.phy_sink),
         # ]
 
         # Connect PIPE interface to external chip pads
