@@ -134,10 +134,10 @@ class PIPETXPacketizer(LiteXModule):
         - Send STP (0xFB, K=1) for TLP
         - Send SDP (0x5C, K=1) for DLLP
     Then:
-        - Send data bytes (K=0) from sink.dat
-    When sink.last:
-        - Send END (0xFD, K=1) for good packet
-        - Send EDB (0xFE, K=1) for bad packet (not implemented yet)
+        - Send 8 data bytes (K=0) from sink.dat
+    Finally:
+        - Send END (0xFD, K=1) to mark packet completion
+        - EDB (0xFE, K=1) for bad packets not yet implemented
 
     References
     ----------
@@ -212,11 +212,17 @@ class PIPETXPacketizer(LiteXModule):
             # Increment byte counter
             NextValue(byte_counter, byte_counter + 1),
 
-            # After 8 bytes (counter reaches 7, then increments to 0), return to IDLE
-            # Note: Counter reaches 7 on the last byte, then goes back to IDLE
+            # After 8 bytes (counter reaches 7), transition to END state
             If(byte_counter == 7,
-                NextState("IDLE")
+                NextState("END")
             )
+        )
+
+        self.fsm.act("END",
+            # Send END symbol (0xFD, K=1) to mark packet completion
+            NextValue(self.pipe_tx_data, PIPE_K29_7_END),
+            NextValue(self.pipe_tx_datak, 1),
+            NextState("IDLE")
         )
 
 
