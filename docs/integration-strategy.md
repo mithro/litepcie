@@ -300,13 +300,22 @@ from RX datapath.
 
 ## Implementation Phases
 
-### Phase 0: Foundation (Current)
+### Phase 0: Foundation (Completed)
 - Task 0.1: ✅ PIPE interface documentation
-- Task 0.2: ⏳ Integration strategy (this document)
-- Task 0.3: ⏳ CI/CD setup
-- Task 0.4: ⏳ Code quality standards
+- Task 0.2: ✅ Integration strategy (this document)
+- Task 0.3: ✅ CI/CD setup
+- Task 0.4: ✅ Code quality standards
 
-### Phase 1: DLL Core
+### Phase 1: DLL Core (Completed)
+- Task 1.1: ✅ DLL common structures
+- Task 1.2: ✅ DLLP processing
+- Task 1.3: ✅ Sequence number management
+- Task 1.4: ✅ LCRC generation/checking
+- Task 1.5: ✅ Retry buffer
+- Task 1.6: ✅ DLL TX path
+- Task 1.7: ✅ DLL RX path
+
+### Phase 2: DLL Core (Continued)
 Build DLL layer independently, test with models:
 - DLLP structures (ACK, NAK, etc.)
 - Sequence number management
@@ -328,7 +337,18 @@ layout = [("dat", data_width), ("be", data_width//8)]
 layout = [("dat", data_width), ("be", data_width//8)]
 ```
 
-### Phase 2: PIPE Interface
+### Phase 3: PIPE Interface & External PHY (Completed)
+- Task 3.1: ✅ PIPE interface abstraction (litepcie/dll/pipe.py)
+- Task 3.2: ✅ External PIPE PHY wrapper (litepcie/phy/pipe_external_phy.py)
+- Task 3.3: ✅ Integration tests with DLL (test/dll/integration/)
+
+Phase 3 created the foundation for external PIPE PHY support:
+- PIPE interface abstraction with TX idle behavior
+- External PHY wrapper as drop-in replacement for vendor IP
+- Integration tests verifying DLL-PIPE compatibility
+- All tests passing, code quality standards met
+
+### Phase 2: PIPE Interface (Archived - merged into Phase 3)
 Create PIPE interface abstraction:
 
 ```python
@@ -489,13 +509,16 @@ Our custom PHY implementations will be considered successful when:
 ## Next Steps
 
 1. ✅ Document integration strategy (this file)
-2. ⏳ Setup CI/CD test infrastructure
-3. ⏳ Define code quality standards
-4. ⏳ Implement DLL core independently
-5. ⏳ Create PIPE interface abstraction
-6. ⏳ Build external PIPE PHY wrapper
-7. ⏳ Test drop-in replacement with simple design
-8. ⏳ Add internal transceiver wrappers
+2. ✅ Setup CI/CD test infrastructure
+3. ✅ Define code quality standards
+4. ✅ Implement DLL core independently
+5. ✅ Create PIPE interface abstraction
+6. ✅ Build external PIPE PHY wrapper
+7. ⏳ Implement TX data path (DLL packets → PIPE symbols)
+8. ⏳ Implement RX data path (PIPE symbols → DLL packets)
+9. ⏳ Add ordered set handling (TS1, TS2, SKP, etc.)
+10. ⏳ Test drop-in replacement with simple design
+11. ⏳ Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
 
 ---
 
