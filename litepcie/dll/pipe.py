@@ -276,8 +276,33 @@ class PIPERXDepacketizer(LiteXModule):
 
         # # #
 
-        # TODO: Implement depacketizer FSM
-        # States: IDLE, DATA, END
+        # FSM for depacketization
+        self.submodules.fsm = FSM(reset_state="IDLE")
+
+        # Track packet type (TLP vs DLLP)
+        is_tlp = Signal()  # 1 for TLP (STP), 0 for DLLP (SDP)
+
+        self.fsm.act("IDLE",
+            # Wait for START symbol
+            If(self.pipe_rx_datak,
+                If(self.pipe_rx_data == PIPE_K27_7_STP,
+                    # STP: TLP start detected
+                    NextValue(is_tlp, 1),
+                    NextState("DATA")
+                ).Elif(self.pipe_rx_data == PIPE_K28_2_SDP,
+                    # SDP: DLLP start detected
+                    NextValue(is_tlp, 0),
+                    NextState("DATA")
+                )
+                # Ignore other K-characters (SKP, COM, etc.)
+            )
+        )
+
+        self.fsm.act("DATA",
+            # TODO: Data accumulation (Task 4.7)
+            # For now, just return to IDLE
+            NextState("IDLE")
+        )
 
 
 # PIPE Interface -----------------------------------------------------------------------------------
