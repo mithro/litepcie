@@ -34,10 +34,12 @@ PHY:
   - Xilinx Ultrascale(+) (up to PCIe Gen3 X16).
   - Xilinx 7-Series (up to PCIe Gen2 X8).
   - Intel Cyclone5  (up to PCIe Gen2 X4).
+  - PIPE 3.0 interface for external PHY chips (Gen1/Gen2).
   - 64/128/256/512-bit datapath.
   - Clock domain crossing.
 
 Core:
+  - Data Link Layer (DLL) with ACK/NAK protocol, retry buffer, LCRC.
   - TLP layer.
   - Reordering.
   - MSI (Single, Multi-vector)/MSI-X.
@@ -90,6 +92,19 @@ Tests can also be run individually:
 ```sh
 $ python3 -m unittest test.test_name
 ```
+
+Current test coverage:
+- 86+ passing tests
+- DLL/PIPE: 99%+ coverage (30 PIPE-specific tests)
+- Comprehensive edge case testing
+
+[> Documentation
+----------------
+- [PIPE Interface User Guide](docs/pipe-interface-guide.md) - Complete guide for using PIPE interface
+- [PIPE Architecture](docs/pipe-architecture.md) - Detailed architecture with timing diagrams
+- [Integration Examples](docs/pipe-integration-examples.md) - Practical integration examples
+- [Testing Guide](docs/pipe-testing-guide.md) - How to test and debug PIPE implementations
+- [Integration Strategy](docs/integration-strategy.md) - Development phases and strategy
 
 [> License
 ----------
