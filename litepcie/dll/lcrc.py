@@ -26,6 +26,7 @@ from litepcie.dll.common import (
     LCRC_WIDTH,
     LCRC_POLYNOMIAL,
     LCRC_INITIAL_VALUE,
+    LCRC_RESIDUE_VALUE,
 )
 
 
@@ -281,15 +282,16 @@ class LCRC32Checker(Module):
             engine.crc_prev.eq(crc),
         ]
 
-        # Check for CRC error
-        # TODO: Implement proper residue check per PCIe spec
-        # For now, this is a simplified checker that can detect corrupted CRCs
-        # but needs refinement for the valid CRC detection logic
-        # The residue value after processing valid data+CRC needs to be
-        # determined from the PCIe specification
+        # Check for CRC error using residue value
         #
-        # Note: The checker successfully detects INVALID CRCs (primary use case)
-        # Valid CRC detection needs spec-compliant residue value
+        # When a valid packet (data + CRC) is processed through the CRC engine,
+        # the final CRC value should equal the magic residue constant.
+        #
+        # PCIe LCRC uses CRC-32 with polynomial 0x04C11DB7 and initial value 0xFFFFFFFF,
+        # but does NOT use bit reflection (unlike Ethernet CRC-32). The CRC is appended
+        # directly without complementation. This gives a residue of 0x497C2DBF.
+        #
+        # Error is asserted when data_valid goes low if the CRC doesn't match the residue.
         self.comb += [
-            self.crc_error.eq((crc != LCRC_INITIAL_VALUE) & ~self.data_valid),
+            self.crc_error.eq((crc != LCRC_RESIDUE_VALUE) & ~self.data_valid),
         ]

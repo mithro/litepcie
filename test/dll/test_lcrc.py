@@ -173,17 +173,13 @@ class TestLCRC32Hardware(unittest.TestCase):
 class TestLCRC32Checker(unittest.TestCase):
     """Test hardware LCRC-32 checker."""
 
-    @unittest.skip("TODO: Valid CRC residue check requires PCIe LCRC format specification (complemented? byte order?)")
     def test_checker_detects_valid_crc(self):
         """Checker should accept valid CRC.
 
-        NOTE: This test is skipped because the CRC residue value after processing
-        data+CRC depends on the exact format of how the CRC is transmitted (complemented,
-        byte order, etc.). This needs to be determined from the PCIe specification.
-
-        The checker successfully detects INVALID CRCs (see test_checker_detects_invalid_crc),
-        which is the critical safety feature. Valid CRC acceptance will be implemented
-        during TX/RX path integration when the full LCRC packet format is defined.
+        PCIe LCRC uses CRC-32 with polynomial 0x04C11DB7 and initial 0xFFFFFFFF,
+        but does NOT use bit reflection (unlike Ethernet CRC-32). The CRC is
+        appended directly without complementation. When valid data+CRC is processed,
+        the checker should see residue 0x497C2DBF and not report an error.
         """
         from litepcie.dll.lcrc import LCRC32Checker
         from litepcie.dll.common import calculate_lcrc32

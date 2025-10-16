@@ -39,7 +39,7 @@ DLLP_DATA_LENGTH_BYTES = 6  # DLLP data (excluding CRC-16)
 LCRC_WIDTH = 32  # LCRC is 32-bit CRC
 LCRC_POLYNOMIAL = 0x04C11DB7  # CRC-32 polynomial (Ethernet polynomial)
 LCRC_INITIAL_VALUE = 0xFFFFFFFF  # LCRC initial value
-LCRC_RESIDUE_VALUE = 0x2144DF1C  # Expected residue after processing data+CRC (CRC-32 magic number)
+LCRC_RESIDUE_VALUE = 0x497C2DBF  # Expected residue after processing data+CRC (PCIe LCRC uses non-reflected CRC-32)
 
 # CRC-16 for DLLPs (PCIe Spec 3.4.3)
 DLLP_CRC16_WIDTH = 16  # DLLP CRC is 16 bits
