@@ -282,16 +282,26 @@ class PIPERXDepacketizer(LiteXModule):
         # Track packet type (TLP vs DLLP)
         is_tlp = Signal()  # 1 for TLP (STP), 0 for DLLP (SDP)
 
+        # Byte counter and data buffer for accumulation
+        byte_counter = Signal(3)  # 0-7 for 8 bytes
+        data_buffer = Signal(64)  # Accumulate 8-bit symbols into 64-bit word
+
+        # Debug signal for testing (expose internal buffer)
+        self.debug_data_buffer = Signal(64)
+        self.comb += self.debug_data_buffer.eq(data_buffer)
+
         self.fsm.act("IDLE",
             # Wait for START symbol
             If(self.pipe_rx_datak,
                 If(self.pipe_rx_data == PIPE_K27_7_STP,
                     # STP: TLP start detected
                     NextValue(is_tlp, 1),
+                    NextValue(byte_counter, 0),  # Reset counter
                     NextState("DATA")
                 ).Elif(self.pipe_rx_data == PIPE_K28_2_SDP,
                     # SDP: DLLP start detected
                     NextValue(is_tlp, 0),
+                    NextValue(byte_counter, 0),  # Reset counter
                     NextState("DATA")
                 )
                 # Ignore other K-characters (SKP, COM, etc.)
@@ -299,9 +309,27 @@ class PIPERXDepacketizer(LiteXModule):
         )
 
         self.fsm.act("DATA",
-            # TODO: Data accumulation (Task 4.7)
-            # For now, just return to IDLE
-            NextState("IDLE")
+            # Accumulate data bytes (not K-characters)
+            If(~self.pipe_rx_datak,
+                # Store byte in little-endian order
+                Case(byte_counter, {
+                    0: NextValue(data_buffer[0:8],   self.pipe_rx_data),
+                    1: NextValue(data_buffer[8:16],  self.pipe_rx_data),
+                    2: NextValue(data_buffer[16:24], self.pipe_rx_data),
+                    3: NextValue(data_buffer[24:32], self.pipe_rx_data),
+                    4: NextValue(data_buffer[32:40], self.pipe_rx_data),
+                    5: NextValue(data_buffer[40:48], self.pipe_rx_data),
+                    6: NextValue(data_buffer[48:56], self.pipe_rx_data),
+                    7: NextValue(data_buffer[56:64], self.pipe_rx_data),
+                }),
+                NextValue(byte_counter, byte_counter + 1),
+
+                # After 8 bytes, return to IDLE
+                # (Task 4.8 will change this to check for END symbol)
+                If(byte_counter == 7,
+                    NextState("IDLE")
+                )
+            )
         )
 
 

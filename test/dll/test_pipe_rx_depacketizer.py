@@ -92,5 +92,57 @@ class TestPIPERXDepacketizerStart(unittest.TestCase):
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
+class TestPIPERXDepacketizerData(unittest.TestCase):
+    """Test PIPE RX depacketizer data accumulation."""
+
+    def test_rx_accumulates_data_bytes(self):
+        """
+        RX should accumulate 8 data bytes into 64-bit word.
+
+        Data accumulation:
+        - Receives 8 sequential bytes after START symbol
+        - Byte order: LSB-first (little-endian)
+        - Byte 0 → bits [7:0], Byte 7 → bits [63:56]
+        - Only accumulates data bytes (datak=0), not K-characters
+
+        Note: This test verifies accumulation via debug signal.
+        Task 4.8 will verify full packet output with END detection.
+
+        Reference: PCIe Spec 4.0, Section 4.2.2: Symbol Encoding
+        """
+        def testbench(dut):
+            # Send START symbol (STP for TLP)
+            yield dut.pipe_rx_data.eq(0xFB)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Send 8 data bytes (LSB-first)
+            # Expected buffer: 0x0123456789ABCDEF
+            # Byte 0 (0xEF) → bits [7:0]
+            # Byte 1 (0xCD) → bits [15:8]
+            # ...
+            # Byte 7 (0x01) → bits [63:56]
+            data_bytes = [0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01]
+            for byte_val in data_bytes:
+                yield dut.pipe_rx_data.eq(byte_val)
+                yield dut.pipe_rx_datak.eq(0)
+                yield
+
+            # Need one more cycle for the last byte to be written
+            # NextValue schedules updates for next cycle
+            yield
+
+            # After 8 bytes, check accumulated data via debug signal
+            buffer_value = (yield dut.debug_data_buffer)
+            expected = 0x0123456789ABCDEF
+            self.assertEqual(buffer_value, expected,
+                f"Data buffer should be 0x{expected:016X}, got 0x{buffer_value:016X}")
+
+        dut = PIPERXDepacketizer()
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_rx_data.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
 if __name__ == "__main__":
     unittest.main()
