@@ -63,5 +63,47 @@ class TestPIPEExternalPHYStructure(unittest.TestCase):
         self.assertTrue(hasattr(dut, "bar0_mask"))
 
 
+class TestPIPEExternalPHYParameterValidation(unittest.TestCase):
+    """Test external PIPE PHY parameter validation."""
+
+    def test_invalid_data_width_raises_error(self):
+        """
+        External PHY should reject invalid data widths.
+
+        Valid widths: 64, 128, 256, 512 bits
+        These match standard PCIe TLP datapath widths.
+
+        Reference: PCIe Base Spec 4.0, Section 2.2.7: TLP Data Width
+        """
+        # Test various invalid data widths
+        invalid_widths = [8, 16, 32, 96, 192, 1024, 0, -64]
+
+        for width in invalid_widths:
+            with self.assertRaises(ValueError) as context:
+                PIPEExternalPHY(
+                    platform=None,
+                    pads=None,
+                    data_width=width,
+                    cd="sys",
+                    bar0_size=0x10000,
+                )
+
+            self.assertIn("Invalid data_width", str(context.exception))
+
+    def test_valid_data_widths_accepted(self):
+        """Valid data widths should be accepted."""
+        valid_widths = [64, 128, 256, 512]
+
+        for width in valid_widths:
+            dut = PIPEExternalPHY(
+                platform=None,
+                pads=None,
+                data_width=width,
+                cd="sys",
+                bar0_size=0x10000,
+            )
+            self.assertEqual(dut.data_width, width)
+
+
 if __name__ == "__main__":
     unittest.main()

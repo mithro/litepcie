@@ -101,5 +101,57 @@ class TestPIPEInterfaceTXRX(unittest.TestCase):
         self.assertTrue(hasattr(dut, "rx_depacketizer"))
 
 
+class TestPIPEInterfaceParameterValidation(unittest.TestCase):
+    """Test PIPE interface parameter validation."""
+
+    def test_invalid_data_width_raises_error(self):
+        """
+        PIPE interface should reject invalid data widths.
+
+        Only 8-bit mode is currently supported (PIPE 3.0 standard).
+        Unsupported widths (16, 32, etc.) should raise ValueError.
+
+        Reference: Intel PIPE 3.0 Specification, Section 2.1
+        """
+        # Test various invalid data widths
+        invalid_widths = [16, 32, 64, 128, 4, 0, -8]
+
+        for width in invalid_widths:
+            with self.assertRaises(ValueError) as context:
+                PIPEInterface(data_width=width, gen=1)
+
+            self.assertIn("8-bit", str(context.exception))
+
+    def test_invalid_gen_raises_error(self):
+        """
+        PIPE interface should reject invalid PCIe generations.
+
+        Only Gen1 (2.5 GT/s) and Gen2 (5.0 GT/s) are currently supported.
+        Gen3/Gen4/Gen5 require different PIPE modes not yet implemented.
+
+        Reference: PCIe Base Spec 4.0, Section 8.0: Physical Layer
+        """
+        # Test various invalid generations
+        invalid_gens = [0, 3, 4, 5, -1, 10]
+
+        for gen in invalid_gens:
+            with self.assertRaises(ValueError) as context:
+                PIPEInterface(data_width=8, gen=gen)
+
+            self.assertIn("Gen1/Gen2", str(context.exception))
+
+    def test_valid_parameters_accepted(self):
+        """Valid parameter combinations should work."""
+        # Gen1 with 8-bit - should create successfully
+        dut1 = PIPEInterface(data_width=8, gen=1)
+        self.assertTrue(hasattr(dut1, "pipe_rate"))
+        self.assertTrue(hasattr(dut1, "pipe_tx_data"))
+
+        # Gen2 with 8-bit - should create successfully
+        dut2 = PIPEInterface(data_width=8, gen=2)
+        self.assertTrue(hasattr(dut2, "pipe_rate"))
+        self.assertTrue(hasattr(dut2, "pipe_tx_data"))
+
+
 if __name__ == "__main__":
     unittest.main()
