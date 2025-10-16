@@ -155,8 +155,45 @@ class PIPETXPacketizer(LiteXModule):
 
         # # #
 
-        # TODO: Implement packetizer FSM
-        # States: IDLE, START, DATA, END
+        # FSM for packetization
+        self.submodules.fsm = FSM(reset_state="IDLE")
+
+        # Detect packet type from first byte
+        first_byte = Signal(8)
+        is_dllp = Signal()
+        self.comb += [
+            first_byte.eq(self.sink.dat[0:8]),
+            # DLLP types: 0x00 (ACK), 0x10 (NAK), 0x20 (PM), 0x30 (Vendor)
+            is_dllp.eq((first_byte & 0xC0) == 0x00),
+        ]
+
+        self.fsm.act("IDLE",
+            # When packet starts, transition to START and output START symbol
+            If(self.sink.valid & self.sink.first,
+                If(is_dllp,
+                    # DLLP: Send SDP (0x5C, K=1)
+                    NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
+                    NextValue(self.pipe_tx_datak, 1),
+                ).Else(
+                    # TLP: Send STP (0xFB, K=1)
+                    NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
+                    NextValue(self.pipe_tx_datak, 1),
+                ),
+                NextState("DATA")
+            ).Else(
+                # Default: output idle (data=0, K=0)
+                NextValue(self.pipe_tx_data, 0x00),
+                NextValue(self.pipe_tx_datak, 0),
+            )
+        )
+
+        self.fsm.act("DATA",
+            # TODO: Implement data transmission
+            # For now, go back to IDLE
+            NextValue(self.pipe_tx_data, 0x00),
+            NextValue(self.pipe_tx_datak, 0),
+            NextState("IDLE")
+        )
 
 
 # PIPE Interface -----------------------------------------------------------------------------------
