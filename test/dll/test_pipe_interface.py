@@ -12,14 +12,14 @@ Tests behavioral aspects of PIPE signal generation and processing.
 Reference: Intel PIPE 3.0 Specification
 """
 
-import unittest
-import tempfile
 import os
+import tempfile
+import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
-from litepcie.dll.pipe import PIPEInterface, pipe_layout_8b
+from litepcie.dll.pipe import PIPEInterface
 
 
 class TestPIPEInterfaceStructure(unittest.TestCase):
@@ -64,19 +64,20 @@ class TestPIPETXBehavior(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.6.2.4: Electrical Idle
         """
+
         def testbench(dut):
             # No DLL data provided
             yield dut.dll_tx_sink.valid.eq(0)
             yield
 
             # PIPE should request electrical idle
-            elecidle = (yield dut.pipe_tx_elecidle)
+            elecidle = yield dut.pipe_tx_elecidle
             self.assertEqual(elecidle, 1, "Should request electrical idle when no data")
 
             # Wait a few cycles
             for _ in range(5):
                 yield
-                elecidle = (yield dut.pipe_tx_elecidle)
+                elecidle = yield dut.pipe_tx_elecidle
                 self.assertEqual(elecidle, 1, "Should maintain electrical idle")
 
         dut = PIPEInterface(data_width=8, gen=1)

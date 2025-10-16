@@ -19,18 +19,17 @@ References
 - PCIe Base Spec 4.0, Section 3.3.4: LCRC
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
 
 from litepcie.dll.common import (
-    LCRC_WIDTH,
-    LCRC_POLYNOMIAL,
     LCRC_INITIAL_VALUE,
+    LCRC_POLYNOMIAL,
     LCRC_RESIDUE_VALUE,
 )
 
-
 # LCRC CRC-32 Engine -----------------------------------------------------------------------------
+
 
 class LCRC32Engine(Module):
     """
@@ -68,6 +67,7 @@ class LCRC32Engine(Module):
     - PCIe Base Spec 4.0, Section 3.3.4: LCRC
     - LiteEth MAC CRC Engine implementation
     """
+
     def __init__(self, data_width, width, polynom):
         self.data = Signal(data_width)
         self.crc_prev = Signal(width)
@@ -117,10 +117,12 @@ class LCRC32Engine(Module):
             Optimized list with only odd-occurrence bits
         """
         from collections import Counter
+
         return [bit for bit, count in Counter(bits).items() if count % 2 == 1]
 
 
 # LCRC32 Generator -------------------------------------------------------------------------------
+
 
 class LCRC32Generator(Module):
     """
@@ -166,6 +168,7 @@ class LCRC32Generator(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.3.4: LCRC
     """
+
     def __init__(self):
         self.data_in = Signal(8)
         self.data_valid = Signal()
@@ -176,18 +179,20 @@ class LCRC32Generator(Module):
 
         # CRC engine (parallel LFSR)
         self.submodules.engine = engine = LCRC32Engine(
-            data_width = 8,
-            width      = 32,
-            polynom    = LCRC_POLYNOMIAL,
+            data_width=8,
+            width=32,
+            polynom=LCRC_POLYNOMIAL,
         )
 
         # CRC register
         crc = Signal(32, reset=LCRC_INITIAL_VALUE)
 
         self.sync += [
-            If(self.reset,
+            If(
+                self.reset,
                 crc.eq(LCRC_INITIAL_VALUE),
-            ).Elif(self.data_valid,
+            ).Elif(
+                self.data_valid,
                 crc.eq(engine.crc_next),
             ),
         ]
@@ -200,6 +205,7 @@ class LCRC32Generator(Module):
 
 
 # LCRC32 Checker ---------------------------------------------------------------------------------
+
 
 class LCRC32Checker(Module):
     """
@@ -249,6 +255,7 @@ class LCRC32Checker(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.3.4: LCRC
     """
+
     def __init__(self):
         self.data_in = Signal(8)
         self.data_valid = Signal()
@@ -259,9 +266,9 @@ class LCRC32Checker(Module):
 
         # CRC engine (parallel LFSR)
         self.submodules.engine = engine = LCRC32Engine(
-            data_width = 8,
-            width      = 32,
-            polynom    = LCRC_POLYNOMIAL,
+            data_width=8,
+            width=32,
+            polynom=LCRC_POLYNOMIAL,
         )
 
         # CRC register
@@ -269,9 +276,11 @@ class LCRC32Checker(Module):
         crc_prev = Signal(32)
 
         self.sync += [
-            If(self.reset,
+            If(
+                self.reset,
                 crc.eq(LCRC_INITIAL_VALUE),
-            ).Elif(self.data_valid,
+            ).Elif(
+                self.data_valid,
                 crc_prev.eq(crc),
                 crc.eq(engine.crc_next),
             ),

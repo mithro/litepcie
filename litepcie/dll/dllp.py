@@ -23,18 +23,18 @@ References
 - PCIe Base Spec 4.0, Section 3.4.3: DLLP CRC
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
 
 from litepcie.dll.common import (
-    DLLP_TYPE_ACK,
-    DLLP_TYPE_NAK,
     DLLP_CRC16_INITIAL_VALUE,
     DLLP_CRC16_POLYNOMIAL,
+    DLLP_TYPE_ACK,
+    DLLP_TYPE_NAK,
 )
 
-
 # DLLP CRC-16 Generator ----------------------------------------------------------------------------
+
 
 class DLLPCRC16Engine(Module):
     """
@@ -73,6 +73,7 @@ class DLLPCRC16Engine(Module):
     - LiteEth MAC CRC Engine implementation
     - "Cyclic Redundancy Check" Wikipedia article
     """
+
     def __init__(self, data_width, width, polynom):
         self.data = Signal(data_width)
         self.crc_prev = Signal(width)
@@ -122,6 +123,7 @@ class DLLPCRC16Engine(Module):
             Optimized list with only odd-occurrence bits
         """
         from collections import Counter
+
         return [bit for bit, count in Counter(bits).items() if count % 2 == 1]
 
 
@@ -165,6 +167,7 @@ class DLLPCRC16(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.4.3: DLLP CRC
     """
+
     def __init__(self):
         self.data_in = Signal(8)
         self.data_valid = Signal()
@@ -175,18 +178,20 @@ class DLLPCRC16(Module):
 
         # CRC engine (parallel LFSR)
         self.submodules.engine = engine = DLLPCRC16Engine(
-            data_width = 8,
-            width      = 16,
-            polynom    = DLLP_CRC16_POLYNOMIAL,
+            data_width=8,
+            width=16,
+            polynom=DLLP_CRC16_POLYNOMIAL,
         )
 
         # CRC register
         crc = Signal(16, reset=DLLP_CRC16_INITIAL_VALUE)
 
         self.sync += [
-            If(self.reset,
+            If(
+                self.reset,
                 crc.eq(DLLP_CRC16_INITIAL_VALUE),
-            ).Elif(self.data_valid,
+            ).Elif(
+                self.data_valid,
                 crc.eq(engine.crc_next),
             ),
         ]
@@ -199,6 +204,7 @@ class DLLPCRC16(Module):
 
 
 # DLLP ACK Generator -------------------------------------------------------------------------------
+
 
 class DLLPAckGenerator(Module):
     """
@@ -244,6 +250,7 @@ class DLLPAckGenerator(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.4.2: Ack DLLP
     """
+
     def __init__(self):
         self.seq_num = Signal(12)
         self.generate = Signal()
@@ -264,34 +271,42 @@ class DLLPAckGenerator(Module):
         byte_count = Signal(3)
         seq_num_latched = Signal(12)
 
-        fsm.act("IDLE",
+        fsm.act(
+            "IDLE",
             self.dllp_valid.eq(0),
-            If(self.generate,
+            If(
+                self.generate,
                 NextValue(seq_num_latched, self.seq_num),
                 NextValue(byte_count, 0),
                 NextState("GENERATE_CRC"),
             ),
         )
 
-        fsm.act("GENERATE_CRC",
+        fsm.act(
+            "GENERATE_CRC",
             # Feed 6 bytes of DLLP data into CRC
             crc.data_valid.eq(1),
             # Generate appropriate byte based on byte_count
-            Case(byte_count, {
-                0: crc.data_in.eq(DLLP_TYPE_ACK << 4),  # Byte 0: type + reserved
-                1: crc.data_in.eq(seq_num_latched[0:8]),  # Byte 1: seq low
-                2: crc.data_in.eq(seq_num_latched[8:12]),  # Byte 2: seq high + reserved
-                3: crc.data_in.eq(0x00),  # Byte 3: reserved
-                4: crc.data_in.eq(0x00),  # Byte 4: reserved
-                5: crc.data_in.eq(0x00),  # Byte 5: reserved
-            }),
+            Case(
+                byte_count,
+                {
+                    0: crc.data_in.eq(DLLP_TYPE_ACK << 4),  # Byte 0: type + reserved
+                    1: crc.data_in.eq(seq_num_latched[0:8]),  # Byte 1: seq low
+                    2: crc.data_in.eq(seq_num_latched[8:12]),  # Byte 2: seq high + reserved
+                    3: crc.data_in.eq(0x00),  # Byte 3: reserved
+                    4: crc.data_in.eq(0x00),  # Byte 4: reserved
+                    5: crc.data_in.eq(0x00),  # Byte 5: reserved
+                },
+            ),
             NextValue(byte_count, byte_count + 1),
-            If(byte_count == 5,
+            If(
+                byte_count == 5,
                 NextState("OUTPUT"),
             ),
         )
 
-        fsm.act("OUTPUT",
+        fsm.act(
+            "OUTPUT",
             self.dllp_valid.eq(1),
             self.dllp_type.eq(DLLP_TYPE_ACK),
             self.dllp_seq_num.eq(seq_num_latched),
@@ -301,6 +316,7 @@ class DLLPAckGenerator(Module):
 
 
 # DLLP NAK Generator -------------------------------------------------------------------------------
+
 
 class DLLPNakGenerator(Module):
     """
@@ -349,6 +365,7 @@ class DLLPNakGenerator(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.4.2: Nak DLLP
     """
+
     def __init__(self):
         self.seq_num = Signal(12)
         self.generate = Signal()
@@ -369,34 +386,42 @@ class DLLPNakGenerator(Module):
         byte_count = Signal(3)
         seq_num_latched = Signal(12)
 
-        fsm.act("IDLE",
+        fsm.act(
+            "IDLE",
             self.dllp_valid.eq(0),
-            If(self.generate,
+            If(
+                self.generate,
                 NextValue(seq_num_latched, self.seq_num),
                 NextValue(byte_count, 0),
                 NextState("GENERATE_CRC"),
             ),
         )
 
-        fsm.act("GENERATE_CRC",
+        fsm.act(
+            "GENERATE_CRC",
             # Feed 6 bytes of DLLP data into CRC
             crc.data_valid.eq(1),
             # Generate appropriate byte based on byte_count
-            Case(byte_count, {
-                0: crc.data_in.eq(DLLP_TYPE_NAK << 4),  # Byte 0: type + reserved
-                1: crc.data_in.eq(seq_num_latched[0:8]),  # Byte 1: seq low
-                2: crc.data_in.eq(seq_num_latched[8:12]),  # Byte 2: seq high + reserved
-                3: crc.data_in.eq(0x00),  # Byte 3: reserved
-                4: crc.data_in.eq(0x00),  # Byte 4: reserved
-                5: crc.data_in.eq(0x00),  # Byte 5: reserved
-            }),
+            Case(
+                byte_count,
+                {
+                    0: crc.data_in.eq(DLLP_TYPE_NAK << 4),  # Byte 0: type + reserved
+                    1: crc.data_in.eq(seq_num_latched[0:8]),  # Byte 1: seq low
+                    2: crc.data_in.eq(seq_num_latched[8:12]),  # Byte 2: seq high + reserved
+                    3: crc.data_in.eq(0x00),  # Byte 3: reserved
+                    4: crc.data_in.eq(0x00),  # Byte 4: reserved
+                    5: crc.data_in.eq(0x00),  # Byte 5: reserved
+                },
+            ),
             NextValue(byte_count, byte_count + 1),
-            If(byte_count == 5,
+            If(
+                byte_count == 5,
                 NextState("OUTPUT"),
             ),
         )
 
-        fsm.act("OUTPUT",
+        fsm.act(
+            "OUTPUT",
             self.dllp_valid.eq(1),
             self.dllp_type.eq(DLLP_TYPE_NAK),
             self.dllp_seq_num.eq(seq_num_latched),

@@ -15,8 +15,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 
 class TestDLLRXIncremental(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestDLLRXIncremental(unittest.TestCase):
             yield
 
             # Verify FSM starts in IDLE
-            fsm_state = (yield dut.fsm.state)
+            fsm_state = yield dut.fsm.state
             print(f"Initial FSM state: {fsm_state}")
 
             # Send minimal TLP
@@ -45,13 +45,13 @@ class TestDLLRXIncremental(unittest.TestCase):
             yield
 
             # Check phy_sink was accepted (ready should be high in IDLE)
-            phy_ready = (yield dut.phy_sink.ready)
+            phy_ready = yield dut.phy_sink.ready
             self.assertTrue(phy_ready, "PHY sink should be ready in IDLE state")
 
             # FSM should have moved from IDLE
             yield dut.phy_sink.valid.eq(0)
             yield
-            fsm_state = (yield dut.fsm.state)
+            fsm_state = yield dut.fsm.state
             print(f"FSM state after TLP: {fsm_state}")
             # Should not be in IDLE (state 0) anymore
             self.assertNotEqual(fsm_state, 0, "FSM should have left IDLE state")
@@ -82,14 +82,15 @@ class TestDLLRXIncremental(unittest.TestCase):
             states = []
             for i in range(10):
                 yield
-                state = (yield dut.fsm.state)
+                state = yield dut.fsm.state
                 states.append(state)
                 print(f"Cycle {i}: FSM state = {state}")
 
             # Verify FSM moved through multiple states
             unique_states = set(states)
-            self.assertGreater(len(unique_states), 1,
-                             f"FSM should visit multiple states, got: {states}")
+            self.assertGreater(
+                len(unique_states), 1, f"FSM should visit multiple states, got: {states}"
+            )
 
         dut = DLLRX(data_width=64)
         run_simulation(dut, testbench(dut), vcd_name="test_rx_step2.vcd")
@@ -118,7 +119,7 @@ class TestDLLRXIncremental(unittest.TestCase):
                 yield
 
             # Check debug signal for LCRC validation result
-            lcrc_valid = (yield dut.debug_lcrc_valid)
+            lcrc_valid = yield dut.debug_lcrc_valid
             print(f"LCRC valid: {lcrc_valid}")
             self.assertTrue(lcrc_valid, "Valid CRC should pass validation")
 
@@ -149,7 +150,7 @@ class TestDLLRXIncremental(unittest.TestCase):
                 yield
 
             # Check debug signal for LCRC validation result
-            lcrc_valid = (yield dut.debug_lcrc_valid)
+            lcrc_valid = yield dut.debug_lcrc_valid
             print(f"LCRC valid: {lcrc_valid}")
             self.assertFalse(lcrc_valid, "Bad CRC pattern should fail validation")
 
@@ -180,7 +181,7 @@ class TestDLLRXIncremental(unittest.TestCase):
                 yield
 
             # Check debug signal for sequence validation
-            seq_valid = (yield dut.debug_seq_valid)
+            seq_valid = yield dut.debug_seq_valid
             print(f"Seq valid: {seq_valid}")
             self.assertTrue(seq_valid, "Expected sequence should be valid")
 
@@ -210,9 +211,9 @@ class TestDLLRXIncremental(unittest.TestCase):
             ack_found = False
             for i in range(15):
                 yield
-                ack_valid = (yield dut.ack_source.valid)
+                ack_valid = yield dut.ack_source.valid
                 if ack_valid:
-                    ack_seq = (yield dut.ack_source.seq_num)
+                    ack_seq = yield dut.ack_source.seq_num
                     print(f"Cycle {i}: ACK generated with seq={ack_seq}")
                     ack_found = True
                     self.assertEqual(ack_seq, 0, "ACK should have sequence 0")
@@ -246,9 +247,9 @@ class TestDLLRXIncremental(unittest.TestCase):
             nak_found = False
             for i in range(15):
                 yield
-                nak_valid = (yield dut.nak_source.valid)
+                nak_valid = yield dut.nak_source.valid
                 if nak_valid:
-                    nak_seq = (yield dut.nak_source.seq_num)
+                    nak_seq = yield dut.nak_source.seq_num
                     print(f"Cycle {i}: NAK generated with seq={nak_seq}")
                     nak_found = True
                     break
@@ -282,9 +283,9 @@ class TestDLLRXIncremental(unittest.TestCase):
             tlp_found = False
             for i in range(15):
                 yield
-                tlp_valid = (yield dut.tlp_source.valid)
+                tlp_valid = yield dut.tlp_source.valid
                 if tlp_valid:
-                    tlp_data = (yield dut.tlp_source.data)
+                    tlp_data = yield dut.tlp_source.data
                     print(f"Cycle {i}: TLP forwarded with data=0x{tlp_data:016X}")
                     tlp_found = True
                     self.assertEqual(tlp_data, test_data, "Forwarded data should match input")

@@ -42,16 +42,17 @@ References
 - Intel PIPE 3.0 Specification
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
 
 from litepcie.common import *
-from litepcie.phy.common import PHYTXDatapath, PHYRXDatapath
-from litepcie.dll.tx import DLLTX
-from litepcie.dll.rx import DLLRX
 from litepcie.dll.pipe import PIPEInterface
+from litepcie.dll.rx import DLLRX
+from litepcie.dll.tx import DLLTX
+from litepcie.phy.common import PHYRXDatapath, PHYTXDatapath
 
 # External PIPE PHY Wrapper ------------------------------------------------------------------------
+
 
 class PIPEExternalPHY(LiteXModule):
     """
@@ -101,6 +102,7 @@ class PIPEExternalPHY(LiteXModule):
     - docs/integration-strategy.md: PHY interface contract
     - Intel PIPE 3.0 Specification
     """
+
     def __init__(self, platform, pads, data_width=64, cd="sys", bar0_size=0x10000):
         # Validate parameters
         if data_width not in [64, 128, 256, 512]:

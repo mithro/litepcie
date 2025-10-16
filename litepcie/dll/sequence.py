@@ -20,16 +20,16 @@ References
 - PCIe Base Spec 4.0, Section 3.3.6: ACK/NAK Protocol
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
 
 from litepcie.dll.common import (
-    DLL_SEQUENCE_NUM_WIDTH,
     DLL_SEQUENCE_NUM_MAX,
+    DLL_SEQUENCE_NUM_WIDTH,
 )
 
-
 # Sequence Number Manager -----------------------------------------------------------------------
+
 
 class SequenceNumberManager(Module):
     """
@@ -99,6 +99,7 @@ class SequenceNumberManager(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.3.5: Sequence Numbers
     """
+
     def __init__(self):
         # TX interface
         self.tx_alloc = Signal()
@@ -125,9 +126,11 @@ class SequenceNumberManager(Module):
 
         # Synchronously increment counter when allocating
         self.sync += [
-            If(self.tx_alloc,
+            If(
+                self.tx_alloc,
                 # Wrap at 4096 (PCIe Spec 3.3.5)
-                If(tx_counter == DLL_SEQUENCE_NUM_MAX,
+                If(
+                    tx_counter == DLL_SEQUENCE_NUM_MAX,
                     tx_counter.eq(0),
                 ).Else(
                     tx_counter.eq(tx_counter + 1),
@@ -145,9 +148,11 @@ class SequenceNumberManager(Module):
         ]
 
         self.sync += [
-            If(self.rx_valid,
+            If(
+                self.rx_valid,
                 # Update expected sequence for next packet
-                If(rx_expected == DLL_SEQUENCE_NUM_MAX,
+                If(
+                    rx_expected == DLL_SEQUENCE_NUM_MAX,
                     rx_expected.eq(0),
                 ).Else(
                     rx_expected.eq(rx_expected + 1),
@@ -157,7 +162,8 @@ class SequenceNumberManager(Module):
 
         # ACK sequence tracker
         self.sync += [
-            If(self.ack_valid,
+            If(
+                self.ack_valid,
                 self.tx_acked_seq.eq(self.ack_seq_num),
             ),
         ]

@@ -18,17 +18,17 @@ References
 - PCIe Base Spec 4.0, Section 3.3: Data Link Layer TX
 """
 
-from migen import *
 from litex.gen import *
 from litex.soc.interconnect import stream
+from migen import *
 
 from litepcie.dll.common import DLL_SEQUENCE_NUM_WIDTH
-from litepcie.dll.sequence import SequenceNumberManager
 from litepcie.dll.lcrc import LCRC32Generator
 from litepcie.dll.retry_buffer import RetryBuffer
-
+from litepcie.dll.sequence import SequenceNumberManager
 
 # DLL TX Path -------------------------------------------------------------------------------------
+
 
 class DLLTX(Module):
     """
@@ -88,6 +88,7 @@ class DLLTX(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.3: Data Link Layer
     """
+
     def __init__(self, data_width=64):
         self.data_width = data_width
 
@@ -120,18 +121,21 @@ class DLLTX(Module):
         current_data = Signal(data_width)
         lcrc_value = Signal(32)
 
-        fsm.act("IDLE",
-            If(self.tlp_sink.valid,
+        fsm.act(
+            "IDLE",
+            If(
+                self.tlp_sink.valid,
                 # Allocate sequence number
                 self.seq_manager.tx_alloc.eq(1),
                 NextValue(current_seq, self.seq_manager.tx_seq_num),
                 NextValue(current_data, self.tlp_sink.data),
                 NextValue(self.debug_last_seq, self.seq_manager.tx_seq_num),
                 NextState("CALC_LCRC"),
-            )
+            ),
         )
 
-        fsm.act("CALC_LCRC",
+        fsm.act(
+            "CALC_LCRC",
             # Feed data to LCRC calculator
             # For simplicity, assuming single-cycle TLP for now
             # (Real implementation would process multi-cycle TLPs)
@@ -142,25 +146,29 @@ class DLLTX(Module):
             NextState("STORE"),
         )
 
-        fsm.act("STORE",
+        fsm.act(
+            "STORE",
             # Store in retry buffer
             self.retry_buffer.write_data.eq(current_data),
             self.retry_buffer.write_seq.eq(current_seq),
             self.retry_buffer.write_valid.eq(1),
-            If(self.retry_buffer.write_ready,
+            If(
+                self.retry_buffer.write_ready,
                 NextState("TX"),
-            )
+            ),
         )
 
-        fsm.act("TX",
+        fsm.act(
+            "TX",
             # Transmit to PHY
             self.phy_source.valid.eq(1),
             self.phy_source.data.eq(current_data),
-            If(self.phy_source.ready,
+            If(
+                self.phy_source.ready,
                 # Consume TLP from sink
                 self.tlp_sink.ready.eq(1),
                 NextState("IDLE"),
-            )
+            ),
         )
 
         # ACK/NAK handling

@@ -17,8 +17,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 
 class TestSpec3_3_5_SequenceNumbers(unittest.TestCase):
@@ -34,26 +34,26 @@ class TestSpec3_3_5_SequenceNumbers(unittest.TestCase):
 
         Verify that sequence numbers use exactly 12 bits and wrap at 4096.
         """
-        from litepcie.dll.sequence import SequenceNumberManager
         from litepcie.dll.common import DLL_SEQUENCE_NUM_MAX
+        from litepcie.dll.sequence import SequenceNumberManager
 
         def testbench(dut):
             # Verify max sequence number is 4095 (12 bits)
-            self.assertEqual(DLL_SEQUENCE_NUM_MAX, 4095,
-                           "Sequence number max must be 4095 (12-bit)")
+            self.assertEqual(
+                DLL_SEQUENCE_NUM_MAX, 4095, "Sequence number max must be 4095 (12-bit)"
+            )
 
             # Allocate sequences up to max
             for expected_seq in range(4096):
                 yield dut.tx_alloc.eq(1)
                 yield
-                seq = (yield dut.tx_seq_num)
-                self.assertEqual(seq, expected_seq,
-                               f"Sequence {expected_seq} allocation failed")
+                seq = yield dut.tx_seq_num
+                self.assertEqual(seq, expected_seq, f"Sequence {expected_seq} allocation failed")
 
             # Next allocation should wrap to 0
             yield dut.tx_alloc.eq(1)
             yield
-            seq = (yield dut.tx_seq_num)
+            seq = yield dut.tx_seq_num
             self.assertEqual(seq, 0, "Sequence should wrap to 0 after 4095")
 
         dut = SequenceNumberManager()
@@ -72,12 +72,13 @@ class TestSpec3_3_5_SequenceNumbers(unittest.TestCase):
             for i in range(10):
                 yield dut.tx_alloc.eq(1)
                 yield
-                seq = (yield dut.tx_seq_num)
+                seq = yield dut.tx_seq_num
 
                 if prev_seq is not None:
                     expected = (prev_seq + 1) % 4096
-                    self.assertEqual(seq, expected,
-                                   f"Sequence should increment: got {seq}, expected {expected}")
+                    self.assertEqual(
+                        seq, expected, f"Sequence should increment: got {seq}, expected {expected}"
+                    )
                 prev_seq = seq
 
             yield dut.tx_alloc.eq(0)
@@ -111,8 +112,9 @@ class TestSpec3_3_4_LCRC(unittest.TestCase):
         """
         from litepcie.dll.common import LCRC_POLYNOMIAL
 
-        self.assertEqual(LCRC_POLYNOMIAL, 0x04C11DB7,
-                        "LCRC polynomial must be 0x04C11DB7 (Ethernet CRC-32)")
+        self.assertEqual(
+            LCRC_POLYNOMIAL, 0x04C11DB7, "LCRC polynomial must be 0x04C11DB7 (Ethernet CRC-32)"
+        )
 
     def test_spec_3_3_4_lcrc_initial_value(self):
         """
@@ -122,8 +124,7 @@ class TestSpec3_3_4_LCRC(unittest.TestCase):
         """
         from litepcie.dll.common import LCRC_INITIAL_VALUE
 
-        self.assertEqual(LCRC_INITIAL_VALUE, 0xFFFFFFFF,
-                        "LCRC initial value must be 0xFFFFFFFF")
+        self.assertEqual(LCRC_INITIAL_VALUE, 0xFFFFFFFF, "LCRC initial value must be 0xFFFFFFFF")
 
     def test_spec_3_3_4_lcrc_appended_to_tlp(self):
         """
@@ -148,7 +149,7 @@ class TestSpec3_3_4_LCRC(unittest.TestCase):
                 yield
 
             # Verify LCRC was calculated (non-zero in debug signal)
-            lcrc = (yield dut.debug_last_lcrc)
+            lcrc = yield dut.debug_last_lcrc
             self.assertNotEqual(lcrc, 0, "LCRC should be calculated for TLP")
 
         dut = DLLTX(data_width=64)
@@ -189,13 +190,12 @@ class TestSpec3_3_6_AckNak(unittest.TestCase):
             ack_found = False
             for _ in range(15):
                 yield
-                ack_valid = (yield dut.ack_source.valid)
+                ack_valid = yield dut.ack_source.valid
                 if ack_valid:
                     ack_found = True
                     break
 
-            self.assertTrue(ack_found,
-                          "Receiver must send ACK for valid TLP (Spec 3.3.6)")
+            self.assertTrue(ack_found, "Receiver must send ACK for valid TLP (Spec 3.3.6)")
 
         dut = DLLRX(data_width=64)
         run_simulation(dut, testbench(dut), vcd_name="compliance_3_3_6_ack.vcd")
@@ -227,13 +227,12 @@ class TestSpec3_3_6_AckNak(unittest.TestCase):
             nak_found = False
             for _ in range(15):
                 yield
-                nak_valid = (yield dut.nak_source.valid)
+                nak_valid = yield dut.nak_source.valid
                 if nak_valid:
                     nak_found = True
                     break
 
-            self.assertTrue(nak_found,
-                          "Receiver must send NAK for bad LCRC (Spec 3.3.6)")
+            self.assertTrue(nak_found, "Receiver must send NAK for bad LCRC (Spec 3.3.6)")
 
         dut = DLLRX(data_width=64)
         run_simulation(dut, testbench(dut), vcd_name="compliance_3_3_6_nak.vcd")
@@ -256,9 +255,8 @@ class TestSpec3_3_6_AckNak(unittest.TestCase):
             yield
 
             # Verify stored (buffer not empty)
-            empty = (yield dut.empty)
-            self.assertFalse(empty,
-                           "Retry buffer must store TLP until ACKed (Spec 3.3.6)")
+            empty = yield dut.empty
+            self.assertFalse(empty, "Retry buffer must store TLP until ACKed (Spec 3.3.6)")
 
             # ACK the TLP
             yield dut.ack_seq.eq(0)
@@ -268,7 +266,7 @@ class TestSpec3_3_6_AckNak(unittest.TestCase):
             yield
 
             # Should be released
-            empty = (yield dut.empty)
+            empty = yield dut.empty
             self.assertTrue(empty, "ACK should release TLP from retry buffer")
 
         dut = RetryBuffer(depth=16, data_width=64)
@@ -308,9 +306,8 @@ class TestSpec3_3_6_AckNak(unittest.TestCase):
             yield
 
             # Should replay sequence 1
-            replay_valid = (yield dut.replay_valid)
-            self.assertTrue(replay_valid,
-                          "NAK must trigger retransmission (Spec 3.3.6)")
+            replay_valid = yield dut.replay_valid
+            self.assertTrue(replay_valid, "NAK must trigger retransmission (Spec 3.3.6)")
 
         dut = RetryBuffer(depth=16, data_width=64)
         run_simulation(dut, testbench(dut), vcd_name="compliance_3_3_6_retx.vcd")
@@ -344,9 +341,8 @@ class TestSpec3_3_7_RetryBuffer(unittest.TestCase):
             yield
 
             # Buffer should not be full yet
-            full = (yield dut.full)
-            self.assertFalse(full,
-                           "Buffer with adequate depth should handle multiple TLPs")
+            full = yield dut.full
+            self.assertFalse(full, "Buffer with adequate depth should handle multiple TLPs")
 
         # Test with standard depth
         dut = RetryBuffer(depth=64, data_width=64)
@@ -381,20 +377,24 @@ class TestSpec3_3_7_RetryBuffer(unittest.TestCase):
 
             # Verify order is maintained
             for expected_seq, expected_data in enumerate(test_data):
-                replay_valid = (yield dut.replay_valid)
+                replay_valid = yield dut.replay_valid
                 if not replay_valid:
                     yield  # Wait one more cycle
-                    replay_valid = (yield dut.replay_valid)
+                    replay_valid = yield dut.replay_valid
 
                 self.assertTrue(replay_valid, f"Replay {expected_seq} should be valid")
 
-                replay_seq = (yield dut.replay_seq)
-                replay_data = (yield dut.replay_data)
+                replay_seq = yield dut.replay_seq
+                replay_data = yield dut.replay_data
 
-                self.assertEqual(replay_seq, expected_seq,
-                               f"Replay sequence order must match (got {replay_seq})")
-                self.assertEqual(replay_data, expected_data,
-                               f"Replay data order must match (got 0x{replay_data:X})")
+                self.assertEqual(
+                    replay_seq, expected_seq, f"Replay sequence order must match (got {replay_seq})"
+                )
+                self.assertEqual(
+                    replay_data,
+                    expected_data,
+                    f"Replay data order must match (got 0x{replay_data:X})",
+                )
                 yield
 
         dut = RetryBuffer(depth=16, data_width=64)

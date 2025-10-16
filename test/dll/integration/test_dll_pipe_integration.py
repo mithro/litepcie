@@ -18,12 +18,10 @@ References
 import unittest
 
 from migen import *
-from litex.gen import run_simulation
 
-from litepcie.dll.tx import DLLTX
-from litepcie.dll.rx import DLLRX
 from litepcie.dll.pipe import PIPEInterface
-from litepcie.common import phy_layout
+from litepcie.dll.rx import DLLRX
+from litepcie.dll.tx import DLLTX
 
 
 class TestDLLPIPEIntegration(unittest.TestCase):

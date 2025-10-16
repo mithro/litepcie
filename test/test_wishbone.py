@@ -5,20 +5,18 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 import unittest
+from test.common import seed_to_data
+from test.model.host import *
 
 from litex.gen import *
-
 from litex.soc.interconnect import wishbone
 
 from litepcie.core import LitePCIeEndpoint
 from litepcie.frontend.wishbone import LitePCIeWishboneMaster, LitePCIeWishboneSlave
 
-from test.common import seed_to_data
-from test.model.host import *
-
 # Parameters ---------------------------------------------------------------------------------------
 
-root_id     = 0x100
+root_id = 0x100
 endpoint_id = 0x400
 
 # Test Wishbone Master -----------------------------------------------------------------------------
@@ -57,6 +55,7 @@ endpoint_id = 0x400
 # The test verifies that the Host model is able to access the wishbone SRAM correctly through the
 # LitePCIeEndpoint.
 
+
 class TestWishboneMaster(unittest.TestCase):
     def wishbone_test(self, data_width, nwords=64):
         wr_datas = [seed_to_data(i, True) for i in range(nwords)]
@@ -73,14 +72,14 @@ class TestWishboneMaster(unittest.TestCase):
 
         class DUT(LiteXModule):
             def __init__(self, data_width):
-                self.host     = Host(data_width, root_id, endpoint_id)
+                self.host = Host(data_width, root_id, endpoint_id)
                 self.endpoint = LitePCIeEndpoint(self.host.phy)
-                self.master   = LitePCIeWishboneMaster(self.endpoint)
-                self.sram     = wishbone.SRAM(nwords*4, bus=self.master.wishbone)
+                self.master = LitePCIeWishboneMaster(self.endpoint)
+                self.sram = wishbone.SRAM(nwords * 4, bus=self.master.wishbone)
 
         dut = DUT(data_width)
         generators = {
-            "sys" : [
+            "sys": [
                 main_generator(dut),
                 dut.host.chipset.phy.phy_sink.generator(),
                 dut.host.chipset.phy.phy_source.generator(),
@@ -107,7 +106,7 @@ class TestWishboneMaster(unittest.TestCase):
 # Test Wishbone Slave ------------------------------------------------------------------------------
 
 # In this high level test, LitePCIeEndpoint is connected to LitePCIeWishboneSlave frontend. Wishbone
-# accesses are done to Host Memory through LitePCIeWishbone and the Host software model is used to 
+# accesses are done to Host Memory through LitePCIeWishbone and the Host software model is used to
 # handle Write/Read TLPs:
 #
 #                                    ┌───────────┐
@@ -140,12 +139,13 @@ class TestWishboneMaster(unittest.TestCase):
 #
 # The test verifies that the LitePCIeWishboneSlave is able to access Host Memory.
 
+
 class TestWishboneSlave(unittest.TestCase):
     def wishbone_test(self, data_width, nwords=8):
         wr_datas = [seed_to_data(i, True) for i in range(nwords)]
         rd_datas = []
 
-        #@passive
+        # @passive
         def main_generator(dut):
             # Allocate Host's Memory.
             dut.host.malloc(0x00000000, 1024)
@@ -157,7 +157,7 @@ class TestWishboneSlave(unittest.TestCase):
             for i in range(nwords):
                 yield from dut.slave.wishbone.write(i, wr_datas[i])
 
-           # Read ndatas from Host Memory.
+            # Read ndatas from Host Memory.
             for i in range(nwords):
                 rd_datas.append((yield from dut.slave.wishbone.read(i)))
 
@@ -167,15 +167,15 @@ class TestWishboneSlave(unittest.TestCase):
 
         class DUT(LiteXModule):
             def __init__(self, data_width):
-                self.host     = Host(data_width, root_id, endpoint_id, phy_debug=True, host_debug=True)
+                self.host = Host(data_width, root_id, endpoint_id, phy_debug=True, host_debug=True)
                 self.endpoint = LitePCIeEndpoint(self.host.phy)
-                self.slave    = LitePCIeWishboneSlave(self.endpoint)
+                self.slave = LitePCIeWishboneSlave(self.endpoint)
 
         dut = DUT(data_width)
         generators = {
-            "sys" : [
+            "sys": [
                 main_generator(dut),
-                #fake_generator(dut),
+                # fake_generator(dut),
                 dut.host.generator(),
                 dut.host.chipset.generator(),
                 dut.host.chipset.phy.phy_sink.generator(),

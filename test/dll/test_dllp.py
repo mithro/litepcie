@@ -14,8 +14,8 @@ Reference: PCIe Base Spec 4.0, Section 3.4
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 from litepcie.dll.common import (
     DLLP_TYPE_ACK,
@@ -23,7 +23,7 @@ from litepcie.dll.common import (
     calculate_dllp_crc16,
     verify_dllp_crc16,
 )
-from litepcie.dll.dllp import DLLPAckGenerator, DLLPNakGenerator, DLLPCRC16
+from litepcie.dll.dllp import DLLPCRC16, DLLPAckGenerator, DLLPNakGenerator
 
 
 class TestDLLPCRC16(unittest.TestCase):
@@ -46,9 +46,12 @@ class TestDLLPCRC16(unittest.TestCase):
             yield
 
             # Read CRC output
-            hw_crc = (yield dut.crc_out)
-            self.assertEqual(hw_crc, expected_crc,
-                           f"Hardware CRC 0x{hw_crc:04X} != Software CRC 0x{expected_crc:04X}")
+            hw_crc = yield dut.crc_out
+            self.assertEqual(
+                hw_crc,
+                expected_crc,
+                f"Hardware CRC 0x{hw_crc:04X} != Software CRC 0x{expected_crc:04X}",
+            )
 
         dut = DLLPCRC16()
         run_simulation(dut, testbench(dut), vcd_name="test_dllp_crc16.vcd")
@@ -65,7 +68,7 @@ class TestDLLPCRC16(unittest.TestCase):
             yield
 
             # Get CRC (should be non-initial)
-            crc_before_reset = (yield dut.crc_out)
+            crc_before_reset = yield dut.crc_out
 
             # Reset
             yield dut.reset.eq(1)
@@ -74,8 +77,9 @@ class TestDLLPCRC16(unittest.TestCase):
             yield
 
             # CRC should be back to initial value
-            crc_after_reset = (yield dut.crc_out)
+            crc_after_reset = yield dut.crc_out
             from litepcie.dll.common import DLLP_CRC16_INITIAL_VALUE
+
             self.assertEqual(crc_after_reset, DLLP_CRC16_INITIAL_VALUE)
 
         dut = DLLPCRC16()
@@ -100,9 +104,9 @@ class TestDLLPAckGenerator(unittest.TestCase):
                 yield
 
             # Verify DLLP fields
-            dllp_type = (yield dut.dllp_type)
-            dllp_seq = (yield dut.dllp_seq_num)
-            dllp_crc = (yield dut.dllp_crc)
+            dllp_type = yield dut.dllp_type
+            dllp_seq = yield dut.dllp_seq_num
+            dllp_crc = yield dut.dllp_crc
 
             self.assertEqual(dllp_type, DLLP_TYPE_ACK, "DLLP type should be ACK")
             self.assertEqual(dllp_seq, 42, "Sequence number should be 42")
@@ -117,8 +121,11 @@ class TestDLLPAckGenerator(unittest.TestCase):
                 0x00,  # Byte 5: reserved
             ]
             expected_crc = calculate_dllp_crc16(dllp_data)
-            self.assertEqual(dllp_crc, expected_crc,
-                           f"CRC mismatch: got 0x{dllp_crc:04X}, expected 0x{expected_crc:04X}")
+            self.assertEqual(
+                dllp_crc,
+                expected_crc,
+                f"CRC mismatch: got 0x{dllp_crc:04X}, expected 0x{expected_crc:04X}",
+            )
 
         dut = DLLPAckGenerator()
         run_simulation(dut, testbench(dut), vcd_name="test_dllp_ack_gen.vcd")
@@ -137,7 +144,7 @@ class TestDLLPAckGenerator(unittest.TestCase):
             while not (yield dut.dllp_valid):
                 yield
 
-            dllp_seq = (yield dut.dllp_seq_num)
+            dllp_seq = yield dut.dllp_seq_num
             self.assertEqual(dllp_seq, 4095, "Should handle max sequence number")
 
         dut = DLLPAckGenerator()
@@ -162,9 +169,9 @@ class TestDLLPNakGenerator(unittest.TestCase):
                 yield
 
             # Verify DLLP fields
-            dllp_type = (yield dut.dllp_type)
-            dllp_seq = (yield dut.dllp_seq_num)
-            dllp_crc = (yield dut.dllp_crc)
+            dllp_type = yield dut.dllp_type
+            dllp_seq = yield dut.dllp_seq_num
+            dllp_crc = yield dut.dllp_crc
 
             self.assertEqual(dllp_type, DLLP_TYPE_NAK, "DLLP type should be NAK")
             self.assertEqual(dllp_seq, 100, "Sequence number should be 100")
@@ -174,7 +181,9 @@ class TestDLLPNakGenerator(unittest.TestCase):
                 (dllp_type << 4),
                 (dllp_seq & 0xFF),
                 (dllp_seq >> 8) & 0x0F,
-                0x00, 0x00, 0x00,
+                0x00,
+                0x00,
+                0x00,
             ]
             expected_crc = calculate_dllp_crc16(dllp_data)
             self.assertEqual(dllp_crc, expected_crc, "CRC should be correct")

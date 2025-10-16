@@ -14,8 +14,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3.4
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 
 class TestLCRC32Software(unittest.TestCase):
@@ -72,16 +72,28 @@ class TestLCRC32Hardware(unittest.TestCase):
 
     def test_hardware_lcrc_matches_software(self):
         """Hardware LCRC should match software reference."""
-        from litepcie.dll.lcrc import LCRC32Generator
         from litepcie.dll.common import calculate_lcrc32
+        from litepcie.dll.lcrc import LCRC32Generator
 
         def testbench(dut):
             # Test data: 16 bytes
             test_data = [
-                0x00, 0x00, 0x00, 0x00,
-                0xDE, 0xAD, 0xBE, 0xEF,
-                0xCA, 0xFE, 0xBA, 0xBE,
-                0x12, 0x34, 0x56, 0x78,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0xDE,
+                0xAD,
+                0xBE,
+                0xEF,
+                0xCA,
+                0xFE,
+                0xBA,
+                0xBE,
+                0x12,
+                0x34,
+                0x56,
+                0x78,
             ]
             expected_crc = calculate_lcrc32(test_data)
 
@@ -101,17 +113,20 @@ class TestLCRC32Hardware(unittest.TestCase):
             yield
 
             # Read CRC output
-            hw_crc = (yield dut.crc_out)
-            self.assertEqual(hw_crc, expected_crc,
-                           f"Hardware CRC 0x{hw_crc:08X} != Software CRC 0x{expected_crc:08X}")
+            hw_crc = yield dut.crc_out
+            self.assertEqual(
+                hw_crc,
+                expected_crc,
+                f"Hardware CRC 0x{hw_crc:08X} != Software CRC 0x{expected_crc:08X}",
+            )
 
         dut = LCRC32Generator()
         run_simulation(dut, testbench(dut), vcd_name="test_lcrc_hw.vcd")
 
     def test_hardware_lcrc_reset(self):
         """Hardware LCRC reset should return to initial state."""
-        from litepcie.dll.lcrc import LCRC32Generator
         from litepcie.dll.common import LCRC_INITIAL_VALUE
+        from litepcie.dll.lcrc import LCRC32Generator
 
         def testbench(dut):
             # Feed some data
@@ -122,7 +137,7 @@ class TestLCRC32Hardware(unittest.TestCase):
             yield
 
             # CRC should be non-initial
-            crc_before = (yield dut.crc_out)
+            crc_before = yield dut.crc_out
             self.assertNotEqual(crc_before, LCRC_INITIAL_VALUE)
 
             # Reset
@@ -132,7 +147,7 @@ class TestLCRC32Hardware(unittest.TestCase):
             yield
 
             # CRC should be back to initial
-            crc_after = (yield dut.crc_out)
+            crc_after = yield dut.crc_out
             self.assertEqual(crc_after, LCRC_INITIAL_VALUE)
 
         dut = LCRC32Generator()
@@ -140,8 +155,8 @@ class TestLCRC32Hardware(unittest.TestCase):
 
     def test_hardware_lcrc_incremental(self):
         """Hardware LCRC should handle incremental data feed."""
-        from litepcie.dll.lcrc import LCRC32Generator
         from litepcie.dll.common import calculate_lcrc32
+        from litepcie.dll.lcrc import LCRC32Generator
 
         def testbench(dut):
             test_data = [0x12, 0x34, 0x56, 0x78]
@@ -162,7 +177,7 @@ class TestLCRC32Hardware(unittest.TestCase):
                 yield
 
             # Final CRC should match
-            hw_crc = (yield dut.crc_out)
+            hw_crc = yield dut.crc_out
             expected_crc = calculate_lcrc32(test_data)
             self.assertEqual(hw_crc, expected_crc)
 
@@ -181,8 +196,8 @@ class TestLCRC32Checker(unittest.TestCase):
         appended directly without complementation. When valid data+CRC is processed,
         the checker should see residue 0x497C2DBF and not report an error.
         """
-        from litepcie.dll.lcrc import LCRC32Checker
         from litepcie.dll.common import calculate_lcrc32
+        from litepcie.dll.lcrc import LCRC32Checker
 
         def testbench(dut):
             # Prepare data with valid CRC
@@ -217,7 +232,7 @@ class TestLCRC32Checker(unittest.TestCase):
             yield
 
             # Check should pass
-            error = (yield dut.crc_error)
+            error = yield dut.crc_error
             self.assertEqual(error, 0, "Valid CRC should not trigger error")
 
         dut = LCRC32Checker()
@@ -225,8 +240,8 @@ class TestLCRC32Checker(unittest.TestCase):
 
     def test_checker_detects_invalid_crc(self):
         """Checker should reject invalid CRC."""
-        from litepcie.dll.lcrc import LCRC32Checker
         from litepcie.dll.common import calculate_lcrc32
+        from litepcie.dll.lcrc import LCRC32Checker
 
         def testbench(dut):
             # Prepare data with INVALID CRC
@@ -255,7 +270,7 @@ class TestLCRC32Checker(unittest.TestCase):
             yield
 
             # Check should fail
-            error = (yield dut.crc_error)
+            error = yield dut.crc_error
             self.assertEqual(error, 1, "Invalid CRC should trigger error")
 
         dut = LCRC32Checker()

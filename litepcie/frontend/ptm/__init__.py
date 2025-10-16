@@ -5,5 +5,5 @@
 # Copyright (c) 2023 Florent Kermarrec <florent@enjoy-digital.fr>
 # SPDX-License-Identifier: BSD-2-Clause
 
+from litepcie.frontend.ptm.core import PTMCapabilities, PTMRequester
 from litepcie.frontend.ptm.sniffer import PCIePTMSniffer
-from litepcie.frontend.ptm.core    import PTMCapabilities, PTMRequester

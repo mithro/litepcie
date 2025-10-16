@@ -15,8 +15,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3.7
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 
 class TestRetryBuffer(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestRetryBuffer(unittest.TestCase):
             yield  # Wait for synchronous write_ptr update
 
             # Verify not empty
-            empty = (yield dut.empty)
+            empty = yield dut.empty
             self.assertFalse(empty, "Buffer should not be empty after write")
 
             # ACK sequence 0
@@ -48,7 +48,7 @@ class TestRetryBuffer(unittest.TestCase):
 
             # Should be empty now
             yield
-            empty = (yield dut.empty)
+            empty = yield dut.empty
             self.assertTrue(empty, "Buffer should be empty after ACK")
 
         dut = RetryBuffer(depth=16, data_width=64)
@@ -94,9 +94,9 @@ class TestRetryBuffer(unittest.TestCase):
             yield
 
             # Should replay sequence 1
-            replay_valid = (yield dut.replay_valid)
-            replay_seq = (yield dut.replay_seq)
-            replay_data = (yield dut.replay_data)
+            replay_valid = yield dut.replay_valid
+            replay_seq = yield dut.replay_seq
+            replay_data = yield dut.replay_data
 
             self.assertTrue(replay_valid, "Replay should be valid")
             self.assertEqual(replay_seq, 1, "Should replay sequence 1")
@@ -104,8 +104,8 @@ class TestRetryBuffer(unittest.TestCase):
             yield
 
             # Should replay sequence 2
-            replay_seq = (yield dut.replay_seq)
-            replay_data = (yield dut.replay_data)
+            replay_seq = yield dut.replay_seq
+            replay_data = yield dut.replay_data
             self.assertEqual(replay_seq, 2, "Should replay sequence 2")
             self.assertEqual(replay_data, 0xCCCCCCCCCCCCCCCC, "Should replay correct data")
 
@@ -130,15 +130,15 @@ class TestRetryBuffer(unittest.TestCase):
                 yield  # Wait for sync update
 
                 # Check full status - should be full only on last iteration
-                full = (yield dut.full)
+                full = yield dut.full
                 if i < depth - 2:
                     self.assertFalse(full, f"Buffer should not be full at entry {i}")
                 else:
                     self.assertTrue(full, f"Buffer should be full after entry {i}")
 
             # Verify buffer is full
-            full = (yield dut.full)
-            write_ready = (yield dut.write_ready)
+            full = yield dut.full
+            write_ready = yield dut.write_ready
             self.assertTrue(full, "Buffer should be full")
             self.assertFalse(write_ready, "Write should not be ready when full")
 
@@ -150,7 +150,7 @@ class TestRetryBuffer(unittest.TestCase):
             yield
 
             # Should no longer be full
-            full = (yield dut.full)
+            full = yield dut.full
             self.assertFalse(full, "Buffer should not be full after ACK")
 
         dut = RetryBuffer(depth=16, data_width=64)

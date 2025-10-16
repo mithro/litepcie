@@ -5,18 +5,18 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 import random
+from test.model.tlp import *
 
 from litex.gen import *
 
 from litepcie.common import *
 from litepcie.tlp.common import *
 
-from test.model.tlp import *
-
 # Helpers ------------------------------------------------------------------------------------------
 
+
 def print_chipset(s):
-    print("[CHIPSET] {}".format(s))
+    print(f"[CHIPSET] {s}")
 
 
 def find_cmp_tags(queue):
@@ -32,18 +32,20 @@ def find_first_cmp_msg(queue, msg_tag):
         if tag == msg_tag:
             return i
 
+
 # Chipset model ------------------------------------------------------------------------------------
+
 
 class Chipset(LiteXModule):
     def __init__(self, phy, root_id, debug=False, with_reordering=False):
-        self.phy     = phy
+        self.phy = phy
         self.root_id = root_id
-        self.debug   = debug
+        self.debug = debug
         self.with_reordering = with_reordering
 
         # # #
 
-        self.rd_data   = []
+        self.rd_data = []
         self.cmp_queue = []
         self.en = False
 
@@ -58,11 +60,11 @@ class Chipset(LiteXModule):
 
     def wr(self, wr_cls, adr, data):
         wr = wr_cls()
-        wr.fmt          = 0b10 if isinstance(wr, WR32) else 0b11
-        wr.type         = 0b00000
-        wr.length       = len(data)
-        wr.first_be     = 0xf
-        wr.address      = (adr << 2)
+        wr.fmt = 0b10 if isinstance(wr, WR32) else 0b11
+        wr.type = 0b00000
+        wr.length = len(data)
+        wr.first_be = 0xF
+        wr.address = adr << 2
         wr.requester_id = self.root_id
         dwords = wr.encode_dwords(data)
         if self.debug:
@@ -78,11 +80,11 @@ class Chipset(LiteXModule):
 
     def rd(self, rd_cls, adr, length=1):
         rd = rd_cls()
-        rd.fmt          = 0b00 if isinstance(rd, RD32) else 0b01
-        rd.type         = 0b00000
-        rd.length       = length
-        rd.first_be     = 0xf
-        rd.address      = (adr << 2)
+        rd.fmt = 0b00 if isinstance(rd, RD32) else 0b01
+        rd.type = 0b00000
+        rd.length = length
+        rd.first_be = 0xF
+        rd.address = adr << 2
         rd.requester_id = self.root_id
         dwords = rd.encode_dwords()
         if self.debug:
@@ -108,14 +110,13 @@ class Chipset(LiteXModule):
     def cmp(self, req_id, data, byte_count=None, lower_address=0, tag=0, with_split=False):
         if with_split:
             d = random.choice([64, 128, 256])
-            n = byte_count//d
+            n = byte_count // d
             if n == 0:
                 self.cmp(req_id, data, byte_count=byte_count, tag=tag)
             else:
                 for i in range(n):
-                    cmp_data = data[i*byte_count//(4*n):(i+1)*byte_count//(4*n)]
-                    self.cmp(req_id, cmp_data,
-                        byte_count=byte_count-i*byte_count//n, tag=tag)
+                    cmp_data = data[i * byte_count // (4 * n) : (i + 1) * byte_count // (4 * n)]
+                    self.cmp(req_id, cmp_data, byte_count=byte_count - i * byte_count // n, tag=tag)
         else:
             if len(data) == 0:
                 fmt = 0b00
@@ -123,14 +124,14 @@ class Chipset(LiteXModule):
             else:
                 fmt = 0b10
                 cpl = CPLD()
-            cpl.fmt           = fmt
-            cpl.type          = 0b01010
-            cpl.length        = len(data)
+            cpl.fmt = fmt
+            cpl.type = 0b01010
+            cpl.length = len(data)
             cpl.lower_address = lower_address
-            cpl.requester_id  = req_id
-            cpl.completer_id  = self.root_id
+            cpl.requester_id = req_id
+            cpl.completer_id = self.root_id
             if byte_count is None:
-                cpl.byte_count = len(data)*4
+                cpl.byte_count = len(data) * 4
             else:
                 cpl.byte_count = byte_count
             cpl.tag = tag
@@ -144,8 +145,8 @@ class Chipset(LiteXModule):
         if len(self.cmp_queue):
             if self.with_reordering:
                 tags = find_cmp_tags(self.cmp_queue)
-                tag  = random.choice(tags)
-                n    = find_first_cmp_msg(self.cmp_queue, tag)
+                tag = random.choice(tags)
+                n = find_first_cmp_msg(self.cmp_queue, tag)
                 tag, dwords = self.cmp_queue.pop(n)
             else:
                 tag, dwords = self.cmp_queue.pop(0)

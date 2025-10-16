@@ -21,11 +21,13 @@ References
 - docs/pipe-interface-spec.md
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
+
 from litepcie.common import *
 
 # PIPE Signal Layouts ------------------------------------------------------------------------------
+
 
 def pipe_layout_8b(data_width=8):
     """
@@ -58,22 +60,21 @@ def pipe_layout_8b(data_width=8):
     """
     return [
         # TX Interface (MAC -> PHY)
-        ("tx_data",     data_width, DIR_M_TO_S),
-        ("tx_datak",    1,          DIR_M_TO_S),
-        ("tx_elecidle", 1,          DIR_M_TO_S),
-
+        ("tx_data", data_width, DIR_M_TO_S),
+        ("tx_datak", 1, DIR_M_TO_S),
+        ("tx_elecidle", 1, DIR_M_TO_S),
         # RX Interface (PHY -> MAC)
-        ("rx_data",     data_width, DIR_S_TO_M),
-        ("rx_datak",    1,          DIR_S_TO_M),
-        ("rx_valid",    1,          DIR_S_TO_M),
-        ("rx_status",   3,          DIR_S_TO_M),
-        ("rx_elecidle", 1,          DIR_S_TO_M),
-
+        ("rx_data", data_width, DIR_S_TO_M),
+        ("rx_datak", 1, DIR_S_TO_M),
+        ("rx_valid", 1, DIR_S_TO_M),
+        ("rx_status", 3, DIR_S_TO_M),
+        ("rx_elecidle", 1, DIR_S_TO_M),
         # Control Interface
-        ("powerdown",   2,          DIR_M_TO_S),
-        ("rate",        1,          DIR_M_TO_S),
-        ("rx_polarity", 1,          DIR_M_TO_S),
+        ("powerdown", 2, DIR_M_TO_S),
+        ("rate", 1, DIR_M_TO_S),
+        ("rx_polarity", 1, DIR_M_TO_S),
     ]
+
 
 # PIPE Constants -----------------------------------------------------------------------------------
 
@@ -105,6 +106,7 @@ PIPE_K29_7_END = 0xFD  # End packet
 PIPE_K30_7_EDB = 0xFE  # End bad packet
 
 # PIPE Interface -----------------------------------------------------------------------------------
+
 
 class PIPEInterface(LiteXModule):
     """
@@ -176,6 +178,7 @@ class PIPEInterface(LiteXModule):
     - PCIe Base Spec 4.0, Section 4: Physical Layer
     - docs/pipe-interface-spec.md
     """
+
     def __init__(self, data_width=8, gen=1):
         if data_width != 8:
             raise ValueError("Only 8-bit PIPE mode supported currently")

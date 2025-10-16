@@ -15,10 +15,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3.5
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
-
-from litepcie.dll.common import DLL_SEQUENCE_NUM_MAX
+from migen import *
 
 
 class TestSequenceNumberManager(unittest.TestCase):
@@ -32,7 +30,7 @@ class TestSequenceNumberManager(unittest.TestCase):
             # After reset, first allocated sequence should be 0
             yield dut.tx_alloc.eq(1)
             yield
-            seq = (yield dut.tx_seq_num)
+            seq = yield dut.tx_seq_num
             self.assertEqual(seq, 0, "First TX sequence should be 0")
 
         dut = SequenceNumberManager()
@@ -46,15 +44,15 @@ class TestSequenceNumberManager(unittest.TestCase):
             # Allocate first sequence (should be 0)
             yield dut.tx_alloc.eq(1)
             yield
-            seq0 = (yield dut.tx_seq_num)
+            seq0 = yield dut.tx_seq_num
 
             # Allocate second sequence (should be 1)
             yield
-            seq1 = (yield dut.tx_seq_num)
+            seq1 = yield dut.tx_seq_num
 
             # Allocate third sequence (should be 2)
             yield
-            seq2 = (yield dut.tx_seq_num)
+            seq2 = yield dut.tx_seq_num
 
             yield dut.tx_alloc.eq(0)
             yield
@@ -80,17 +78,17 @@ class TestSequenceNumberManager(unittest.TestCase):
                 yield
 
             # Counter should now be at 4095
-            seq_max = (yield dut.tx_seq_num)
+            seq_max = yield dut.tx_seq_num
             self.assertEqual(seq_max, 4095, "Should reach maximum sequence 4095")
 
             # One more allocation wraps to 0
             yield
-            seq_wrapped = (yield dut.tx_seq_num)
+            seq_wrapped = yield dut.tx_seq_num
             self.assertEqual(seq_wrapped, 0, "Should wrap to 0 after 4095")
 
             # Next allocation is sequence 1
             yield
-            seq_after_wrap = (yield dut.tx_seq_num)
+            seq_after_wrap = yield dut.tx_seq_num
             self.assertEqual(seq_after_wrap, 1, "After wrap, next should be 1")
 
             yield dut.tx_alloc.eq(0)
@@ -105,7 +103,7 @@ class TestSequenceNumberManager(unittest.TestCase):
 
         def testbench(dut):
             # Read initial sequence (should be 0)
-            seq0 = (yield dut.tx_seq_num)
+            seq0 = yield dut.tx_seq_num
             self.assertEqual(seq0, 0)
 
             # Allocate sequence 0 (counter increments after this cycle)
@@ -118,17 +116,16 @@ class TestSequenceNumberManager(unittest.TestCase):
             yield
             yield
             yield
-            seq_after_pause = (yield dut.tx_seq_num)
+            seq_after_pause = yield dut.tx_seq_num
 
             # Sequence should still be 1 (didn't increment without tx_alloc)
-            self.assertEqual(seq_after_pause, 1,
-                           "Sequence should not increment when tx_alloc=0")
+            self.assertEqual(seq_after_pause, 1, "Sequence should not increment when tx_alloc=0")
 
             # Enable allocation again - counter should be 1 now, increment to 2
             yield dut.tx_alloc.eq(1)
             yield
             yield  # Wait for increment
-            seq_next = (yield dut.tx_seq_num)
+            seq_next = yield dut.tx_seq_num
             self.assertEqual(seq_next, 2, "Next allocation should be sequence 2")
 
         dut = SequenceNumberManager()
@@ -140,7 +137,7 @@ class TestSequenceNumberManager(unittest.TestCase):
 
         def testbench(dut):
             # Initially expecting sequence 0
-            expected = (yield dut.rx_expected_seq)
+            expected = yield dut.rx_expected_seq
             self.assertEqual(expected, 0, "Initially expecting sequence 0")
 
             # Receive packet with sequence 0
@@ -151,7 +148,7 @@ class TestSequenceNumberManager(unittest.TestCase):
             yield  # Wait for synchronous update
 
             # Should now expect sequence 1
-            expected = (yield dut.rx_expected_seq)
+            expected = yield dut.rx_expected_seq
             self.assertEqual(expected, 1, "After receiving seq 0, expect seq 1")
 
             # Receive sequence 1
@@ -162,7 +159,7 @@ class TestSequenceNumberManager(unittest.TestCase):
             yield  # Wait for synchronous update
 
             # Should now expect sequence 2
-            expected = (yield dut.rx_expected_seq)
+            expected = yield dut.rx_expected_seq
             self.assertEqual(expected, 2, "After receiving seq 1, expect seq 2")
 
             yield
@@ -179,13 +176,13 @@ class TestSequenceNumberManager(unittest.TestCase):
             yield dut.rx_seq_num.eq(0)
             yield dut.rx_valid.eq(1)
             yield
-            error = (yield dut.rx_seq_error)
+            error = yield dut.rx_seq_error
             self.assertEqual(error, 0, "Sequence 0 should be correct")
 
             # Now expecting sequence 1, but receive sequence 3 (out of order)
             yield dut.rx_seq_num.eq(3)
             yield
-            error = (yield dut.rx_seq_error)
+            error = yield dut.rx_seq_error
             self.assertEqual(error, 1, "Should detect out-of-order packet")
 
             yield dut.rx_valid.eq(0)
@@ -200,7 +197,7 @@ class TestSequenceNumberManager(unittest.TestCase):
 
         def testbench(dut):
             # Initially no sequences acknowledged
-            acked = (yield dut.tx_acked_seq)
+            acked = yield dut.tx_acked_seq
             self.assertEqual(acked, 0)
 
             # Receive ACK for sequence 5
@@ -208,14 +205,14 @@ class TestSequenceNumberManager(unittest.TestCase):
             yield dut.ack_valid.eq(1)
             yield
             yield  # Wait one more cycle for synchronous update
-            acked = (yield dut.tx_acked_seq)
+            acked = yield dut.tx_acked_seq
             self.assertEqual(acked, 5, "Should track ACKed sequence 5")
 
             # Receive ACK for sequence 10
             yield dut.ack_seq_num.eq(10)
             yield
             yield  # Wait one more cycle for synchronous update
-            acked = (yield dut.tx_acked_seq)
+            acked = yield dut.tx_acked_seq
             self.assertEqual(acked, 10, "Should track ACKed sequence 10")
 
             yield dut.ack_valid.eq(0)

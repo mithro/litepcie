@@ -17,13 +17,13 @@ References
 - "PCI Express System Architecture" Chapter 8: Data Link Layer
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
 
 from litepcie.dll.common import DLL_SEQUENCE_NUM_WIDTH
 
-
 # Retry Buffer ------------------------------------------------------------------------------------
+
 
 class RetryBuffer(Module):
     """
@@ -114,6 +114,7 @@ class RetryBuffer(Module):
     ----------
     PCIe Base Spec 4.0, Section 3.3.7: Retry Buffer
     """
+
     def __init__(self, depth=64, data_width=64):
         assert depth & (depth - 1) == 0, "Depth must be power of 2"
 
@@ -169,23 +170,17 @@ class RetryBuffer(Module):
             data_write_port.adr.eq(write_ptr),
             data_write_port.dat_w.eq(self.write_data),
             data_write_port.we.eq(self.write_valid & self.write_ready),
-
             seq_write_port.adr.eq(write_ptr),
             seq_write_port.dat_w.eq(self.write_seq),
             seq_write_port.we.eq(self.write_valid & self.write_ready),
         ]
 
-        self.sync += [
-            If(self.write_valid & self.write_ready,
-                write_ptr.eq(write_ptr + 1)
-            )
-        ]
+        self.sync += [If(self.write_valid & self.write_ready, write_ptr.eq(write_ptr + 1))]
 
         # Read logic for replay
         self.comb += [
             data_read_port.adr.eq(read_ptr),
             self.replay_data.eq(data_read_port.dat_r),
-
             seq_read_port.adr.eq(read_ptr),
             self.replay_seq.eq(seq_read_port.dat_r),
         ]
@@ -195,15 +190,18 @@ class RetryBuffer(Module):
         self.comb += self.replay_valid.eq(replaying & (read_ptr != write_ptr))
 
         self.sync += [
-            If(self.nak_valid,
+            If(
+                self.nak_valid,
                 # NAK triggers replay mode
                 read_ptr.eq(ack_ptr),
                 replaying.eq(1),
-            ).Elif(self.replay_valid & self.replay_ready,
+            ).Elif(
+                self.replay_valid & self.replay_ready,
                 # Advance read pointer during replay
                 read_ptr.eq(read_ptr + 1),
                 # Stop replaying when caught up with write pointer
-                If(read_ptr + 1 == write_ptr,
+                If(
+                    read_ptr + 1 == write_ptr,
                     replaying.eq(0),
                 ),
             ),
@@ -211,9 +209,10 @@ class RetryBuffer(Module):
 
         # ACK logic - advance ack_ptr
         self.sync += [
-            If(self.ack_valid,
+            If(
+                self.ack_valid,
                 # Advance ack pointer to release acknowledged entries
-                ack_ptr.eq(ack_ptr + 1)
+                ack_ptr.eq(ack_ptr + 1),
             )
         ]
 
@@ -223,7 +222,8 @@ class RetryBuffer(Module):
         next_write_ptr = Signal(max=depth)
         self.comb += [
             # Handle wraparound for next write pointer
-            If(write_ptr == (depth - 1),
+            If(
+                write_ptr == (depth - 1),
                 next_write_ptr.eq(0),
             ).Else(
                 next_write_ptr.eq(write_ptr + 1),

@@ -15,8 +15,8 @@ Reference: PCIe Base Spec 4.0, Section 3.3
 
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 
 class TestDLLTXPath(unittest.TestCase):
@@ -42,7 +42,7 @@ class TestDLLTXPath(unittest.TestCase):
                 yield
 
             # Check sequence number assigned
-            seq0 = (yield dut.debug_last_seq)
+            seq0 = yield dut.debug_last_seq
             self.assertEqual(seq0, 0, "First TLP should get sequence 0")
 
             # Send second TLP
@@ -57,7 +57,7 @@ class TestDLLTXPath(unittest.TestCase):
                 yield
 
             # Check sequence number incremented
-            seq1 = (yield dut.debug_last_seq)
+            seq1 = yield dut.debug_last_seq
             self.assertEqual(seq1, 1, "Second TLP should get sequence 1")
 
         dut = DLLTX(data_width=64)
@@ -65,8 +65,8 @@ class TestDLLTXPath(unittest.TestCase):
 
     def test_tx_appends_lcrc(self):
         """TX path should append LCRC to outgoing TLPs."""
-        from litepcie.dll.tx import DLLTX
         from litepcie.dll.common import calculate_lcrc32
+        from litepcie.dll.tx import DLLTX
 
         def testbench(dut):
             # Send TLP data
@@ -75,7 +75,7 @@ class TestDLLTXPath(unittest.TestCase):
 
             # Send 4-byte TLP
             yield dut.tlp_sink.valid.eq(1)
-            yield dut.tlp_sink.data.eq(int.from_bytes(bytes(test_data), 'little'))
+            yield dut.tlp_sink.data.eq(int.from_bytes(bytes(test_data), "little"))
             yield dut.tlp_sink.last.eq(1)
             yield
             yield dut.tlp_sink.valid.eq(0)
@@ -85,12 +85,11 @@ class TestDLLTXPath(unittest.TestCase):
             # Wait for output and check LCRC was appended
             # (Implementation detail: output should have data + LCRC)
             # This is a behavioral test - we verify LCRC is calculated correctly
-            output_valid = (yield dut.phy_source.valid)
+            output_valid = yield dut.phy_source.valid
             if output_valid:
                 # Verify LCRC was computed
-                computed_crc = (yield dut.debug_last_lcrc)
-                self.assertEqual(computed_crc, expected_crc,
-                               f"LCRC should be 0x{expected_crc:08X}")
+                computed_crc = yield dut.debug_last_lcrc
+                self.assertEqual(computed_crc, expected_crc, f"LCRC should be 0x{expected_crc:08X}")
 
         dut = DLLTX(data_width=64)
         run_simulation(dut, testbench(dut), vcd_name="test_dll_tx_lcrc.vcd")
@@ -115,7 +114,7 @@ class TestDLLTXPath(unittest.TestCase):
                 yield
 
             # Check retry buffer has entry
-            retry_empty = (yield dut.retry_buffer.empty)
+            retry_empty = yield dut.retry_buffer.empty
             self.assertFalse(retry_empty, "Retry buffer should have stored TLP")
 
             # Send ACK to release from buffer
@@ -129,7 +128,7 @@ class TestDLLTXPath(unittest.TestCase):
                 yield
 
             # Buffer should be empty after ACK
-            retry_empty = (yield dut.retry_buffer.empty)
+            retry_empty = yield dut.retry_buffer.empty
             self.assertTrue(retry_empty, "Retry buffer should be empty after ACK")
 
         dut = DLLTX(data_width=64)

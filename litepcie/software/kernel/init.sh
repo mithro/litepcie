@@ -52,4 +52,3 @@ insmod liteuart.ko
 for i in `seq 0 16` ; do
     chmod 666 /dev/litepcie$i > /dev/null 2>&1
 done
-

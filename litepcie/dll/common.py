@@ -16,8 +16,9 @@ References
 - PCIe Base Spec 4.0, Section 3.4: DLLPs
 """
 
-from migen import *
 from litex.gen import *
+from migen import *
+
 from litepcie.common import *
 
 # Constants ----------------------------------------------------------------------------------------
@@ -39,7 +40,9 @@ DLLP_DATA_LENGTH_BYTES = 6  # DLLP data (excluding CRC-16)
 LCRC_WIDTH = 32  # LCRC is 32-bit CRC
 LCRC_POLYNOMIAL = 0x04C11DB7  # CRC-32 polynomial (Ethernet polynomial)
 LCRC_INITIAL_VALUE = 0xFFFFFFFF  # LCRC initial value
-LCRC_RESIDUE_VALUE = 0x497C2DBF  # Expected residue after processing data+CRC (PCIe LCRC uses non-reflected CRC-32)
+LCRC_RESIDUE_VALUE = (
+    0x497C2DBF  # Expected residue after processing data+CRC (PCIe LCRC uses non-reflected CRC-32)
+)
 
 # CRC-16 for DLLPs (PCIe Spec 3.4.3)
 DLLP_CRC16_WIDTH = 16  # DLLP CRC is 16 bits
@@ -47,6 +50,7 @@ DLLP_CRC16_POLYNOMIAL = 0x100B  # CRC-16 polynomial for DLLPs
 DLLP_CRC16_INITIAL_VALUE = 0xFFFF  # CRC-16 initial value
 
 # Layouts ------------------------------------------------------------------------------------------
+
 
 def dllp_layout():
     """
@@ -167,6 +171,7 @@ def nak_dllp_layout():
 
 # Helper Functions ---------------------------------------------------------------------------------
 
+
 def calculate_dllp_crc16(data):
     """
     Calculate CRC-16 for DLLP.
@@ -211,9 +216,7 @@ def calculate_dllp_crc16(data):
     PCIe Base Spec 4.0, Section 3.4.3: DLLP CRC
     """
     if len(data) != DLLP_DATA_LENGTH_BYTES:
-        raise ValueError(
-            f"DLLP data must be {DLLP_DATA_LENGTH_BYTES} bytes, got {len(data)}"
-        )
+        raise ValueError(f"DLLP data must be {DLLP_DATA_LENGTH_BYTES} bytes, got {len(data)}")
     if any(b < 0 or b > 255 for b in data):
         raise ValueError("All bytes must be in range 0-255")
 
@@ -250,7 +253,7 @@ def calculate_dllp_crc16(data):
     crc = 0
     for i, bit in enumerate(state):
         if bit:
-            crc |= (1 << i)
+            crc |= 1 << i
 
     return crc
 
@@ -363,7 +366,7 @@ def calculate_lcrc32(data):
     crc = 0
     for i, bit in enumerate(state):
         if bit:
-            crc |= (1 << i)
+            crc |= 1 << i
 
     return crc
 
