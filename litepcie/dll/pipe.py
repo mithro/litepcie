@@ -33,6 +33,9 @@ def pipe_layout_8b(data_width=8):
 
     This defines all PIPE signals for a single lane in 8-bit mode.
 
+    Note: Currently defined for future multi-lane PIPE interfaces. Will be used
+    when implementing x4/x8/x16 PCIe support.
+
     Parameters
     ----------
     data_width : int
@@ -54,12 +57,12 @@ def pipe_layout_8b(data_width=8):
     docs/pipe-interface-spec.md
     """
     return [
-        # TX Interface (MAC � PHY)
+        # TX Interface (MAC -> PHY)
         ("tx_data",     data_width, DIR_M_TO_S),
         ("tx_datak",    1,          DIR_M_TO_S),
         ("tx_elecidle", 1,          DIR_M_TO_S),
 
-        # RX Interface (PHY � MAC)
+        # RX Interface (PHY -> MAC)
         ("rx_data",     data_width, DIR_S_TO_M),
         ("rx_datak",    1,          DIR_S_TO_M),
         ("rx_valid",    1,          DIR_S_TO_M),
@@ -184,12 +187,12 @@ class PIPEInterface(LiteXModule):
         self.dll_rx_source = stream.Endpoint(phy_layout(data_width * 8))
 
         # PIPE-facing interface (raw signals)
-        # TX Interface (MAC � PHY)
+        # TX Interface (MAC -> PHY)
         self.pipe_tx_data = Signal(data_width)
         self.pipe_tx_datak = Signal()
         self.pipe_tx_elecidle = Signal()
 
-        # RX Interface (PHY � MAC)
+        # RX Interface (PHY -> MAC)
         self.pipe_rx_data = Signal(data_width)
         self.pipe_rx_datak = Signal()
         self.pipe_rx_valid = Signal()
@@ -203,11 +206,11 @@ class PIPEInterface(LiteXModule):
 
         # # #
 
-        # TX Path: DLL packets → PIPE symbols
+        # TX Path: DLL packets -> PIPE symbols
         # When no data from DLL, send electrical idle
         self.comb += [
             self.pipe_tx_elecidle.eq(~self.dll_tx_sink.valid),
         ]
 
         # TODO: Implement actual TX data path
-        # TODO: Implement RX path (PIPE symbols → DLL packets)
+        # TODO: Implement RX path (PIPE symbols -> DLL packets)

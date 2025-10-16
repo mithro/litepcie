@@ -13,6 +13,8 @@ Reference: Intel PIPE 3.0 Specification
 """
 
 import unittest
+import tempfile
+import os
 
 from migen import *
 from litex.gen import run_simulation
@@ -78,7 +80,10 @@ class TestPIPETXBehavior(unittest.TestCase):
                 self.assertEqual(elecidle, 1, "Should maintain electrical idle")
 
         dut = PIPEInterface(data_width=8, gen=1)
-        run_simulation(dut, testbench(dut), vcd_name="test_pipe_tx_idle.vcd")
+        # Use temporary directory in project for VCD files to ensure cleanup
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_pipe_tx_idle.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
 if __name__ == "__main__":
