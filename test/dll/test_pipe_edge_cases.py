@@ -20,9 +20,16 @@ import unittest
 from litex.gen import run_simulation
 from migen import *
 
-from litepcie.dll.pipe import PIPEInterface, PIPETXPacketizer, PIPERXDepacketizer
-from litepcie.dll.pipe import PIPE_K27_7_STP, PIPE_K28_2_SDP, PIPE_K29_7_END
-from litepcie.dll.pipe import PIPE_K28_0_SKP, PIPE_K28_5_COM
+from litepcie.dll.pipe import (
+    PIPE_K27_7_STP,
+    PIPE_K28_0_SKP,
+    PIPE_K28_2_SDP,
+    PIPE_K28_5_COM,
+    PIPE_K29_7_END,
+    PIPEInterface,
+    PIPERXDepacketizer,
+    PIPETXPacketizer,
+)
 
 
 class TestPIPETXEdgeCases(unittest.TestCase):

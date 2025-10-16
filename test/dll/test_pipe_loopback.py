@@ -17,8 +17,8 @@ import os
 import tempfile
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 from litepcie.dll.pipe import PIPEInterface
 
@@ -36,6 +36,7 @@ class TestPIPELoopback(unittest.TestCase):
 
         Verify output matches input.
         """
+
         def testbench(dut):
             # Test data
             test_data = 0x0123456789ABCDEF
@@ -61,14 +62,17 @@ class TestPIPELoopback(unittest.TestCase):
                 yield
 
             # Check RX output (should be valid when END symbol is received)
-            rx_valid = (yield dut.dll_rx_source.valid)
-            rx_data = (yield dut.dll_rx_source.dat)
-            rx_first = (yield dut.dll_rx_source.first)
-            rx_last = (yield dut.dll_rx_source.last)
+            rx_valid = yield dut.dll_rx_source.valid
+            rx_data = yield dut.dll_rx_source.dat
+            rx_first = yield dut.dll_rx_source.first
+            rx_last = yield dut.dll_rx_source.last
 
             self.assertEqual(rx_valid, 1, "RX should have valid output")
-            self.assertEqual(rx_data, test_data,
-                f"RX data mismatch: expected 0x{test_data:016X}, got 0x{rx_data:016X}")
+            self.assertEqual(
+                rx_data,
+                test_data,
+                f"RX data mismatch: expected 0x{test_data:016X}, got 0x{rx_data:016X}",
+            )
             self.assertEqual(rx_first, 1, "RX should assert first")
             self.assertEqual(rx_last, 1, "RX should assert last")
 

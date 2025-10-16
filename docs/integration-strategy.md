@@ -359,13 +359,14 @@ Phase 3 created the foundation for external PIPE PHY support:
 - Task 4.8: ✅ RX Depacketizer END detection and packet output
 - Task 4.9: ✅ Integration of TX/RX into PIPE interface
 - Task 4.10: ✅ Loopback testing (TX → RX verification)
-- Task 4.11: ✅ Full test suite validation (71/71 DLL tests passing)
+- Task 4.11: ✅ Full test suite validation (82/82 DLL tests passing)
 
 Phase 4 implemented functional TX/RX data paths:
 - TX: 64-bit DLL packets → 8-bit PIPE symbols with START/DATA/END framing
 - RX: 8-bit PIPE symbols → 64-bit DLL packets with symbol detection
 - Loopback: Complete end-to-end TX → RX verification
-- Test coverage: 15 new tests, all passing (100% success rate)
+- Test coverage: 26 PIPE tests + 56 existing DLL tests, all passing (100% success rate)
+- Code coverage: litepcie/dll/pipe.py at 99% (77 statements, 1 missed), overall DLL at 98%
 - Code quality: TDD approach, comprehensive docstrings, PCIe spec references
 
 ### Phase 2: PIPE Interface (Archived - merged into Phase 3)

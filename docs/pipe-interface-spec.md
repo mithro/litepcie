@@ -272,14 +272,13 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
   - DLL integration (work in progress)
 
 **Test Coverage:**
-- 30 PIPE-specific tests (all passing)
-- TX Packetizer: 6 tests (structure, START, DATA, END, validation, edge cases)
-- RX Depacketizer: 6 tests (structure, START, DATA, END, validation, edge cases)
-- Integration: 4 tests (loopback, TX/RX, multi-packet, K-char data)
-- External PHY: 4 tests (structure, validation)
-- Interface: 7 tests (structure, behavior, validation)
-- Edge Cases: 8 tests (TX/RX/integration edge scenarios)
-- Code coverage: 99% (pipe.py), 96% (pipe_external_phy.py)
+- 26 PIPE-specific tests (all passing, 100% success rate)
+- TX Packetizer: 5 tests (structure, START for TLP/DLLP, DATA, END)
+- RX Depacketizer: 5 tests (structure, START for TLP/DLLP, DATA, END)
+- Integration: 6 tests (interface structure, TX behavior, TX/RX integration, loopback, parameter validation)
+- Edge Cases: 8 tests (TX: all-zeros/ones/back-to-back; RX: invalid K-char/K-char in data/missing END; Integration: multi-packet/K-char data)
+- External PHY: 2 tests (structure validation)
+- Code coverage: 99% (pipe.py - 77 statements, 1 missed), 92% (pipe_external_phy.py)
 
 **Documentation:**
 - [PIPE Interface User Guide](pipe-interface-guide.md) - Complete API reference and usage guide

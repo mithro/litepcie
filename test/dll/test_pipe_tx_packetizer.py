@@ -17,11 +17,10 @@ import os
 import tempfile
 import unittest
 
-from migen import *
 from litex.gen import run_simulation
+from migen import *
 
 from litepcie.dll.pipe import PIPETXPacketizer
-from litepcie.common import phy_layout
 
 
 class TestPIPETXPacketizerStructure(unittest.TestCase):
@@ -53,6 +52,7 @@ class TestPIPETXPacketizerStart(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2.1: START Framing
         """
+
         def testbench(dut):
             # Prepare TLP data (first byte = 0xEF in little-endian, indicating TLP)
             tlp_data = 0x0123456789ABCDEF  # 64-bit TLP data
@@ -68,8 +68,8 @@ class TestPIPETXPacketizerStart(unittest.TestCase):
             yield
 
             # Check START symbol (STP)
-            tx_data = (yield dut.pipe_tx_data)
-            tx_datak = (yield dut.pipe_tx_datak)
+            tx_data = yield dut.pipe_tx_data
+            tx_datak = yield dut.pipe_tx_datak
             self.assertEqual(tx_data, 0xFB, "Should send STP (0xFB)")
             self.assertEqual(tx_datak, 1, "STP should be K-character")
 
@@ -86,6 +86,7 @@ class TestPIPETXPacketizerStart(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 3.3.1: DLLP Format
         """
+
         def testbench(dut):
             # Prepare DLLP data (first byte = 0x34 in little-endian, type check uses bits [7:6])
             dllp_data = 0x00000000ABCD1234  # 64-bit DLLP data
@@ -101,8 +102,8 @@ class TestPIPETXPacketizerStart(unittest.TestCase):
             yield
 
             # Check START symbol (SDP)
-            tx_data = (yield dut.pipe_tx_data)
-            tx_datak = (yield dut.pipe_tx_datak)
+            tx_data = yield dut.pipe_tx_data
+            tx_datak = yield dut.pipe_tx_datak
             self.assertEqual(tx_data, 0x5C, "Should send SDP (0x5C)")
             self.assertEqual(tx_datak, 1, "SDP should be K-character")
 
@@ -132,6 +133,7 @@ class TestPIPETXPacketizerData(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2: Symbol Encoding
         """
+
         def testbench(dut):
             # Send 64-bit data packet
             # Data: 0x0123456789ABCDEF
@@ -148,8 +150,8 @@ class TestPIPETXPacketizerData(unittest.TestCase):
 
             # Cycle 1: START symbol (STP) appears
             yield
-            tx_data = (yield dut.pipe_tx_data)
-            tx_datak = (yield dut.pipe_tx_datak)
+            tx_data = yield dut.pipe_tx_data
+            tx_datak = yield dut.pipe_tx_datak
             self.assertEqual(tx_data, 0xFB, "Should send STP")
             self.assertEqual(tx_datak, 1, "STP should be K-character")
 
@@ -157,8 +159,8 @@ class TestPIPETXPacketizerData(unittest.TestCase):
             expected_bytes = [0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01]
             for i, expected in enumerate(expected_bytes):
                 yield
-                tx_data = (yield dut.pipe_tx_data)
-                tx_datak = (yield dut.pipe_tx_datak)
+                tx_data = yield dut.pipe_tx_data
+                tx_datak = yield dut.pipe_tx_datak
                 self.assertEqual(tx_data, expected, f"Byte {i} should be 0x{expected:02X}")
                 self.assertEqual(tx_datak, 0, f"Byte {i} should not be K-char")
 
@@ -188,6 +190,7 @@ class TestPIPETXPacketizerEnd(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2.2: END Framing
         """
+
         def testbench(dut):
             # Send 64-bit data packet with last=1
             tlp_data = 0x0123456789ABCDEF
@@ -209,8 +212,8 @@ class TestPIPETXPacketizerEnd(unittest.TestCase):
                 yield
 
             # Cycle 11: Check END symbol
-            tx_data = (yield dut.pipe_tx_data)
-            tx_datak = (yield dut.pipe_tx_datak)
+            tx_data = yield dut.pipe_tx_data
+            tx_datak = yield dut.pipe_tx_datak
             self.assertEqual(tx_data, 0xFD, "Should send END (0xFD)")
             self.assertEqual(tx_datak, 1, "END should be K-character")
 
