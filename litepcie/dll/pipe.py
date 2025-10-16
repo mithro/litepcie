@@ -105,6 +105,60 @@ PIPE_K28_2_SDP = 0x5C  # Start DLLP
 PIPE_K29_7_END = 0xFD  # End packet
 PIPE_K30_7_EDB = 0xFE  # End bad packet
 
+# PIPE TX Packetizer -------------------------------------------------------------------------------
+
+
+class PIPETXPacketizer(LiteXModule):
+    """
+    PIPE TX packetizer (DLL packets → PIPE symbols).
+
+    Converts 64-bit DLL packets to 8-bit PIPE symbols with K-character framing.
+
+    Parameters
+    ----------
+    None
+
+    Attributes
+    ----------
+    sink : Endpoint(phy_layout(64)), input
+        DLL packets to transmit
+    pipe_tx_data : Signal(8), output
+        PIPE TX data (8-bit symbol)
+    pipe_tx_datak : Signal(1), output
+        PIPE TX K-character indicator
+
+    Protocol
+    --------
+    When sink.valid & sink.first:
+        - Determine packet type from sink.dat[0:8]
+        - Send STP (0xFB, K=1) for TLP
+        - Send SDP (0x5C, K=1) for DLLP
+    Then:
+        - Send data bytes (K=0) from sink.dat
+    When sink.last:
+        - Send END (0xFD, K=1) for good packet
+        - Send EDB (0xFE, K=1) for bad packet (not implemented yet)
+
+    References
+    ----------
+    - PCIe Base Spec 4.0, Section 4.2.2: Symbol Encoding
+    - PCIe Base Spec 4.0, Section 4.2.3: Framing
+    """
+
+    def __init__(self):
+        # DLL-facing input (64-bit packets)
+        self.sink = stream.Endpoint(phy_layout(64))
+
+        # PIPE-facing output (8-bit symbols)
+        self.pipe_tx_data = Signal(8)
+        self.pipe_tx_datak = Signal()
+
+        # # #
+
+        # TODO: Implement packetizer FSM
+        # States: IDLE, START, DATA, END
+
+
 # PIPE Interface -----------------------------------------------------------------------------------
 
 
