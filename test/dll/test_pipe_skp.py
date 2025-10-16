@@ -46,5 +46,62 @@ class TestPIPETXSKPGeneration(unittest.TestCase):
         self.assertTrue(hasattr(dut, "skp_interval"))
 
 
+class TestPIPETXSKPInsertion(unittest.TestCase):
+    """Test SKP insertion behavior."""
+
+    def test_tx_inserts_skp_at_interval(self):
+        """
+        TX should insert SKP ordered set every N symbols.
+
+        SKP Ordered Set (4 symbols):
+        1. COM (0xBC, K=1)
+        2. SKP (0x1C, K=1)
+        3. SKP (0x1C, K=1)
+        4. SKP (0x1C, K=1)
+
+        Test with small interval (16 symbols) for quick verification.
+        """
+        def testbench(dut):
+            # Scan for SKP ordered set (COM followed by 3x SKP)
+            found_skp = False
+
+            for cycle in range(30):  # Scan first 30 cycles
+                yield
+                tx_data = yield dut.pipe_tx_data
+                tx_datak = yield dut.pipe_tx_datak
+
+                # Look for COM symbol (start of SKP ordered set)
+                if tx_data == 0xBC and tx_datak == 1:
+                    # Found COM, verify next 3 symbols are SKP
+                    yield
+                    skp1_data = yield dut.pipe_tx_data
+                    skp1_datak = yield dut.pipe_tx_datak
+
+                    yield
+                    skp2_data = yield dut.pipe_tx_data
+                    skp2_datak = yield dut.pipe_tx_datak
+
+                    yield
+                    skp3_data = yield dut.pipe_tx_data
+                    skp3_datak = yield dut.pipe_tx_datak
+
+                    # Verify all 3 are SKP (0x1C, K=1)
+                    if (
+                        skp1_data == 0x1C and skp1_datak == 1
+                        and skp2_data == 0x1C and skp2_datak == 1
+                        and skp3_data == 0x1C and skp3_datak == 1
+                    ):
+                        found_skp = True
+                        break
+
+            self.assertTrue(found_skp, "Should find SKP ordered set within 30 cycles")
+
+        # Use small interval for testing
+        dut = PIPETXPacketizer(enable_skp=True, skp_interval=16)
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_skp_insertion.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
 if __name__ == "__main__":
     unittest.main()

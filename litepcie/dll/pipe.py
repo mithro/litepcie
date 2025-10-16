@@ -199,29 +199,86 @@ class PIPETXPacketizer(LiteXModule):
             ]
         )
 
-        self.fsm.act(
-            "IDLE",
-            # When packet starts, transition to START and output START symbol
-            If(
-                self.sink.valid & self.sink.first,
+        # SKP symbol counter (if enabled)
+        if enable_skp:
+            # SKP ordered set counter (0-3 for 4 symbols)
+            skp_symbol_counter = Signal(2)
+
+            # Increment SKP counter in IDLE/END states
+            self.sync += [
                 If(
-                    is_dllp,
-                    # DLLP: Send SDP (0x5C, K=1)
-                    NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
-                    NextValue(self.pipe_tx_datak, 1),
-                ).Else(
-                    # TLP: Send STP (0xFB, K=1)
-                    NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
-                    NextValue(self.pipe_tx_datak, 1),
+                    self.fsm.ongoing("IDLE") | self.fsm.ongoing("END"),
+                    # Increment counter when not actively sending packet
+                    If(
+                        self.skp_counter < skp_interval,
+                        self.skp_counter.eq(self.skp_counter + 1),
+                    ),
+                    # Note: Don't reset here - let it stay at skp_interval
+                    # until SKP state resets it
+                ).Elif(
+                    self.fsm.ongoing("SKP") & (skp_symbol_counter == 0),
+                    # Reset counter at start of SKP transmission
+                    self.skp_counter.eq(0),
                 ),
-                NextValue(byte_counter, 0),
-                NextState("DATA"),
-            ).Else(
-                # Default: output idle (data=0, K=0)
-                NextValue(self.pipe_tx_data, 0x00),
-                NextValue(self.pipe_tx_datak, 0),
-            ),
-        )
+            ]
+
+        # Build IDLE state with optional SKP check
+        idle_actions = []
+
+        if enable_skp:
+            # Check if SKP needs to be inserted (highest priority)
+            idle_actions.append(
+                If(
+                    self.skp_counter >= skp_interval,
+                    NextState("SKP"),
+                ).Else(
+                    # Normal packet/idle handling
+                    If(
+                        self.sink.valid & self.sink.first,
+                        If(
+                            is_dllp,
+                            # DLLP: Send SDP (0x5C, K=1)
+                            NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ).Else(
+                            # TLP: Send STP (0xFB, K=1)
+                            NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ),
+                        NextValue(byte_counter, 0),
+                        NextState("DATA"),
+                    ).Else(
+                        # Default: output idle (data=0, K=0)
+                        NextValue(self.pipe_tx_data, 0x00),
+                        NextValue(self.pipe_tx_datak, 0),
+                    ),
+                )
+            )
+        else:
+            # No SKP, just normal handling
+            idle_actions.append(
+                If(
+                    self.sink.valid & self.sink.first,
+                    If(
+                        is_dllp,
+                        # DLLP: Send SDP (0x5C, K=1)
+                        NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
+                        NextValue(self.pipe_tx_datak, 1),
+                    ).Else(
+                        # TLP: Send STP (0xFB, K=1)
+                        NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
+                        NextValue(self.pipe_tx_datak, 1),
+                    ),
+                    NextValue(byte_counter, 0),
+                    NextState("DATA"),
+                ).Else(
+                    # Default: output idle (data=0, K=0)
+                    NextValue(self.pipe_tx_data, 0x00),
+                    NextValue(self.pipe_tx_datak, 0),
+                )
+            )
+
+        self.fsm.act("IDLE", *idle_actions)
 
         self.fsm.act(
             "DATA",
@@ -242,6 +299,41 @@ class PIPETXPacketizer(LiteXModule):
             NextValue(self.pipe_tx_datak, 1),
             NextState("IDLE"),
         )
+
+        # SKP state (if enabled)
+        if enable_skp:
+            self.fsm.act(
+                "SKP",
+                # Send SKP ordered set: COM, SKP, SKP, SKP
+                Case(
+                    skp_symbol_counter,
+                    {
+                        0: [  # COM symbol
+                            NextValue(self.pipe_tx_data, PIPE_K28_5_COM),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ],
+                        1: [  # SKP symbol
+                            NextValue(self.pipe_tx_data, PIPE_K28_0_SKP),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ],
+                        2: [  # SKP symbol
+                            NextValue(self.pipe_tx_data, PIPE_K28_0_SKP),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ],
+                        3: [  # SKP symbol
+                            NextValue(self.pipe_tx_data, PIPE_K28_0_SKP),
+                            NextValue(self.pipe_tx_datak, 1),
+                        ],
+                    },
+                ),
+                NextValue(skp_symbol_counter, skp_symbol_counter + 1),
+                # After 4 symbols, return to IDLE
+                If(
+                    skp_symbol_counter == 3,
+                    NextValue(skp_symbol_counter, 0),
+                    NextState("IDLE"),
+                ),
+            )
 
 
 # PIPE RX Depacketizer -------------------------------------------------------------------------------
