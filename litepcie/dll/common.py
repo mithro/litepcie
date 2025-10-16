@@ -39,6 +39,7 @@ DLLP_DATA_LENGTH_BYTES = 6  # DLLP data (excluding CRC-16)
 LCRC_WIDTH = 32  # LCRC is 32-bit CRC
 LCRC_POLYNOMIAL = 0x04C11DB7  # CRC-32 polynomial (Ethernet polynomial)
 LCRC_INITIAL_VALUE = 0xFFFFFFFF  # LCRC initial value
+LCRC_RESIDUE_VALUE = 0x2144DF1C  # Expected residue after processing data+CRC (CRC-32 magic number)
 
 # CRC-16 for DLLPs (PCIe Spec 3.4.3)
 DLLP_CRC16_WIDTH = 16  # DLLP CRC is 16 bits
@@ -193,6 +194,11 @@ def calculate_dllp_crc16(data):
     -----
     CRC-16 polynomial: 0x100B
     Initial value: 0xFFFF
+    Bit ordering: LSB-first (matches LiteX parallel LFSR convention)
+
+    This implementation processes bits LSB-first (bit 0, then bit 1, etc.)
+    to match the hardware parallel LFSR used in LiteX ecosystem. Both
+    transmitter and receiver use the same convention for consistency.
 
     Examples
     --------
@@ -211,17 +217,40 @@ def calculate_dllp_crc16(data):
     if any(b < 0 or b > 255 for b in data):
         raise ValueError("All bytes must be in range 0-255")
 
-    # CRC-16 calculation (iterative bit-by-bit)
+    # CRC-16 calculation (LSB-first to match hardware parallel LFSR)
+    # This matches the LiteX parallel LFSR convention used in hardware
     crc = DLLP_CRC16_INITIAL_VALUE
     polynomial = DLLP_CRC16_POLYNOMIAL
 
+    # Extract polynomial tap positions
+    polynom_taps = [bit for bit in range(16) if (1 << bit) & polynomial]
+
+    # Convert CRC to bit array (LSB first)
+    state = [(crc >> i) & 1 for i in range(16)]
+
     for byte in data:
-        crc ^= (byte << 8)  # XOR byte into top 8 bits of CRC
-        for _ in range(8):
-            if crc & 0x8000:  # Check MSB
-                crc = ((crc << 1) ^ polynomial) & 0xFFFF
-            else:
-                crc = (crc << 1) & 0xFFFF
+        # Process each bit LSB-first (bit 0, then bit 1, ... bit 7)
+        for bit_idx in range(8):
+            din_bit = (byte >> bit_idx) & 1
+
+            # Compute feedback (MSB of state XOR with input bit)
+            feedback = state[-1] ^ din_bit
+
+            # Shift state and apply polynomial
+            new_state = [feedback]  # New LSB is feedback
+            for pos in range(15):  # Positions 0 to 14
+                if (pos + 1) in polynom_taps:
+                    new_state.append(state[pos] ^ feedback)
+                else:
+                    new_state.append(state[pos])
+
+            state = new_state
+
+    # Convert bit array back to integer
+    crc = 0
+    for i, bit in enumerate(state):
+        if bit:
+            crc |= (1 << i)
 
     return crc
 
@@ -252,4 +281,121 @@ def verify_dllp_crc16(data, crc):
     False
     """
     expected_crc = calculate_dllp_crc16(data)
+    return crc == expected_crc
+
+
+def calculate_lcrc32(data):
+    """
+    Calculate LCRC-32 for TLP.
+
+    This is a software implementation for testing. Hardware implementation
+    is in litepcie/dll/lcrc.py.
+
+    Parameters
+    ----------
+    data : list[int]
+        TLP data bytes (variable length)
+
+    Returns
+    -------
+    int
+        LCRC-32 value (32 bits)
+
+    Raises
+    ------
+    ValueError
+        If data is empty
+        If any byte is out of range 0-255
+
+    Notes
+    -----
+    LCRC-32 polynomial: 0x04C11DB7 (Ethernet CRC-32)
+    Initial value: 0xFFFFFFFF
+    Bit ordering: LSB-first (matches LiteX parallel LFSR convention)
+
+    This implementation processes bits LSB-first (bit 0, then bit 1, etc.)
+    to match the hardware parallel LFSR used in LiteX ecosystem.
+
+    Examples
+    --------
+    >>> data = [0xDE, 0xAD, 0xBE, 0xEF]
+    >>> crc = calculate_lcrc32(data)
+    >>> print(f"LCRC-32: 0x{crc:08X}")
+
+    References
+    ----------
+    PCIe Base Spec 4.0, Section 3.3.4: LCRC
+    """
+    if len(data) == 0:
+        raise ValueError("LCRC data cannot be empty")
+    if any(b < 0 or b > 255 for b in data):
+        raise ValueError("All bytes must be in range 0-255")
+
+    # LCRC-32 calculation (LSB-first to match hardware parallel LFSR)
+    crc = LCRC_INITIAL_VALUE
+    polynomial = LCRC_POLYNOMIAL
+
+    # Extract polynomial tap positions
+    polynom_taps = [bit for bit in range(32) if (1 << bit) & polynomial]
+
+    # Convert CRC to bit array (LSB first)
+    state = [(crc >> i) & 1 for i in range(32)]
+
+    for byte in data:
+        # Process each bit LSB-first (bit 0, then bit 1, ... bit 7)
+        for bit_idx in range(8):
+            din_bit = (byte >> bit_idx) & 1
+
+            # Compute feedback (MSB of state XOR with input bit)
+            feedback = state[-1] ^ din_bit
+
+            # Shift state and apply polynomial
+            new_state = [feedback]  # New LSB is feedback
+            for pos in range(31):  # Positions 0 to 30
+                if (pos + 1) in polynom_taps:
+                    new_state.append(state[pos] ^ feedback)
+                else:
+                    new_state.append(state[pos])
+
+            state = new_state
+
+    # Convert bit array back to integer
+    crc = 0
+    for i, bit in enumerate(state):
+        if bit:
+            crc |= (1 << i)
+
+    return crc
+
+
+def verify_lcrc32(data, crc):
+    """
+    Verify LCRC-32 for TLP.
+
+    Parameters
+    ----------
+    data : list[int]
+        TLP data bytes
+    crc : int
+        Received LCRC-32 value
+
+    Returns
+    -------
+    bool
+        True if CRC is correct, False otherwise
+
+    Examples
+    --------
+    >>> data = [0xDE, 0xAD, 0xBE, 0xEF]
+    >>> crc = calculate_lcrc32(data)
+    >>> verify_lcrc32(data, crc)
+    True
+    >>> verify_lcrc32(data, crc + 1)
+    False
+
+    References
+    ----------
+    PCIe Base Spec 4.0, Section 3.3.4: LCRC
+    """
+    expected_crc = calculate_lcrc32(data)
     return crc == expected_crc
