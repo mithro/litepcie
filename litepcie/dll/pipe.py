@@ -444,11 +444,33 @@ class PIPEInterface(LiteXModule):
 
         # # #
 
-        # TX Path: DLL packets -> PIPE symbols
-        # When no data from DLL, send electrical idle
+        # TX Path: DLL packets → PIPE symbols
+        self.submodules.tx_packetizer = tx_packetizer = PIPETXPacketizer()
+
+        # Connect DLL TX sink to packetizer
+        self.comb += self.dll_tx_sink.connect(tx_packetizer.sink)
+
+        # Connect packetizer output to PIPE TX
         self.comb += [
-            self.pipe_tx_elecidle.eq(~self.dll_tx_sink.valid),
+            self.pipe_tx_data.eq(tx_packetizer.pipe_tx_data),
+            self.pipe_tx_datak.eq(tx_packetizer.pipe_tx_datak),
         ]
 
-        # TODO: Implement actual TX data path
-        # TODO: Implement RX path (PIPE symbols -> DLL packets)
+        # When no data, send electrical idle
+        self.comb += [
+            If(~tx_packetizer.sink.valid,
+                self.pipe_tx_elecidle.eq(1),
+            )
+        ]
+
+        # RX Path: PIPE symbols → DLL packets
+        self.submodules.rx_depacketizer = rx_depacketizer = PIPERXDepacketizer()
+
+        # Connect PIPE RX to depacketizer
+        self.comb += [
+            rx_depacketizer.pipe_rx_data.eq(self.pipe_rx_data),
+            rx_depacketizer.pipe_rx_datak.eq(self.pipe_rx_datak),
+        ]
+
+        # Connect depacketizer output to DLL RX source
+        self.comb += rx_depacketizer.source.connect(self.dll_rx_source)

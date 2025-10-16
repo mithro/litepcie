@@ -87,5 +87,19 @@ class TestPIPETXBehavior(unittest.TestCase):
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
+class TestPIPEInterfaceTXRX(unittest.TestCase):
+    """Test TX/RX integration."""
+
+    def test_pipe_interface_has_tx_rx(self):
+        """PIPE interface should have TX and RX components."""
+        dut = PIPEInterface(data_width=8, gen=1)
+
+        # Should have TX packetizer
+        self.assertTrue(hasattr(dut, "tx_packetizer"))
+
+        # Should have RX depacketizer
+        self.assertTrue(hasattr(dut, "rx_depacketizer"))
+
+
 if __name__ == "__main__":
     unittest.main()
