@@ -226,6 +226,60 @@ class PIPETXPacketizer(LiteXModule):
         )
 
 
+# PIPE RX Depacketizer -------------------------------------------------------------------------------
+
+
+class PIPERXDepacketizer(LiteXModule):
+    """
+    PIPE RX depacketizer (PIPE symbols → DLL packets).
+
+    Converts 8-bit PIPE symbols to 64-bit DLL packets by detecting K-character
+    framing and accumulating data bytes.
+
+    Parameters
+    ----------
+    None
+
+    Attributes
+    ----------
+    pipe_rx_data : Signal(8), input
+        PIPE RX data (8-bit symbol)
+    pipe_rx_datak : Signal(1), input
+        PIPE RX K-character indicator
+    source : Endpoint(phy_layout(64)), output
+        DLL packets output
+
+    Protocol
+    --------
+    When pipe_rx_datak & (pipe_rx_data == STP or SDP):
+        - Detect packet start and type
+        - Begin accumulating data bytes
+    While accumulating:
+        - Collect 8 data bytes (K=0) into 64-bit word
+    When pipe_rx_datak & (pipe_rx_data == END):
+        - Output completed packet on source endpoint
+        - Assert source.valid, source.first, source.last
+
+    References
+    ----------
+    - PCIe Base Spec 4.0, Section 4.2.2: Symbol Encoding
+    - PCIe Base Spec 4.0, Section 4.2.3: Framing
+    """
+
+    def __init__(self):
+        # PIPE-facing input (8-bit symbols)
+        self.pipe_rx_data = Signal(8)
+        self.pipe_rx_datak = Signal()
+
+        # DLL-facing output (64-bit packets)
+        self.source = stream.Endpoint(phy_layout(64))
+
+        # # #
+
+        # TODO: Implement depacketizer FSM
+        # States: IDLE, DATA, END
+
+
 # PIPE Interface -----------------------------------------------------------------------------------
 
 
