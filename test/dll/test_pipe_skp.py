@@ -21,7 +21,7 @@ import unittest
 from litex.gen import run_simulation
 from migen import *
 
-from litepcie.dll.pipe import PIPETXPacketizer
+from litepcie.dll.pipe import PIPETXPacketizer, PIPERXDepacketizer
 
 
 class TestPIPETXSKPGeneration(unittest.TestCase):
@@ -100,6 +100,57 @@ class TestPIPETXSKPInsertion(unittest.TestCase):
         dut = PIPETXPacketizer(enable_skp=True, skp_interval=16)
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             vcd_path = os.path.join(tmpdir, "test_skp_insertion.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
+class TestPIPERXSKPDetection(unittest.TestCase):
+    """Test SKP detection and handling in RX path."""
+
+    def test_rx_detects_and_skips_skp_ordered_set(self):
+        """
+        RX should detect SKP ordered set and skip it (not output to DLL).
+
+        SKP is transparent to upper layers - inserted/removed by Physical Layer.
+
+        Reference: PCIe Spec 4.0, Section 4.2.7.2
+        """
+        def testbench(dut):
+            # Send SKP ordered set: COM + 3xSKP
+            yield dut.pipe_rx_data.eq(0xBC)  # COM (K28.5)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Send 3x SKP
+            for _ in range(3):
+                yield dut.pipe_rx_data.eq(0x1C)  # SKP (K28.0)
+                yield dut.pipe_rx_datak.eq(1)
+                yield
+
+            # After SKP, send a TLP packet
+            # START symbol (STP)
+            yield dut.pipe_rx_data.eq(0xFB)  # STP (K27.7)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Send 8 data bytes
+            data_bytes = [0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x11, 0x22]
+            for byte_val in data_bytes:
+                yield dut.pipe_rx_data.eq(byte_val)
+                yield dut.pipe_rx_datak.eq(0)
+                yield
+
+            # END symbol
+            yield dut.pipe_rx_data.eq(0xFD)  # END (K29.7)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Check packet output
+            source_valid = yield dut.source.valid
+            self.assertEqual(source_valid, 1, "Should have packet output after SKP")
+
+        dut = PIPERXDepacketizer()
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_rx_skp.vcd")
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 

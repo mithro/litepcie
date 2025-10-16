@@ -404,9 +404,12 @@ class PIPERXDepacketizer(LiteXModule):
             self.debug_data_buffer = Signal(64)
             self.comb += self.debug_data_buffer.eq(data_buffer)
 
+        # SKP ordered set detection
+        skp_check_counter = Signal(2)  # Count 3 SKP symbols after COM
+
         self.fsm.act(
             "IDLE",
-            # Wait for START symbol
+            # Wait for START symbol or SKP ordered set
             If(
                 self.pipe_rx_datak,
                 If(
@@ -421,8 +424,35 @@ class PIPERXDepacketizer(LiteXModule):
                     NextValue(is_tlp, 0),
                     NextValue(byte_counter, 0),  # Reset counter
                     NextState("DATA"),
+                ).Elif(
+                    self.pipe_rx_data == PIPE_K28_5_COM,
+                    # COM: Possible SKP ordered set, transition to SKP_CHECK
+                    NextState("SKP_CHECK"),
                 ),
-                # Ignore other K-characters (SKP, COM, etc.)
+                # Ignore other K-characters
+            ),
+        )
+
+        self.fsm.act(
+            "SKP_CHECK",
+            # Verify next 3 symbols are SKP
+            If(
+                self.pipe_rx_datak & (self.pipe_rx_data == PIPE_K28_0_SKP),
+                # Valid SKP symbol
+                If(
+                    skp_check_counter == 2,  # This is the 3rd SKP
+                    # Complete SKP ordered set detected, return to IDLE
+                    NextValue(skp_check_counter, 0),
+                    NextState("IDLE"),
+                ).Else(
+                    # Not the 3rd SKP yet, continue counting
+                    NextValue(skp_check_counter, skp_check_counter + 1),
+                ),
+            ).Else(
+                # Not a valid SKP ordered set, return to IDLE
+                # (May have been COM for different purpose)
+                NextValue(skp_check_counter, 0),
+                NextState("IDLE"),
             ),
         )
 
