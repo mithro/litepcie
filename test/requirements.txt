@@ -1,0 +1,12 @@
+# LiteX and dependencies
+migen>=0.9
+litex>=2023.12
+
+# Testing frameworks
+pytest>=7.4
+pytest-cov>=4.1
+cocotb>=1.8
+cocotb-test>=0.2
+
+# Utilities
+pyvcd>=0.3  # Waveform generation
