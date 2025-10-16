@@ -171,21 +171,26 @@ class PIPETXPacketizer(LiteXModule):
         byte_counter = Signal(3)
 
         # Array for byte selection (little-endian ordering)
-        byte_array = Array([
-            self.sink.dat[0:8],    # Byte 0 (LSB)
-            self.sink.dat[8:16],   # Byte 1
-            self.sink.dat[16:24],  # Byte 2
-            self.sink.dat[24:32],  # Byte 3
-            self.sink.dat[32:40],  # Byte 4
-            self.sink.dat[40:48],  # Byte 5
-            self.sink.dat[48:56],  # Byte 6
-            self.sink.dat[56:64],  # Byte 7 (MSB)
-        ])
+        byte_array = Array(
+            [
+                self.sink.dat[0:8],  # Byte 0 (LSB)
+                self.sink.dat[8:16],  # Byte 1
+                self.sink.dat[16:24],  # Byte 2
+                self.sink.dat[24:32],  # Byte 3
+                self.sink.dat[32:40],  # Byte 4
+                self.sink.dat[40:48],  # Byte 5
+                self.sink.dat[48:56],  # Byte 6
+                self.sink.dat[56:64],  # Byte 7 (MSB)
+            ]
+        )
 
-        self.fsm.act("IDLE",
+        self.fsm.act(
+            "IDLE",
             # When packet starts, transition to START and output START symbol
-            If(self.sink.valid & self.sink.first,
-                If(is_dllp,
+            If(
+                self.sink.valid & self.sink.first,
+                If(
+                    is_dllp,
                     # DLLP: Send SDP (0x5C, K=1)
                     NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
                     NextValue(self.pipe_tx_datak, 1),
@@ -195,34 +200,32 @@ class PIPETXPacketizer(LiteXModule):
                     NextValue(self.pipe_tx_datak, 1),
                 ),
                 NextValue(byte_counter, 0),
-                NextState("DATA")
+                NextState("DATA"),
             ).Else(
                 # Default: output idle (data=0, K=0)
                 NextValue(self.pipe_tx_data, 0x00),
                 NextValue(self.pipe_tx_datak, 0),
-            )
+            ),
         )
 
-        self.fsm.act("DATA",
+        self.fsm.act(
+            "DATA",
             # Transmit data bytes from sink.dat
             # Output current byte (data, not K-character)
             NextValue(self.pipe_tx_data, byte_array[byte_counter]),
             NextValue(self.pipe_tx_datak, 0),
-
             # Increment byte counter
             NextValue(byte_counter, byte_counter + 1),
-
             # After 8 bytes (counter reaches 7), transition to END state
-            If(byte_counter == 7,
-                NextState("END")
-            )
+            If(byte_counter == 7, NextState("END")),
         )
 
-        self.fsm.act("END",
+        self.fsm.act(
+            "END",
             # Send END symbol (0xFD, K=1) to mark packet completion
             NextValue(self.pipe_tx_data, PIPE_K29_7_END),
             NextValue(self.pipe_tx_datak, 1),
-            NextState("IDLE")
+            NextState("IDLE"),
         )
 
 
@@ -238,7 +241,8 @@ class PIPERXDepacketizer(LiteXModule):
 
     Parameters
     ----------
-    None
+    debug : bool, optional
+        Enable debug signals for testing (default: False)
 
     Attributes
     ----------
@@ -248,6 +252,8 @@ class PIPERXDepacketizer(LiteXModule):
         PIPE RX K-character indicator
     source : Endpoint(phy_layout(64)), output
         DLL packets output
+    debug_data_buffer : Signal(64), output (only when debug=True)
+        Internal data buffer for test verification
 
     Protocol
     --------
@@ -266,7 +272,7 @@ class PIPERXDepacketizer(LiteXModule):
     - PCIe Base Spec 4.0, Section 4.2.3: Framing
     """
 
-    def __init__(self):
+    def __init__(self, debug=False):
         # PIPE-facing input (8-bit symbols)
         self.pipe_rx_data = Signal(8)
         self.pipe_rx_datak = Signal()
@@ -286,57 +292,68 @@ class PIPERXDepacketizer(LiteXModule):
         byte_counter = Signal(3)  # 0-7 for 8 bytes
         data_buffer = Signal(64)  # Accumulate 8-bit symbols into 64-bit word
 
-        # Debug signal for testing (expose internal buffer)
-        self.debug_data_buffer = Signal(64)
-        self.comb += self.debug_data_buffer.eq(data_buffer)
+        # Debug signal (only when debug=True, for testing)
+        if debug:
+            self.debug_data_buffer = Signal(64)
+            self.comb += self.debug_data_buffer.eq(data_buffer)
 
-        self.fsm.act("IDLE",
+        self.fsm.act(
+            "IDLE",
             # Wait for START symbol
-            If(self.pipe_rx_datak,
-                If(self.pipe_rx_data == PIPE_K27_7_STP,
+            If(
+                self.pipe_rx_datak,
+                If(
+                    self.pipe_rx_data == PIPE_K27_7_STP,
                     # STP: TLP start detected
                     NextValue(is_tlp, 1),
                     NextValue(byte_counter, 0),  # Reset counter
-                    NextState("DATA")
-                ).Elif(self.pipe_rx_data == PIPE_K28_2_SDP,
+                    NextState("DATA"),
+                ).Elif(
+                    self.pipe_rx_data == PIPE_K28_2_SDP,
                     # SDP: DLLP start detected
                     NextValue(is_tlp, 0),
                     NextValue(byte_counter, 0),  # Reset counter
-                    NextState("DATA")
-                )
+                    NextState("DATA"),
+                ),
                 # Ignore other K-characters (SKP, COM, etc.)
-            )
+            ),
         )
 
-        self.fsm.act("DATA",
+        self.fsm.act(
+            "DATA",
             # Accumulate data bytes (not K-characters)
-            If(~self.pipe_rx_datak,
+            If(
+                ~self.pipe_rx_datak,
                 # Store byte in little-endian order
-                Case(byte_counter, {
-                    0: NextValue(data_buffer[0:8],   self.pipe_rx_data),
-                    1: NextValue(data_buffer[8:16],  self.pipe_rx_data),
-                    2: NextValue(data_buffer[16:24], self.pipe_rx_data),
-                    3: NextValue(data_buffer[24:32], self.pipe_rx_data),
-                    4: NextValue(data_buffer[32:40], self.pipe_rx_data),
-                    5: NextValue(data_buffer[40:48], self.pipe_rx_data),
-                    6: NextValue(data_buffer[48:56], self.pipe_rx_data),
-                    7: NextValue(data_buffer[56:64], self.pipe_rx_data),
-                }),
+                Case(
+                    byte_counter,
+                    {
+                        0: NextValue(data_buffer[0:8], self.pipe_rx_data),
+                        1: NextValue(data_buffer[8:16], self.pipe_rx_data),
+                        2: NextValue(data_buffer[16:24], self.pipe_rx_data),
+                        3: NextValue(data_buffer[24:32], self.pipe_rx_data),
+                        4: NextValue(data_buffer[32:40], self.pipe_rx_data),
+                        5: NextValue(data_buffer[40:48], self.pipe_rx_data),
+                        6: NextValue(data_buffer[48:56], self.pipe_rx_data),
+                        7: NextValue(data_buffer[56:64], self.pipe_rx_data),
+                    },
+                ),
                 NextValue(byte_counter, byte_counter + 1),
-
                 # After 8 bytes, stay in DATA state waiting for END symbol
-            ).Elif(self.pipe_rx_datak,
+            ).Elif(
+                self.pipe_rx_datak,
                 # K-character detected - check for END symbol
-                If(self.pipe_rx_data == PIPE_K29_7_END,
+                If(
+                    self.pipe_rx_data == PIPE_K29_7_END,
                     # END symbol detected - output packet on source endpoint
                     self.source.valid.eq(1),
                     self.source.first.eq(1),
                     self.source.last.eq(1),
                     self.source.dat.eq(data_buffer),
-                    NextState("IDLE")
-                )
+                    NextState("IDLE"),
+                ),
                 # Ignore other K-characters (EDB handling is future work)
-            )
+            ),
         )
 
 
@@ -458,7 +475,8 @@ class PIPEInterface(LiteXModule):
 
         # When no data, send electrical idle
         self.comb += [
-            If(~tx_packetizer.sink.valid,
+            If(
+                ~tx_packetizer.sink.valid,
                 self.pipe_tx_elecidle.eq(1),
             )
         ]

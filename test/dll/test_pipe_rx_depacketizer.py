@@ -20,7 +20,6 @@ from litex.gen import run_simulation
 from migen import *
 
 from litepcie.dll.pipe import PIPERXDepacketizer
-from litepcie.common import phy_layout
 
 
 class TestPIPERXDepacketizerStructure(unittest.TestCase):
@@ -50,6 +49,7 @@ class TestPIPERXDepacketizerStart(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2.1: START Framing
         """
+
         def testbench(dut):
             # Send STP symbol
             yield dut.pipe_rx_data.eq(0xFB)
@@ -76,6 +76,7 @@ class TestPIPERXDepacketizerStart(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 3.3.1: DLLP Format
         """
+
         def testbench(dut):
             # Send SDP symbol
             yield dut.pipe_rx_data.eq(0x5C)
@@ -110,6 +111,7 @@ class TestPIPERXDepacketizerData(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2: Symbol Encoding
         """
+
         def testbench(dut):
             # Send START symbol (STP for TLP)
             yield dut.pipe_rx_data.eq(0xFB)
@@ -133,12 +135,16 @@ class TestPIPERXDepacketizerData(unittest.TestCase):
             yield
 
             # After 8 bytes, check accumulated data via debug signal
-            buffer_value = (yield dut.debug_data_buffer)
+            buffer_value = yield dut.debug_data_buffer
             expected = 0x0123456789ABCDEF
-            self.assertEqual(buffer_value, expected,
-                f"Data buffer should be 0x{expected:016X}, got 0x{buffer_value:016X}")
+            self.assertEqual(
+                buffer_value,
+                expected,
+                f"Data buffer should be 0x{expected:016X}, got 0x{buffer_value:016X}",
+            )
 
-        dut = PIPERXDepacketizer()
+        # Enable debug mode for testing
+        dut = PIPERXDepacketizer(debug=True)
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             vcd_path = os.path.join(tmpdir, "test_rx_data.vcd")
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
@@ -160,6 +166,7 @@ class TestPIPERXDepacketizerEnd(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.2.3: END Framing
         """
+
         def testbench(dut):
             # Send START symbol (STP for TLP)
             yield dut.pipe_rx_data.eq(0xFB)
@@ -188,8 +195,9 @@ class TestPIPERXDepacketizerEnd(unittest.TestCase):
             self.assertEqual(source_valid, 1, "source.valid should be set")
             self.assertEqual(source_first, 1, "source.first should be set")
             self.assertEqual(source_last, 1, "source.last should be set")
-            self.assertEqual(source_dat, 0x0123456789ABCDEF,
-                           "source.dat should contain accumulated data")
+            self.assertEqual(
+                source_dat, 0x0123456789ABCDEF, "source.dat should contain accumulated data"
+            )
 
         dut = PIPERXDepacketizer()
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
