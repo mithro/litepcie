@@ -144,5 +144,58 @@ class TestPIPERXDepacketizerData(unittest.TestCase):
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 
+class TestPIPERXDepacketizerEnd(unittest.TestCase):
+    """Test PIPE RX depacketizer END detection and packet output."""
+
+    def test_rx_outputs_packet_on_end(self):
+        """
+        RX should output complete packet when END symbol is detected.
+
+        Protocol flow:
+        - Send START symbol (STP or SDP)
+        - Send 8 data bytes
+        - Send END symbol (0xFD, K=1)
+        - Verify packet output on source endpoint
+        - Check source.valid, source.first, source.last, source.dat
+
+        Reference: PCIe Spec 4.0, Section 4.2.2.3: END Framing
+        """
+        def testbench(dut):
+            # Send START symbol (STP for TLP)
+            yield dut.pipe_rx_data.eq(0xFB)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Send 8 data bytes (LSB-first)
+            # Expected buffer: 0x0123456789ABCDEF
+            data_bytes = [0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01]
+            for byte_val in data_bytes:
+                yield dut.pipe_rx_data.eq(byte_val)
+                yield dut.pipe_rx_datak.eq(0)
+                yield
+
+            # Send END symbol (0xFD, K=1)
+            yield dut.pipe_rx_data.eq(0xFD)
+            yield dut.pipe_rx_datak.eq(1)
+            yield
+
+            # Check packet output on source endpoint
+            source_valid = yield dut.source.valid
+            source_first = yield dut.source.first
+            source_last = yield dut.source.last
+            source_dat = yield dut.source.dat
+
+            self.assertEqual(source_valid, 1, "source.valid should be set")
+            self.assertEqual(source_first, 1, "source.first should be set")
+            self.assertEqual(source_last, 1, "source.last should be set")
+            self.assertEqual(source_dat, 0x0123456789ABCDEF,
+                           "source.dat should contain accumulated data")
+
+        dut = PIPERXDepacketizer()
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_rx_end.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
 if __name__ == "__main__":
     unittest.main()

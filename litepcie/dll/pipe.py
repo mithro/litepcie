@@ -324,11 +324,18 @@ class PIPERXDepacketizer(LiteXModule):
                 }),
                 NextValue(byte_counter, byte_counter + 1),
 
-                # After 8 bytes, return to IDLE
-                # (Task 4.8 will change this to check for END symbol)
-                If(byte_counter == 7,
+                # After 8 bytes, stay in DATA state waiting for END symbol
+            ).Elif(self.pipe_rx_datak,
+                # K-character detected - check for END symbol
+                If(self.pipe_rx_data == PIPE_K29_7_END,
+                    # END symbol detected - output packet on source endpoint
+                    self.source.valid.eq(1),
+                    self.source.first.eq(1),
+                    self.source.last.eq(1),
+                    self.source.dat.eq(data_buffer),
                     NextState("IDLE")
                 )
+                # Ignore other K-characters (EDB handling is future work)
             )
         )
 
