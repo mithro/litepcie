@@ -804,6 +804,10 @@ class PIPEInterface(LiteXModule):
         Enable SKP ordered set generation/detection (default: False)
     skp_interval : int, optional
         Symbols between SKP ordered sets (default: 1180)
+    enable_training_sequences : bool, optional
+        Enable TS1/TS2 ordered set support (default: False)
+    enable_ltssm : bool, optional
+        Enable automatic link training with LTSSM (default: False)
 
     Attributes
     ----------
@@ -837,6 +841,11 @@ class PIPEInterface(LiteXModule):
     pipe_rx_polarity : Signal(1), output
         PIPE RX polarity inversion
 
+    link_up : Signal(1), output (when enable_ltssm=True)
+        Link training complete and in L0 state
+    ltssm : LTSSM (when enable_ltssm=True)
+        Link training state machine
+
     Examples
     --------
     >>> pipe = PIPEInterface(data_width=8, gen=1)
@@ -858,7 +867,8 @@ class PIPEInterface(LiteXModule):
     - docs/pipe-interface-spec.md
     """
 
-    def __init__(self, data_width=8, gen=1, enable_skp=False, skp_interval=1180):
+    def __init__(self, data_width=8, gen=1, enable_skp=False, skp_interval=1180,
+                 enable_training_sequences=False, enable_ltssm=False):
         if data_width != 8:
             raise ValueError("Only 8-bit PIPE mode supported currently")
         if gen not in [1, 2]:
@@ -892,6 +902,7 @@ class PIPEInterface(LiteXModule):
         self.submodules.tx_packetizer = tx_packetizer = PIPETXPacketizer(
             enable_skp=enable_skp,
             skp_interval=skp_interval,
+            enable_training_sequences=enable_training_sequences,
         )
 
         # Connect DLL TX sink to packetizer
@@ -912,7 +923,9 @@ class PIPEInterface(LiteXModule):
         ]
 
         # RX Path: PIPE symbols → DLL packets
-        self.submodules.rx_depacketizer = rx_depacketizer = PIPERXDepacketizer()
+        self.submodules.rx_depacketizer = rx_depacketizer = PIPERXDepacketizer(
+            enable_training_sequences=enable_training_sequences,
+        )
 
         # Connect PIPE RX to depacketizer
         self.comb += [
@@ -922,3 +935,31 @@ class PIPEInterface(LiteXModule):
 
         # Connect depacketizer output to DLL RX source
         self.comb += rx_depacketizer.source.connect(self.dll_rx_source)
+
+        # LTSSM Integration (optional)
+        if enable_ltssm:
+            from litepcie.dll.ltssm import LTSSM
+
+            # Instantiate LTSSM
+            self.submodules.ltssm = ltssm = LTSSM(gen=gen, lanes=1)
+
+            # Connect LTSSM control outputs to TX packetizer
+            if enable_training_sequences:
+                self.comb += [
+                    tx_packetizer.send_ts1.eq(ltssm.send_ts1),
+                    tx_packetizer.send_ts2.eq(ltssm.send_ts2),
+                ]
+
+            # Connect PIPE RX status to LTSSM inputs
+            if enable_training_sequences:
+                self.comb += [
+                    ltssm.ts1_detected.eq(rx_depacketizer.ts1_detected),
+                    ltssm.ts2_detected.eq(rx_depacketizer.ts2_detected),
+                ]
+
+            # Note: rx_elecidle connection requires external PHY integration
+            # For now, make it controllable from outside:
+            # (Will be connected to actual PHY in next phase)
+
+            # Expose link status
+            self.link_up = ltssm.link_up
