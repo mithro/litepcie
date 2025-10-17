@@ -46,17 +46,17 @@ self.add_csr("analyzer")
 
 ```bash
 # Build
-python3 examples/pcie_pipe_debug.py --build
+uv run python examples/pcie_pipe_debug.py --build
 
 # Load to FPGA
-python3 examples/pcie_pipe_debug.py --load
+uv run python examples/pcie_pipe_debug.py --load
 ```
 
 ### 3. Capture Signals
 
 ```bash
 # Using litescope_cli
-litescope_cli --csv analyzer.csv
+uv run litescope_cli --csv analyzer.csv
 
 # Or using Python API
 from litescope import LiteScopeAnalyzerDriver
@@ -273,7 +273,7 @@ self.add_etherbone(phy=self.eth_phy, ip_address="192.168.1.50")
 Then capture remotely:
 
 ```bash
-litescope_cli --csv analyzer.csv --host 192.168.1.50
+uv run litescope_cli --csv analyzer.csv --host 192.168.1.50
 ```
 
 ### Continuous Capture Mode

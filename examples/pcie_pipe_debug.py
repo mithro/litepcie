@@ -18,11 +18,11 @@ Hardware Setup:
 - Connection to PCIe root complex
 
 Usage:
-    python3 examples/pcie_pipe_debug.py --build  # Build bitstream
-    python3 examples/pcie_pipe_debug.py --load   # Load to FPGA
+    uv run python examples/pcie_pipe_debug.py --build  # Build bitstream
+    uv run python examples/pcie_pipe_debug.py --load   # Load to FPGA
 
 Then use LiteScope to capture signals:
-    litescope_cli --csv analyzer.csv
+    uv run litescope_cli --csv analyzer.csv
 
 References:
 - usb3_pipe/kc705.py: LiteScope integration pattern
@@ -228,8 +228,8 @@ def main():
 
     print("\n" + "="*80)
     print("To use LiteScope:")
-    print("  1. Load bitstream: python3 examples/pcie_pipe_debug.py --load")
-    print("  2. Run LiteScope: litescope_cli --csv analyzer.csv")
+    print("  1. Load bitstream: uv run python examples/pcie_pipe_debug.py --load")
+    print("  2. Run LiteScope: uv run litescope_cli --csv analyzer.csv")
     print("  3. Trigger on LTSSM state changes or link_up signal")
     print("="*80 + "\n")
 
