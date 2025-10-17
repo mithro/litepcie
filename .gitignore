@@ -97,3 +97,4 @@ ENV/
 
 # Development plans
 docs/plans/
+.tmp/
