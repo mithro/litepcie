@@ -535,12 +535,37 @@ Our custom PHY implementations will be considered successful when:
 4. ✅ Implement DLL core independently
 5. ✅ Create PIPE interface abstraction
 6. ✅ Build external PIPE PHY wrapper
-7. ⏳ Implement TX data path (DLL packets → PIPE symbols)
-8. ⏳ Implement RX data path (PIPE symbols → DLL packets)
-9. ⏳ Add ordered set handling (TS1, TS2, SKP, etc.)
-10. ⏳ Test drop-in replacement with simple design
-11. ⏳ Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
+7. ✅ Implement TX data path (DLL packets → PIPE symbols)
+8. ✅ Implement RX data path (PIPE symbols → DLL packets)
+9. ✅ Add ordered set handling (SKP for clock compensation, TS1/TS2 foundation)
+10. ⏳ Implement Link Training State Machine (LTSSM)
+11. ⏳ Test drop-in replacement with simple design
+12. ⏳ Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
+
+## Phase Implementation Status
+
+### Phase 4: PIPE TX/RX Data Path ✅ (Completed 2025-10-16)
+- TX packetizer converts 64-bit DLL packets to 8-bit PIPE symbols
+- RX depacketizer converts 8-bit PIPE symbols to 64-bit DLL packets
+- Framing with K-characters (STP, SDP, END)
+- Loopback testing validates data integrity
+- 88 DLL tests passing, 99% code coverage
+
+### Phase 5: Ordered Sets & Link Training Foundation ✅ (Completed 2025-10-17)
+- **SKP Ordered Sets:** Automatic insertion every 1180 symbols, transparent RX removal
+- **TS1/TS2 Structures:** 16-symbol Training Sequences with proper formatting
+- **TS1/TS2 TX Generation:** Manual trigger support via `send_ts1`/`send_ts2` signals
+- **TS1/TS2 RX Detection:** Pattern identification with `ts1_detected`/`ts2_detected` flags
+- 90 DLL tests passing, 34 PIPE tests, all edge cases handled
+- See: `docs/phase-5-completion-summary.md`
+
+### Phase 6: Link Training State Machine (LTSSM) ⏳ (Planned)
+- Implement LTSSM states (Detect, Polling, Configuration, Recovery, L0)
+- Automatic TS1/TS2 exchange during link initialization
+- Speed negotiation (Gen1/Gen2)
+- Lane configuration (x1 initially)
+- Link up/down detection
 
 ---
 
-**Status:** Living document - will update as we implement and discover details.
+**Status:** Active development - Phase 5 complete, Phase 6 planned.
