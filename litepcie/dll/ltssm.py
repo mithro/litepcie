@@ -134,6 +134,38 @@ class LTSSM(LiteXModule):
             ),
         ]
 
+        # Lane reversal detection
+        self.lane_reversal = Signal()
+        self.rx_lane_numbers = Array([Signal(5) for _ in range(lanes)])
+        self.logical_lane_map = Array([Signal(5) for _ in range(lanes)])
+
+        # Detect lane reversal:
+        # Normal: rx_lane_numbers = [0, 1, 2, 3]
+        # Reversed: rx_lane_numbers = [3, 2, 1, 0]
+        if lanes > 1:
+            self.comb += [
+                self.lane_reversal.eq(
+                    self.rx_lane_numbers[0] == (lanes - 1)
+                ),
+            ]
+
+            # Create logical lane mapping
+            for i in range(lanes):
+                self.comb += [
+                    self.logical_lane_map[i].eq(
+                        Mux(self.lane_reversal,
+                            (lanes - 1 - i),  # Reversed
+                            i                 # Normal
+                        )
+                    ),
+                ]
+        else:
+            # Single lane cannot be reversed
+            self.comb += [
+                self.lane_reversal.eq(0),
+                self.logical_lane_map[0].eq(0),
+            ]
+
         # # #
 
         # LTSSM State Machine
