@@ -101,6 +101,7 @@ class TestPIPELoopbackWithSKP(unittest.TestCase):
         RX removes SKP automatically.
         Data packets should pass through correctly.
         """
+
         def testbench(dut):
             # Send a packet
             test_data = 0x0123456789ABCDEF

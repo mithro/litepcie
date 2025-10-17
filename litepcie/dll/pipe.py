@@ -384,15 +384,18 @@ class PIPETXPacketizer(LiteXModule):
                         NextValue(ts_type, 1),
                         NextValue(ts_symbol_counter, 0),
                         NextState("TS"),
-                    ).Elif(
+                    )
+                    .Elif(
                         self.send_ts2,
                         NextValue(ts_type, 2),
                         NextValue(ts_symbol_counter, 0),
                         NextState("TS"),
-                    ).Elif(
+                    )
+                    .Elif(
                         self.skp_counter >= skp_interval,
                         NextState("SKP"),
-                    ).Else(
+                    )
+                    .Else(
                         build_normal_handling(),
                     )
                 )
@@ -404,12 +407,14 @@ class PIPETXPacketizer(LiteXModule):
                         NextValue(ts_type, 1),
                         NextValue(ts_symbol_counter, 0),
                         NextState("TS"),
-                    ).Elif(
+                    )
+                    .Elif(
                         self.send_ts2,
                         NextValue(ts_type, 2),
                         NextValue(ts_symbol_counter, 0),
                         NextState("TS"),
-                    ).Else(
+                    )
+                    .Else(
                         build_normal_handling(),
                     )
                 )
@@ -610,13 +615,15 @@ class PIPERXDepacketizer(LiteXModule):
                     NextValue(is_tlp, 1),
                     NextValue(byte_counter, 0),  # Reset counter
                     NextState("DATA"),
-                ).Elif(
+                )
+                .Elif(
                     self.pipe_rx_data == PIPE_K28_2_SDP,
                     # SDP: DLLP start detected
                     NextValue(is_tlp, 0),
                     NextValue(byte_counter, 0),  # Reset counter
                     NextState("DATA"),
-                ).Elif(
+                )
+                .Elif(
                     self.pipe_rx_data == PIPE_K28_5_COM,
                     # COM: Could be SKP or TS, check next symbols
                     *(
@@ -700,7 +707,8 @@ class PIPERXDepacketizer(LiteXModule):
                     # Not the 3rd SKP yet, continue counting
                     NextValue(skp_check_counter, skp_check_counter + 1),
                 ),
-            ).Elif(
+            )
+            .Elif(
                 self.pipe_rx_datak,
                 # Not SKP, but is a K-character - check if it's a START symbol
                 If(
@@ -710,20 +718,23 @@ class PIPERXDepacketizer(LiteXModule):
                     NextValue(byte_counter, 0),
                     NextValue(skp_check_counter, 0),
                     NextState("DATA"),
-                ).Elif(
+                )
+                .Elif(
                     self.pipe_rx_data == PIPE_K28_2_SDP,
                     # SDP: DLLP start detected (COM was not start of SKP)
                     NextValue(is_tlp, 0),
                     NextValue(byte_counter, 0),
                     NextValue(skp_check_counter, 0),
                     NextState("DATA"),
-                ).Else(
+                )
+                .Else(
                     # Other K-character, not a valid SKP ordered set
                     # Return to IDLE and ignore
                     NextValue(skp_check_counter, 0),
                     NextState("IDLE"),
                 ),
-            ).Else(
+            )
+            .Else(
                 # Data character while expecting SKP - invalid SKP ordered set
                 # Return to IDLE
                 NextValue(skp_check_counter, 0),

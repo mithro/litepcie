@@ -21,7 +21,7 @@ import unittest
 from litex.gen import run_simulation
 from migen import *
 
-from litepcie.dll.pipe import PIPETXPacketizer, PIPERXDepacketizer
+from litepcie.dll.pipe import PIPERXDepacketizer, PIPETXPacketizer
 
 
 class TestPIPETXSKPGeneration(unittest.TestCase):
@@ -61,6 +61,7 @@ class TestPIPETXSKPInsertion(unittest.TestCase):
 
         Test with small interval (16 symbols) for quick verification.
         """
+
         def testbench(dut):
             # Scan for SKP ordered set (COM followed by 3x SKP)
             found_skp = False
@@ -87,9 +88,12 @@ class TestPIPETXSKPInsertion(unittest.TestCase):
 
                     # Verify all 3 are SKP (0x1C, K=1)
                     if (
-                        skp1_data == 0x1C and skp1_datak == 1
-                        and skp2_data == 0x1C and skp2_datak == 1
-                        and skp3_data == 0x1C and skp3_datak == 1
+                        skp1_data == 0x1C
+                        and skp1_datak == 1
+                        and skp2_data == 0x1C
+                        and skp2_datak == 1
+                        and skp3_data == 0x1C
+                        and skp3_datak == 1
                     ):
                         found_skp = True
                         break
@@ -114,6 +118,7 @@ class TestPIPERXSKPDetection(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.7.2
         """
+
         def testbench(dut):
             # Send SKP ordered set: COM + 3xSKP
             yield dut.pipe_rx_data.eq(0xBC)  # COM (K28.5)

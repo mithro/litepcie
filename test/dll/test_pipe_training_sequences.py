@@ -22,11 +22,11 @@ from litex.gen import run_simulation
 from migen import *
 
 from litepcie.dll.pipe import (
+    PIPE_K28_5_COM,
+    PIPERXDepacketizer,
+    PIPETXPacketizer,
     TS1OrderedSet,
     TS2OrderedSet,
-    PIPE_K28_5_COM,
-    PIPETXPacketizer,
-    PIPERXDepacketizer,
 )
 
 
@@ -84,6 +84,7 @@ class TestTS1Generation(unittest.TestCase):
 
         TS1 is 16 symbols starting with COM.
         """
+
         def testbench(dut):
             # Trigger TS1 generation
             yield dut.send_ts1.eq(1)
@@ -119,6 +120,7 @@ class TestTS1Detection(unittest.TestCase):
 
         TS1 detection is first step in link training response.
         """
+
         def testbench(dut):
             # Create TS1 to send
             ts1 = TS1OrderedSet(link_number=0, lane_number=0)
