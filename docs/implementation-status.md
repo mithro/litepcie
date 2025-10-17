@@ -24,7 +24,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 **Status:** COMPLETE
 **Date:** 2025-10-16
-**Plan:** `docs/plans/phase-3-pipe-interface-external-phy.md`
+**Plan:** `docs/plans/2025-10-16-phase-3-pipe-interface-external-phy.md`
 
 ### Completed Tasks
 - ✅ Task 3.1: PIPE interface abstraction (`litepcie/dll/pipe.py`)
@@ -49,7 +49,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 **Status:** COMPLETE
 **Date:** 2025-10-17
-**Plan:** `docs/plans/phase-4-cleanup-and-documentation.md`
+**Plan:** `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md`
 **Completion Summary:** `docs/phase-4-completion-summary.md`
 
 ### Completed Tasks
@@ -274,8 +274,8 @@ The following items have TODO markers in the code:
 ### Implementation Plans
 
 **Completed Phases:**
-- `docs/plans/phase-3-pipe-interface-external-phy.md` - Phase 3: PIPE Interface & External PHY
-- `docs/plans/phase-4-cleanup-and-documentation.md` - Phase 4: Cleanup & Documentation
+- `docs/plans/2025-10-16-phase-3-pipe-interface-external-phy.md` - Phase 3: PIPE Interface & External PHY
+- `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md` - Phase 4: Cleanup & Documentation
 - `docs/plans/2025-10-17-phase-4-pipe-tx-rx-datapath.md` - Phase 4: TX/RX Datapath
 - `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5: Ordered Sets
 - `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6: LTSSM
