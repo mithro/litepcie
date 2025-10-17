@@ -16,7 +16,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 | Phase 6 | ✅ COMPLETE | 2025-10-17 | LTSSM (Link Training State Machine) |
 | Phase 7 | ✅ COMPLETE | 2025-10-17 | Advanced LTSSM (Gen2, Multi-lane, Power States) |
 | Phase 8 | 🔄 IN PROGRESS | 2025-10-17 | Hardware Validation (External PIPE PHY) - Tasks 8.1-8.4 Complete |
-| Phase 9 | ⏳ PLANNED | 2025-10-17 | Internal Transceiver Support (GTX, ECP5) |
+| Phase 9 | 📋 PRE-IMPLEMENTATION | 2025-10-17 | Internal Transceiver Support (GTX, ECP5) - Documentation Complete |
 
 ---
 
@@ -390,8 +390,13 @@ Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
 **In Progress:**
 - `docs/plans/2025-10-17-phase-8-hardware-validation.md` - Phase 8: Hardware Validation (Tasks 8.1-8.4 complete)
 
-**Future Phases (Planned):**
-- `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md` - Phase 9: Internal Transceivers (50 KB, 10 tasks)
+**Pre-Implementation (Phase 9):**
+- `docs/plans/2025-10-17-phase-9-internal-transceiver-support-v2.md` - Phase 9: Internal Transceivers (54 KB, 10 tasks)
+- `docs/phase-9-plan-review.md` - Critical review identifying 4 "Must Fix" items
+- `docs/clock-domain-architecture.md` - Clock domain strategy (Must Fix 1) ✅
+- `docs/phase-9-dependencies.md` - liteiclink dependency documentation (Must Fix 2) ✅
+- `docs/phase-9-testing-strategy.md` - Tiered testing strategy (Must Fix 4) ✅
+- Phase 9 plan corrections - 8b/10b strategy fixed (Must Fix 3) ✅
 
 ### Completion Summaries
 - `docs/phase-4-completion-summary.md`
@@ -424,4 +429,9 @@ The implementation follows PCIe Base Spec 4.0 and Intel PIPE 3.0 specifications,
 **Current Status:**
 - Software/simulation infrastructure complete and validated
 - Ready for hardware testing with external PIPE PHY (Tasks 8.5-8.9)
-- Alternative: Proceed to Phase 9 (Internal Transceiver Support)
+- **Phase 9 pre-implementation complete:** All 4 "Must Fix" items addressed
+  - Clock domain architecture defined (sys/pcie/tx/rx with AsyncFIFO CDC)
+  - liteiclink dependency documented
+  - 8b/10b strategy clarified (hardware for Xilinx, software for ECP5)
+  - Tiered testing strategy defined (Simulation → Loopback → Real PCIe)
+- Ready to proceed with Phase 9 implementation (10 tasks, ~18 days)
