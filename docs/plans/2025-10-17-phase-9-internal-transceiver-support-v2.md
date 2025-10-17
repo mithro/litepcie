@@ -855,13 +855,13 @@ class S7GTXTransceiver(PIPETransceiver):
         self.submodules.pll = pll
 
         # TX/RX Datapaths (from usb3_pipe pattern)
-        self.submodules.tx_datapath = TransceiverTXDatapath(phy_dw=20)
-        self.submodules.rx_datapath = TransceiverRXDatapath(phy_dw=20)
+        # Note: For Xilinx, we use hardware 8b/10b in the GTX primitive
+        # For ECP5, we'll use software 8b/10b (see Task 9.5)
+        self.submodules.tx_datapath = TransceiverTXDatapath(phy_dw=16)  # 2 bytes
+        self.submodules.rx_datapath = TransceiverRXDatapath(phy_dw=16)  # 2 bytes
 
-        # 8b/10b Encoder/Decoder (use LiteX built-in)
-        from litex.soc.cores.code_8b10b import Encoder, Decoder
-        self.submodules.encoder = Encoder(nwords=2, lsb_first=True)
-        self.submodules.decoder = Decoder(nwords=2, lsb_first=True)
+        # No software encoder/decoder for Xilinx - hardware 8b/10b is used
+        # (Lines removed - was contradictory with p_TX_8B10B_ENABLE=True)
 
         # GTX primitive (next step)
         # ...
@@ -912,19 +912,21 @@ self.specials += Instance("GTXE2_CHANNEL",
     o_GTXTXN = pads.tx_n,
     o_GTXTXP = pads.tx_p,
 
-    # TX User Interface
+    # TX User Interface (hardware 8b/10b enabled)
     i_TXUSRCLK = ClockSignal("tx"),
     i_TXUSRCLK2 = ClockSignal("tx"),
     o_TXOUTCLK = self.tx_clk,
-    i_TXDATA = Cat(self.encoder.output[0], self.encoder.output[1]),
-    i_TXCHARISK = Cat(self.encoder.k[0], self.encoder.k[1]),
+    # Connect 8-bit data directly - GTX handles encoding
+    i_TXDATA = self.tx_datapath.source.data,    # 16-bit (2 bytes)
+    i_TXCHARISK = self.tx_datapath.source.ctrl, # 2-bit (K-char per byte)
 
-    # RX User Interface
+    # RX User Interface (hardware 8b/10b enabled)
     i_RXUSRCLK = ClockSignal("rx"),
     i_RXUSRCLK2 = ClockSignal("rx"),
     o_RXOUTCLK = self.rx_clk,
-    o_RXDATA = Cat(self.decoder.input[0], self.decoder.input[1]),
-    o_RXCHARISK = Cat(self.decoder.k[0], self.decoder.k[1]),
+    # Receive 8-bit decoded data - GTX handles decoding
+    o_RXDATA = self.rx_datapath.sink.data,      # 16-bit (2 bytes)
+    o_RXCHARISK = self.rx_datapath.sink.ctrl,   # 2-bit (K-char per byte)
 
     # Electrical Idle
     i_TXELECIDLE = self.tx_elecidle,
