@@ -170,6 +170,23 @@ class LTSSM(LiteXModule):
             ),
         )
 
+        # RECOVERY State - Error Recovery and Link Retraining
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.7
         self.fsm.act("RECOVERY",
             NextValue(self.current_state, self.RECOVERY),
+
+            # Link is down during recovery
+            NextValue(self.link_up, 0),
+
+            # Send TS1 to attempt retraining
+            NextValue(self.send_ts1, 1),
+            NextValue(self.send_ts2, 0),
+            NextValue(self.tx_elecidle, 0),
+
+            # Wait for partner to exit electrical idle and respond with TS1
+            # Simplified recovery: if we receive TS1, return to L0
+            # (Full spec would go through POLLING/CONFIGURATION again)
+            If((~self.rx_elecidle) & self.ts1_detected,
+                NextState("L0"),
+            ),
         )

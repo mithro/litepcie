@@ -337,5 +337,94 @@ class TestLTSSML0(unittest.TestCase):
         run_simulation(dut, testbench(dut))
 
 
+class TestLTSSMRecovery(unittest.TestCase):
+    """Test LTSSM RECOVERY state."""
+
+    def test_recovery_sends_ts1_for_retraining(self):
+        """
+        RECOVERY state should send TS1 ordered sets to retrain link.
+
+        RECOVERY is entered when link errors occur in L0. It attempts
+        to restore the link by re-exchanging training sequences.
+
+        Reference: PCIe Spec 4.0, Section 4.2.5.3.7: Recovery
+        """
+        def testbench(dut):
+            # Get to L0, then trigger recovery
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield dut.ts1_detected.eq(0)
+            yield dut.ts2_detected.eq(1)
+            yield
+            yield
+            yield  # Now in L0
+
+            # Trigger recovery (electrical idle)
+            yield dut.rx_elecidle.eq(1)
+            yield
+            yield
+            yield
+
+            # Should be in RECOVERY
+            state = yield dut.current_state
+            self.assertEqual(state, dut.RECOVERY)
+
+            # Should be sending TS1 to retrain
+            send_ts1 = yield dut.send_ts1
+            self.assertEqual(send_ts1, 1)
+
+            # Link should no longer be up
+            link_up = yield dut.link_up
+            self.assertEqual(link_up, 0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+    def test_recovery_returns_to_l0_after_successful_retrain(self):
+        """
+        RECOVERY should return to L0 after successful retraining.
+
+        When partner responds with TS1 (exits electrical idle), recovery
+        can transition back to L0 (simplified - full spec uses TS2 exchange).
+        """
+        def testbench(dut):
+            # Get to RECOVERY state
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield dut.ts1_detected.eq(0)
+            yield dut.ts2_detected.eq(1)
+            yield
+            yield
+            yield  # L0
+            yield dut.rx_elecidle.eq(1)
+            yield
+            yield
+            yield  # RECOVERY
+
+            # Simulate partner exiting electrical idle and sending TS1
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield
+
+            # Should return to L0 (simplified recovery)
+            state = yield dut.current_state
+            self.assertEqual(state, dut.L0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+
 if __name__ == "__main__":
     unittest.main()
