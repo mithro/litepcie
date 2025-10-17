@@ -50,7 +50,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 **Status:** COMPLETE
 **Date:** 2025-10-17
 **Plan:** `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md`
-**Completion Summary:** `docs/phase-4-completion-summary.md`
+**Completion Summary:** `docs/phases/phase-4-completion-summary.md`
 
 ### Completed Tasks
 - ✅ Task 4.1-4.4: TX packetizer implementation
@@ -85,7 +85,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 **Status:** COMPLETE
 **Date:** 2025-10-17
 **Plan:** `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md`
-**Completion Summary:** `docs/phase-5-completion-summary.md`
+**Completion Summary:** `docs/phases/phase-5-completion-summary.md`
 
 ### Completed Tasks
 - ✅ Task 5.1-5.2: SKP ordered set TX generation (automatic)
@@ -118,7 +118,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 **Status:** COMPLETE
 **Date:** 2025-10-17
 **Plan:** `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
-**Completion Summary:** `docs/phase-6-completion-summary.md`
+**Completion Summary:** `docs/phases/phase-6-completion-summary.md`
 
 ### Completed Tasks
 - ✅ Task 6.1: LTSSM state machine structure
@@ -166,7 +166,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 **Status:** COMPLETE
 **Date:** 2025-10-17
 **Plan:** `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md`
-**Completion Summary:** `docs/phase-7-completion-summary.md`
+**Completion Summary:** `docs/phases/phase-7-completion-summary.md`
 
 ### Completed Tasks
 - ✅ Task 7.1: Gen2 speed negotiation capability
@@ -392,17 +392,17 @@ Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
 
 **Pre-Implementation (Phase 9):**
 - `docs/plans/2025-10-17-phase-9-internal-transceiver-support-v2.md` - Phase 9: Internal Transceivers (54 KB, 10 tasks)
-- `docs/phase-9-plan-review.md` - Critical review identifying 4 "Must Fix" items
+- `docs/phases/phase-9-plan-review.md` - Critical review identifying 4 "Must Fix" items
 - `docs/clock-domain-architecture.md` - Clock domain strategy (Must Fix 1) ✅
-- `docs/phase-9-dependencies.md` - liteiclink dependency documentation (Must Fix 2) ✅
-- `docs/phase-9-testing-strategy.md` - Tiered testing strategy (Must Fix 4) ✅
+- `docs/phases/phase-9-dependencies.md` - liteiclink dependency documentation (Must Fix 2) ✅
+- `docs/phases/phase-9-testing-strategy.md` - Tiered testing strategy (Must Fix 4) ✅
 - Phase 9 plan corrections - 8b/10b strategy fixed (Must Fix 3) ✅
 
 ### Completion Summaries
-- `docs/phase-4-completion-summary.md`
-- `docs/phase-5-completion-summary.md`
-- `docs/phase-6-completion-summary.md`
-- `docs/phase-7-completion-summary.md`
+- `docs/phases/phase-4-completion-summary.md`
+- `docs/phases/phase-5-completion-summary.md`
+- `docs/phases/phase-6-completion-summary.md`
+- `docs/phases/phase-7-completion-summary.md`
 
 ---
 

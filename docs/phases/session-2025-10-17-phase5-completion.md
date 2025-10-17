@@ -161,7 +161,7 @@ self.fsm.act("TS_CHECK",
   - Added `TestTS1Detection` class with `test_rx_detects_ts1`
 
 **Documentation:**
-- `docs/phase-5-completion-summary.md` - Updated completion status
+- `docs/phases/phase-5-completion-summary.md` - Updated completion status
 - `docs/integration-strategy.md` - Added phase status section
 
 ### Architecture Decisions
@@ -347,7 +347,7 @@ Plan document exists: `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.
 
 **Implementation Documents:**
 - `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5 plan
-- `docs/phase-5-completion-summary.md` - Phase 5 results
+- `docs/phases/phase-5-completion-summary.md` - Phase 5 results
 - `docs/integration-strategy.md` - Overall integration approach
 
 **Commits:**

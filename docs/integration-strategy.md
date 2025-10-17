@@ -558,7 +558,7 @@ Our custom PHY implementations will be considered successful when:
 - **TS1/TS2 RX Detection:** Pattern identification with `ts1_detected`/`ts2_detected` flags
 - **Phase 4 Cleanup:** Coverage analysis (99%), edge case tests, TS+SKP combination test
 - 91 DLL tests passing (including 35 PIPE tests), 99% code coverage, all edge cases handled
-- See: `docs/phase-5-completion-summary.md`, `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md`
+- See: `docs/phases/phase-5-completion-summary.md`, `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md`
 
 ### Phase 6: Link Training State Machine (LTSSM) ✅ (Completed 2025-10-17)
 - **LTSSM States Implemented:** DETECT, POLLING, CONFIGURATION, L0, RECOVERY
@@ -568,7 +568,7 @@ Our custom PHY implementations will be considered successful when:
 - **PIPE Integration:** Clean integration with PIPEInterface via `enable_ltssm=True` parameter
 - **Link Status:** `link_up` signal indicates trained link in L0 state
 - 107 DLL tests passing (including 16 LTSSM tests), 98% code coverage
-- See: `docs/phase-6-completion-summary.md`, `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
+- See: `docs/phases/phase-6-completion-summary.md`, `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
 
 ### Phase 7: Advanced LTSSM Features ⏳ (Planned)
 - Gen2 speed negotiation (5.0 GT/s)

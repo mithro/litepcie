@@ -115,7 +115,7 @@ Phase 7 extended the LTSSM implementation with production-ready Gen2 and multi-l
 - `test/dll/test_ltssm_equalization.py` - Equalization tests (129 lines, 3 tests)
 - `test/dll/test_ltssm_power_states.py` - Power state tests (390 lines, 7 tests)
 - `test/dll/test_ltssm_substates.py` - Detailed substates tests (251 lines, 6 tests)
-- `docs/phase-7-completion-summary.md` - This document
+- `docs/phases/phase-7-completion-summary.md` - This document
 
 ### Files Modified
 - `litepcie/dll/ltssm.py` - Extensive additions for all Phase 7 features
@@ -406,7 +406,7 @@ Users can incrementally adopt features:
 - **Intel PIPE 3.0 Specification:** PHY Interface
 - **Implementation Documents:**
   - `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7 plan
-  - `docs/phase-6-completion-summary.md` - Phase 6 results (LTSSM baseline)
+  - `docs/phases/phase-6-completion-summary.md` - Phase 6 results (LTSSM baseline)
   - `docs/integration-strategy.md` - Overall integration approach
 
 ## Conclusion

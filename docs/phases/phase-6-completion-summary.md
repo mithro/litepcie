@@ -255,7 +255,7 @@ Phase 6 implemented the Link Training and Status State Machine (LTSSM) for autom
 - **Implementation Documents:**
   - `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6 plan
   - `docs/integration-strategy.md` - Overall integration approach
-  - `docs/phase-5-completion-summary.md` - Phase 5 results (TS1/TS2 foundation)
+  - `docs/phases/phase-5-completion-summary.md` - Phase 5 results (TS1/TS2 foundation)
 
 ## Conclusion
 

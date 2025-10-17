@@ -322,7 +322,7 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 - Code coverage: 99% (litepcie/dll/pipe.py - 142 statements, 2 missed)
 
 **Documentation:**
-- [Phase 5 Completion Summary](phase-5-completion-summary.md) - Detailed implementation notes
+- [Phase 5 Completion Summary](phases/phase-5-completion-summary.md) - Detailed implementation notes
 - [Performance Analysis](pipe-performance.md) - Throughput, latency, resource analysis
 - [Testing Guide](pipe-testing-guide.md) - Updated with Phase 5 test patterns
 - [Integration Strategy](integration-strategy.md) - Updated with Phase 5 completion

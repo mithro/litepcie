@@ -109,7 +109,7 @@ Current test coverage:
 - [PIPE Architecture](docs/pipe-architecture.md) - Detailed architecture with timing diagrams
 - [Integration Examples](docs/pipe-integration-examples.md) - Practical integration examples
 - [Testing Guide](docs/pipe-testing-guide.md) - How to test and debug PIPE implementations
-- [Phase 6 Summary](docs/phase-6-completion-summary.md) - LTSSM implementation summary
+- [Phase 6 Summary](docs/phases/phase-6-completion-summary.md) - LTSSM implementation summary
 
 [> License
 ----------
