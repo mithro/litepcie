@@ -96,5 +96,4 @@ ENV/
 .claude/
 
 # Development plans
-docs/plans/
 .tmp/
