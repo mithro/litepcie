@@ -105,6 +105,117 @@ PIPE_K28_2_SDP = 0x5C  # Start DLLP
 PIPE_K29_7_END = 0xFD  # End packet
 PIPE_K30_7_EDB = 0xFE  # End bad packet
 
+# Training Sequence Ordered Sets -------------------------------------------------------------------
+
+
+class TS1OrderedSet:
+    """
+    Training Sequence 1 (TS1) Ordered Set.
+
+    Used during link training for speed negotiation, lane configuration,
+    and equalization. TS1 is sent in early training stages.
+
+    Parameters
+    ----------
+    link_number : int
+        Link number (0-255)
+    lane_number : int
+        Lane number within link (0-31)
+    n_fts : int
+        Number of Fast Training Sequences for L0s exit (0-255)
+    rate_id : int
+        Data rate identifier (1=Gen1, 2=Gen2, etc.)
+
+    Attributes
+    ----------
+    symbols : list of int
+        16-symbol ordered set
+
+    References
+    ----------
+    PCIe Base Spec 4.0, Section 4.2.6.2: TS1 Ordered Set
+    """
+
+    def __init__(self, link_number=0, lane_number=0, n_fts=128, rate_id=1):
+        # Symbol 0: COM (always K28.5)
+        self.symbols = [PIPE_K28_5_COM]
+
+        # Symbol 1: Link number
+        self.symbols.append(link_number & 0xFF)
+
+        # Symbol 2: Lane number
+        self.symbols.append(lane_number & 0x1F)  # 5 bits
+
+        # Symbol 3: N_FTS
+        self.symbols.append(n_fts & 0xFF)
+
+        # Symbol 4: Rate ID
+        self.symbols.append(rate_id & 0x1F)
+
+        # Symbols 5-6: Training Control
+        # Bit 0: Hot Reset
+        # Bit 1: Disable Link
+        # Bit 2: Loopback
+        # Bit 3: Disable Scrambling
+        # Bits 4-5: Reserved
+        self.symbols.append(0x00)  # Training Control byte 0
+        self.symbols.append(0x00)  # Training Control byte 1
+
+        # Symbols 7-14: TS1 Identifier (all D10.2 = 0x4A for TS1)
+        for _ in range(8):
+            self.symbols.append(0x4A)  # D10.2 identifies TS1
+
+        # Symbol 15: TS1 Identifier (D10.2)
+        self.symbols.append(0x4A)
+
+
+class TS2OrderedSet:
+    """
+    Training Sequence 2 (TS2) Ordered Set.
+
+    Used during link training after TS1 exchange. TS2 signifies
+    later training stages and configuration lock.
+
+    Parameters
+    ----------
+    link_number : int
+        Link number (0-255)
+    lane_number : int
+        Lane number within link (0-31)
+    n_fts : int
+        Number of Fast Training Sequences for L0s exit (0-255)
+    rate_id : int
+        Data rate identifier (1=Gen1, 2=Gen2, etc.)
+
+    Attributes
+    ----------
+    symbols : list of int
+        16-symbol ordered set
+
+    References
+    ----------
+    PCIe Base Spec 4.0, Section 4.2.6.3: TS2 Ordered Set
+    """
+
+    def __init__(self, link_number=0, lane_number=0, n_fts=128, rate_id=1):
+        # Structure identical to TS1, except identifier symbols
+
+        # Symbol 0: COM (always K28.5)
+        self.symbols = [PIPE_K28_5_COM]
+
+        # Symbols 1-6: Same as TS1
+        self.symbols.append(link_number & 0xFF)
+        self.symbols.append(lane_number & 0x1F)
+        self.symbols.append(n_fts & 0xFF)
+        self.symbols.append(rate_id & 0x1F)
+        self.symbols.append(0x00)  # Training Control byte 0
+        self.symbols.append(0x00)  # Training Control byte 1
+
+        # Symbols 7-15: TS2 Identifier (all D5.2 = 0x45 for TS2)
+        for _ in range(9):
+            self.symbols.append(0x45)  # D5.2 identifies TS2
+
+
 # PIPE TX Packetizer -------------------------------------------------------------------------------
 
 
