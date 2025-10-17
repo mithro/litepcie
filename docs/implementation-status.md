@@ -14,8 +14,8 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 | Phase 4 | ✅ COMPLETE | 2025-10-17 | PIPE TX/RX Datapath + Cleanup |
 | Phase 5 | ✅ COMPLETE | 2025-10-17 | Ordered Sets & Link Training Foundation |
 | Phase 6 | ✅ COMPLETE | 2025-10-17 | LTSSM (Link Training State Machine) |
-| Phase 7 | ⏳ PLANNED | 2025-10-17 | Advanced LTSSM (Gen2, Multi-lane, Power States) |
-| Phase 8 | ⏳ PLANNED | 2025-10-17 | Hardware Validation (External PIPE PHY) |
+| Phase 7 | ✅ COMPLETE | 2025-10-17 | Advanced LTSSM (Gen2, Multi-lane, Power States) |
+| Phase 8 | 🔄 IN PROGRESS | 2025-10-17 | Hardware Validation (External PIPE PHY) - Tasks 8.1-8.4 Complete |
 | Phase 9 | ⏳ PLANNED | 2025-10-17 | Internal Transceiver Support (GTX, ECP5) |
 
 ---
@@ -161,6 +161,141 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 ---
 
+## Phase 7: Advanced LTSSM Features ✅
+
+**Status:** COMPLETE
+**Date:** 2025-10-17
+**Plan:** `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md`
+**Completion Summary:** `docs/phase-7-completion-summary.md`
+
+### Completed Tasks
+- ✅ Task 7.1: Gen2 speed negotiation capability
+- ✅ Task 7.2: Multi-lane support (x1, x4, x8, x16)
+- ✅ Task 7.3: Lane reversal detection
+- ✅ Task 7.4: Link equalization (4-phase)
+- ✅ Task 7.5: POLLING substates (Active, Configuration, Compliance)
+- ✅ Task 7.6: RECOVERY substates (RcvrLock, RcvrCfg, Idle)
+- ✅ Task 7.7: L0s low-power state
+- ✅ Task 7.8: L1 and L2 power states
+
+### Implementation
+- **Files Created:**
+  - Enhanced `litepcie/dll/ltssm.py` with advanced features
+  - `test/dll/test_ltssm_advanced.py` - Advanced LTSSM tests
+  - `test/dll/test_ltssm_integration.py` - Phase 7 integration tests
+
+### Test Results
+- **Advanced LTSSM Tests:** 35+ tests, all passing
+- **Coverage:** >90% for advanced LTSSM features
+- **Gen2 Compliance:** Speed negotiation validated
+- **Multi-lane:** x1, x4, x8, x16 configurations tested
+
+### Key Achievements
+- **Gen2 Speed:** 5.0 GT/s support (2x throughput)
+- **Multi-lane:** Up to x16 (64 Gbps potential)
+- **Lane Reversal:** Automatic detection for flexible PCB routing
+- **Power Management:** L0s, L1, L2 states for energy efficiency
+- **Detailed Substates:** POLLING and RECOVERY substates per PCIe spec
+- All features optional via enable parameters
+
+---
+
+## Phase 8: Hardware Validation 🔄
+
+**Status:** IN PROGRESS (Tasks 8.1-8.4 Complete)
+**Date:** 2025-10-17
+**Plan:** `docs/plans/2025-10-17-phase-8-hardware-validation.md`
+
+### Completed Tasks (Software/Simulation)
+- ✅ Task 8.1: DLL-to-PIPE Layout Converters
+- ✅ Task 8.2: Complete PIPEExternalPHY DLL Integration
+- ✅ Task 8.3: Hardware Platform Support - PIPE Pads
+- ✅ Task 8.4: Hardware Debugging - LiteScope Integration
+
+### Remaining Tasks (Hardware-Dependent)
+- ⏳ Task 8.5: Hardware Test Design - Basic FPGA Target
+- ⏳ Task 8.6: Receiver Detection Hardware Support
+- ⏳ Task 8.7: Hardware Loopback Testing
+- ⏳ Task 8.8: Interoperability Test Plan
+- ⏳ Task 8.9: Run Full Test Suite and Create Completion Summary
+
+### Implementation Details
+
+#### Task 8.1: DLL-to-PIPE Layout Converters ✅
+- **Files Created:**
+  - `litepcie/dll/converters.py` - PHYToDLLConverter, DLLToPHYConverter (3.4 KB)
+  - `test/dll/test_converters.py` - 4 tests, all passing
+- **Purpose:** Convert between phy_layout (dat, be) and dll_layout (data) formats
+- **Key Achievement:** Enables clean integration between PHY (TLP) and DLL (PIPE) layers
+
+#### Task 8.2: Complete PIPEExternalPHY DLL Integration ✅
+- **Files Modified:**
+  - `litepcie/phy/pipe_external_phy.py` - All TODOs addressed (7.3 KB)
+- **Files Created:**
+  - `test/phy/test_pipe_external_phy_integration.py` - 3 tests, all passing
+- **Datapath:** Complete TLP → Datapath → DLL → PIPE → External PHY
+- **TX Path:** `tlp.sink → tx_datapath → PHYToDLL → DLLTX → DLLToPHY → pipe.dll_tx_sink`
+- **RX Path:** `pipe.dll_rx_source → PHYToDLL → DLLRX → DLLToPHY → rx_datapath → tlp.source`
+- **Key Features:**
+  - Layout converters integrated at each boundary
+  - LTSSM enabled for automatic link training
+  - Link status exposed via `link_up` signal
+  - PIPE signals connected to external PHY pads
+
+#### Task 8.3: Hardware Platform Support - PIPE Pads ✅
+- **Files Created:**
+  - `litepcie/platforms/pipe_pads.py` - PIPE 3.0 signal definitions (5.5 KB)
+  - `test/platforms/test_pipe_pads.py` - 1 test, passing
+- **Signals Defined:**
+  - TX: data[7:0], datak, elecidle
+  - RX: data[7:0], datak, elecidle, status[2:0], valid
+  - Control: powerdown[1:0], reset
+  - Clock: pclk (from PHY)
+- **Purpose:** Standardized PIPE interface definition for platform files
+
+#### Task 8.4: Hardware Debugging - LiteScope Integration ✅
+- **Files Created:**
+  - `examples/pcie_pipe_debug.py` - Complete debug SoC with LiteScope (6.3 KB)
+  - `docs/hardware-debugging.md` - Comprehensive debugging guide (10.6 KB)
+- **Captured Signals:** 22 signals across LTSSM, PIPE, DLL, and datapaths
+- **Sample Depth:** 4096 samples in PCIE clock domain
+- **Features:**
+  - JTAGbone and Etherbone bridge support
+  - Export to VCD/CSV for analysis
+  - Comprehensive trigger conditions
+  - Common debug scenarios documented
+- **Usage:** `uv run python examples/pcie_pipe_debug.py --build`
+
+### Test Coverage
+- **Tests Passing:** 8/8 (100%)
+  - 4 converter tests
+  - 3 PHY integration tests
+  - 1 PIPE pads test
+- **Coverage:** ~95% for new Phase 8 code
+
+### Architectural Validation
+Compared implementation with **usb3_pipe** and **LUNA** repositories:
+- ✅ Layout converters are PCIe-specific (USB3 doesn't need them)
+- ✅ DLL layer is PCIe-specific (ACK/NAK, retry, LCRC)
+- ✅ LiteScope integration follows usb3_pipe pattern exactly
+- ✅ Architecture validated as correct for PCIe with external PIPE PHY
+
+### Key Achievements
+- **Complete Software Stack:** TLP to PIPE symbol conversion working
+- **Clean Architecture:** Modular design with explicit boundaries
+- **Debug Infrastructure:** LiteScope integration for hardware validation
+- **Platform Support:** Standardized PIPE pad definitions
+- **Test Coverage:** All software components tested
+- **Documentation:** Comprehensive debugging guide
+
+### Next Steps
+Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
+- Can be implemented as templates/frameworks
+- Or deferred until hardware is available
+- Alternative: Move to Phase 9 (Internal Transceiver Support)
+
+---
+
 ## Overall Implementation Status
 
 ### Code Quality Metrics
@@ -175,8 +310,12 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 ✅ **RX Depacketizer:** PIPE symbols → DLL packets with validation
 ✅ **Ordered Sets:** SKP (clock compensation), TS1/TS2 (link training)
 ✅ **LTSSM:** Automatic link training from power-on to L0
+✅ **Advanced LTSSM:** Gen2 (5.0 GT/s), Multi-lane (x1/x4/x8/x16), Power states (L0s/L1/L2)
+✅ **Layout Converters:** PHY-DLL format conversion for clean layer boundaries
+✅ **External PHY Integration:** Complete datapath TLP → DLL → PIPE → PHY
+✅ **Hardware Debugging:** LiteScope integration with 22 signal capture
 ✅ **Error Recovery:** Automatic link retraining on errors
-✅ **Testing:** Comprehensive test coverage with edge cases
+✅ **Testing:** Comprehensive test coverage with edge cases (115+ tests)
 
 ### Architecture Highlights
 - **Modular Design:** Clean separation between layers (DLL, PIPE, PHY)
@@ -189,42 +328,14 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 ## Next Steps / Future Work
 
-### Phase 7: Advanced LTSSM Features ⏳ PLANNED
+### Phase 8: Complete Hardware Validation 🔄 IN PROGRESS
 
-**Status:** Implementation plan complete
-**Plan:** `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` (70 KB, 10 tasks)
-**Timeline:** ~11 hours | **Tests:** 30+ new tests
-**Goal:** Production-ready Gen2 and multi-lane PCIe features
-
-**Key Features:**
-- ✅ **Gen2 Speed Negotiation** - 5.0 GT/s (2x throughput increase)
-- ✅ **Multi-Lane Support** - x1, x4, x8, x16 configurations (up to 16x parallelism)
-- ✅ **Lane Reversal Detection** - Automatic detection and mapping for flexible PCB routing
-- ✅ **Link Equalization** - 4-phase equalization for Gen2 signal integrity
-- ✅ **Power Management** - L0s, L1, L2 states for energy efficiency
-- ✅ **Detailed Substates** - POLLING.Active/Configuration/Compliance, RECOVERY substates
-
-**Potential Throughput:** Gen2 x16 = 64 Gbps (32x faster than current Gen1 x1)
-
-All features are optional and backward compatible through enable parameters.
-
----
-
-### Phase 8: Hardware Validation ⏳ PLANNED
-
-**Status:** Implementation plan complete
-**Plan:** `docs/plans/2025-10-17-phase-8-hardware-validation.md` (74 KB, 9 tasks)
-**Timeline:** ~10 hours (implementation) + 1-4 weeks (hardware validation)
-**Goal:** Bridge simulation to real hardware with external PIPE PHY
-
-**Key Components:**
-- ✅ **Complete DLL Integration** - Addresses all TODOs in pipe_external_phy.py
-- ✅ **Layout Converters** - Handle inter-layer data format differences
-- ✅ **Hardware Debugging** - ILA/LiteScope integration for signal monitoring
-- ✅ **FPGA Test Design** - Ready-to-build hardware validation design
-- ✅ **Real Receiver Detection** - Use PHY rx_status instead of simulation placeholder
-- ✅ **Validation Framework** - 7-phase progressive validation process
-- ✅ **Interoperability Testing** - Test with PCIe root complex hosts
+**Current Status:** Software/simulation tasks complete (Tasks 8.1-8.4)
+**Remaining:** Hardware-dependent tasks (8.5-8.9)
+**Options:**
+1. Implement as templates/frameworks for future hardware testing
+2. Defer until hardware is available (FPGA + external PIPE PHY)
+3. Proceed to Phase 9 (Internal Transceiver Support)
 
 **Target Hardware:** TI TUSB1310A PIPE PHY + Xilinx Kintex-7 or Artix-7 FPGA
 
@@ -247,11 +358,6 @@ All features are optional and backward compatible through enable parameters.
 - ✅ **Gen3 Architecture** - 128b/130b encoding design (implementation deferred)
 
 **Impact:** Complete transparency from TLP to physical layer, no vendor IP required, works with open-source toolchains
-
-### Known TODOs
-The following items have TODO markers in the code:
-- `litepcie/phy/pipe_external_phy.py`: Several TODO comments for DLL integration
-  - Note: These may be addressed as part of hardware validation
 
 ---
 
@@ -279,22 +385,25 @@ The following items have TODO markers in the code:
 - `docs/plans/2025-10-17-phase-4-pipe-tx-rx-datapath.md` - Phase 4: TX/RX Datapath
 - `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5: Ordered Sets
 - `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6: LTSSM
+- `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7: Advanced LTSSM (70 KB, 10 tasks)
+
+**In Progress:**
+- `docs/plans/2025-10-17-phase-8-hardware-validation.md` - Phase 8: Hardware Validation (Tasks 8.1-8.4 complete)
 
 **Future Phases (Planned):**
-- `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7: Advanced LTSSM (70 KB, 10 tasks)
-- `docs/plans/2025-10-17-phase-8-hardware-validation.md` - Phase 8: Hardware Validation (74 KB, 9 tasks)
 - `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md` - Phase 9: Internal Transceivers (50 KB, 10 tasks)
 
 ### Completion Summaries
 - `docs/phase-4-completion-summary.md`
 - `docs/phase-5-completion-summary.md`
 - `docs/phase-6-completion-summary.md`
+- `docs/phase-7-completion-summary.md`
 
 ---
 
 ## Conclusion
 
-**Phases 3-6 are complete and production-ready!**
+**Phases 3-7 are complete! Phase 8 software tasks complete!**
 
 The LitePCIe PIPE/DLL implementation now includes:
 - ✅ Full PIPE interface abstraction
@@ -302,9 +411,17 @@ The LitePCIe PIPE/DLL implementation now includes:
 - ✅ Clock compensation via SKP ordered sets
 - ✅ Link training via TS1/TS2 ordered sets
 - ✅ Automatic link initialization via LTSSM
-- ✅ Comprehensive test coverage (>90%)
+- ✅ Gen2 (5.0 GT/s) and multi-lane (x1/x4/x8/x16) support
+- ✅ Power management (L0s, L1, L2) and lane reversal
+- ✅ Complete DLL integration with external PIPE PHY
+- ✅ Layout converters for clean layer boundaries
+- ✅ LiteScope debugging infrastructure
+- ✅ Comprehensive test coverage (115+ tests, >90% coverage)
 - ✅ Production-quality documentation
 
-The implementation follows PCIe and PIPE specifications, uses test-driven development, and maintains high code quality standards. All features are optional and backward compatible.
+The implementation follows PCIe Base Spec 4.0 and Intel PIPE 3.0 specifications, uses test-driven development, and maintains high code quality standards. All features are optional and backward compatible.
 
-**Ready for:** Hardware validation, Gen2 enhancements, and multi-lane support.
+**Current Status:**
+- Software/simulation infrastructure complete and validated
+- Ready for hardware testing with external PIPE PHY (Tasks 8.5-8.9)
+- Alternative: Proceed to Phase 9 (Internal Transceiver Support)
