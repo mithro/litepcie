@@ -78,12 +78,13 @@ class LTSSM(LiteXModule):
     CONFIGURATION = 2
     L0 = 3
     RECOVERY = 4
+    RECOVERY_SPEED = 5  # Speed change substate
 
     def __init__(self, gen=1, lanes=1):
         # Link status outputs
         self.link_up = Signal()
         self.current_state = Signal(3)
-        self.link_speed = Signal(2, reset=gen)
+        self.link_speed = Signal(2, reset=1)  # Always start at Gen1
         self.link_width = Signal(5, reset=lanes)
 
         # PIPE control outputs (to PIPE TX)
@@ -96,6 +97,21 @@ class LTSSM(LiteXModule):
         self.ts1_detected = Signal()
         self.ts2_detected = Signal()
         self.rx_elecidle = Signal()
+
+        # Gen2 speed negotiation support
+        self.gen2_capable = Signal(reset=1 if gen >= 2 else 0)
+        self.ts_rate_id = Signal(5, reset=gen)  # Rate ID to advertise in TS1/TS2
+        self.rx_rate_id = Signal(5)  # Rate ID received from partner
+        self.speed_change_required = Signal()  # Need to change speed
+
+        # Detect if partner supports same or higher speed
+        self.comb += [
+            self.speed_change_required.eq(
+                self.gen2_capable &
+                (self.rx_rate_id >= 2) &
+                (self.link_speed == 1)  # Currently at Gen1
+            ),
+        ]
 
         # # #
 
@@ -162,9 +178,13 @@ class LTSSM(LiteXModule):
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
+            # If speed change required, enter RECOVERY.Speed
+            If(
+                self.speed_change_required,
+                NextState("RECOVERY_SPEED"),
             # Monitor for link errors
             # If rx goes to electrical idle unexpectedly, enter RECOVERY
-            If(
+            ).Elif(
                 self.rx_elecidle,
                 NextState("RECOVERY"),
             ),
@@ -186,6 +206,26 @@ class LTSSM(LiteXModule):
             # (Full spec would go through POLLING/CONFIGURATION again)
             If(
                 (~self.rx_elecidle) & self.ts1_detected,
+                NextState("L0"),
+            ),
+        )
+
+        # RECOVERY.Speed State - Speed Change
+        # Reference: PCIe Spec 4.0, Section 4.2.6.2.1: Speed Change
+        self.fsm.act(
+            "RECOVERY_SPEED",
+            NextValue(self.current_state, self.RECOVERY_SPEED),
+            NextValue(self.link_up, 0),
+            # Change link speed to Gen2
+            NextValue(self.link_speed, 2),
+            # Send TS1 at new speed
+            NextValue(self.send_ts1, 1),
+            NextValue(self.send_ts2, 0),
+            NextValue(self.tx_elecidle, 0),
+            # Wait for partner TS1 at new speed
+            If(
+                self.ts1_detected,
+                # Speed change successful, return to L0
                 NextState("L0"),
             ),
         )
