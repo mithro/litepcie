@@ -19,6 +19,7 @@ import unittest
 
 from migen import *
 from litepcie.dll.ltssm import LTSSM
+from litex.gen import run_simulation
 
 
 class TestLTSSMStructure(unittest.TestCase):
@@ -80,6 +81,61 @@ class TestLTSSMStructure(unittest.TestCase):
         self.assertTrue(hasattr(dut, "ts1_detected"))
         self.assertTrue(hasattr(dut, "ts2_detected"))
         self.assertTrue(hasattr(dut, "rx_elecidle"))
+
+
+class TestLTSSMDetect(unittest.TestCase):
+    """Test LTSSM DETECT state."""
+
+    def test_ltssm_starts_in_detect(self):
+        """
+        LTSSM should start in DETECT state after reset.
+
+        DETECT state responsibilities:
+        - Check for receiver on the link
+        - Determine if link partner is present
+        - Transition to POLLING when receiver detected
+
+        Reference: PCIe Spec 4.0, Section 4.2.5.3.1: Detect
+        """
+        def testbench(dut):
+            # After reset, should be in DETECT
+            state = yield dut.current_state
+            self.assertEqual(state, dut.DETECT)
+
+            # Link should not be up
+            link_up = yield dut.link_up
+            self.assertEqual(link_up, 0)
+
+            # TX should be in electrical idle
+            tx_elecidle = yield dut.tx_elecidle
+            self.assertEqual(tx_elecidle, 1)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+    def test_detect_transitions_to_polling_when_receiver_detected(self):
+        """
+        DETECT should transition to POLLING when receiver exits electrical idle.
+
+        In real hardware, receiver detection is done by PHY. For this implementation,
+        we use rx_elecidle signal: when it goes low, receiver is detected.
+        """
+        def testbench(dut):
+            # Start in DETECT
+            state = yield dut.current_state
+            self.assertEqual(state, dut.DETECT)
+
+            # Simulate receiver detection (rx_elecidle goes low)
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield  # Give state machine time to transition
+
+            # Should transition to POLLING
+            state = yield dut.current_state
+            self.assertEqual(state, dut.POLLING)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
 
 
 if __name__ == "__main__":

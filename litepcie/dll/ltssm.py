@@ -99,6 +99,36 @@ class LTSSM(LiteXModule):
 
         # # #
 
-        # State machine will be implemented in subsequent tasks
-        # For now, stay in DETECT state
-        self.comb += self.current_state.eq(self.DETECT)
+        # LTSSM State Machine
+        self.submodules.fsm = FSM(reset_state="DETECT")
+
+        # DETECT State - Receiver Detection
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.1
+        self.fsm.act("DETECT",
+            # In DETECT, TX is in electrical idle
+            NextValue(self.tx_elecidle, 1),
+            NextValue(self.link_up, 0),
+            NextValue(self.current_state, self.DETECT),
+
+            # Transition to POLLING when receiver detected (rx_elecidle goes low)
+            If(~self.rx_elecidle,
+                NextState("POLLING"),
+            ),
+        )
+
+        # Placeholder states (to be implemented in subsequent tasks)
+        self.fsm.act("POLLING",
+            NextValue(self.current_state, self.POLLING),
+        )
+
+        self.fsm.act("CONFIGURATION",
+            NextValue(self.current_state, self.CONFIGURATION),
+        )
+
+        self.fsm.act("L0",
+            NextValue(self.current_state, self.L0),
+        )
+
+        self.fsm.act("RECOVERY",
+            NextValue(self.current_state, self.RECOVERY),
+        )
