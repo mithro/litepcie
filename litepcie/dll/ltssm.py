@@ -150,8 +150,24 @@ class LTSSM(LiteXModule):
             ),
         )
 
+        # L0 State - Normal Operation (Link Up)
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.5
         self.fsm.act("L0",
             NextValue(self.current_state, self.L0),
+
+            # Link is up and operational
+            NextValue(self.link_up, 1),
+
+            # Stop sending training sequences
+            NextValue(self.send_ts1, 0),
+            NextValue(self.send_ts2, 0),
+            NextValue(self.tx_elecidle, 0),
+
+            # Monitor for link errors
+            # If rx goes to electrical idle unexpectedly, enter RECOVERY
+            If(self.rx_elecidle,
+                NextState("RECOVERY"),
+            ),
         )
 
         self.fsm.act("RECOVERY",

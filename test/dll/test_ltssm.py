@@ -246,5 +246,96 @@ class TestLTSSMConfiguration(unittest.TestCase):
         run_simulation(dut, testbench(dut))
 
 
+class TestLTSSML0(unittest.TestCase):
+    """Test LTSSM L0 state (normal operation)."""
+
+    def test_l0_sets_link_up(self):
+        """
+        L0 state should assert link_up signal.
+
+        L0 is the normal operational state where:
+        - Link is trained and ready for data transfer
+        - link_up signal is asserted
+        - No training sequences sent (except SKP for clock compensation)
+
+        Reference: PCIe Spec 4.0, Section 4.2.5.3.5: L0
+        """
+        def testbench(dut):
+            # Simulate full training sequence to reach L0
+            # DETECT → POLLING → CONFIGURATION → L0
+
+            # DETECT → POLLING
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+
+            # POLLING → CONFIGURATION
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield dut.ts1_detected.eq(0)
+
+            # CONFIGURATION → L0
+            yield dut.ts2_detected.eq(1)
+            yield
+            yield
+            yield  # Need extra cycle for state transition
+
+            # Should be in L0
+            state = yield dut.current_state
+            self.assertEqual(state, dut.L0)
+
+            # Link should be up
+            link_up = yield dut.link_up
+            self.assertEqual(link_up, 1)
+
+            # Should not be sending TS1 or TS2
+            send_ts1 = yield dut.send_ts1
+            send_ts2 = yield dut.send_ts2
+            self.assertEqual(send_ts1, 0)
+            self.assertEqual(send_ts2, 0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+    def test_l0_transitions_to_recovery_on_electrical_idle(self):
+        """
+        L0 should transition to RECOVERY if link goes to electrical idle.
+
+        Unexpected electrical idle indicates link error or partner initiated
+        link retrain. RECOVERY state will attempt to restore the link.
+        """
+        def testbench(dut):
+            # Get to L0 state (same sequence as above)
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield dut.ts1_detected.eq(0)
+            yield dut.ts2_detected.eq(1)
+            yield
+            yield
+            yield  # Need extra cycle for state transition
+
+            # In L0 now
+            state = yield dut.current_state
+            self.assertEqual(state, dut.L0)
+
+            # Simulate link going to electrical idle (error condition)
+            yield dut.rx_elecidle.eq(1)
+            yield
+            yield
+            yield  # Need extra cycle for state transition
+
+            # Should transition to RECOVERY
+            state = yield dut.current_state
+            self.assertEqual(state, dut.RECOVERY)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+
 if __name__ == "__main__":
     unittest.main()
