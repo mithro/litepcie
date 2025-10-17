@@ -376,145 +376,162 @@ All three use multi-state FSMs:
 
 ## Task Breakdown
 
-## Task 9.1: 8b/10b Encoder/Decoder Implementation
+## Task 9.1: 8b/10b Encoder/Decoder Integration
 
-**Goal:** Create software 8b/10b encoder/decoder using LiteX patterns (not hardware primitive).
+**Goal:** Validate LiteX's existing 8b/10b encoder/decoder for PCIe usage (NO wrapper needed).
 
-**Why Software?**
-- ECP5 doesn't have built-in 8b/10b (must be gateware)
-- Consistency across platforms
-- Easier testing and debugging
-- Can optimize for PCIe-specific usage
+**Why Use LiteX's 8b/10b Directly?**
+- ✅ **Already proven:** liteiclink uses it for GTX/GTY at PCIe speeds (2.5/5.0 GT/s)
+- ✅ **Already tested:** Used by liteeth (1000BASE-X) and liteiclink (SERDES)
+- ✅ **No duplication:** Avoids reinventing well-tested code
+- ✅ **Consistent:** Same encoder/decoder for ALL platforms (Xilinx + ECP5)
+- ✅ **Complete:** Includes K-character support, disparity tracking, error detection
 
 **Files to Create:**
-- `litepcie/phy/common/encoding.py` - 8b/10b encoder/decoder
-- `test/test_encoding.py` - Comprehensive tests
+- `test/phy/test_8b10b_pcie.py` - PCIe-specific validation tests
 
 **Reference:**
 - LiteX `litex/soc/cores/code_8b10b.py` (existing implementation)
-- usb3_pipe's use of LiteX Encoder/Decoder
-- ECP5-PCIe approach (study for PCIe-specific needs)
+- liteiclink's usage: `liteiclink/serdes/gtx_7series.py` (line 254-255)
+- Investigation: `docs/phase-9-8b10b-investigation.md`
 
 **Detailed Steps:**
 
-### Step 1: Review LiteX 8b/10b Implementation
-
-```bash
-# Check if LiteX already has 8b/10b
-find /home/tim/.local/lib/python*/site-packages/litex -name "*8b10b*" -o -name "*code*"
-```
-
-LiteX provides: `litex.soc.cores.code_8b10b.Encoder` and `Decoder`
-
-### Step 2: Create Wrapper for PCIe Usage
+### Step 1: Review LiteX 8b/10b API
 
 ```python
-# litepcie/phy/common/encoding.py
+# Study existing implementation
+from litex.soc.cores.code_8b10b import Encoder, Decoder, K, D
 
-from migen import *
-from litex.soc.cores.code_8b10b import Encoder, Decoder
-
-class PCIeEncoder(Module):
-    """
-    PCIe-optimized 8b/10b encoder.
-
-    Wraps LiteX Encoder with PCIe-specific features:
-    - Proper disparity tracking
-    - K-character support
-    - Running disparity initialization
-
-    Attributes
-    ----------
-    sink : Record (stream-like)
-        Input: 8-bit data + k flag
-    source : Record (stream-like)
-        Output: 10-bit encoded data
-    """
-    def __init__(self):
-        self.sink = sink = stream.Endpoint([("d", 8), ("k", 1)])
-        self.source = source = stream.Endpoint([("d", 10)])
-
-        # # #
-
-        encoder = Encoder(nwords=1, lsb_first=True)
-        self.submodules.encoder = encoder
-
-        self.comb += [
-            encoder.d[0].eq(sink.d),
-            encoder.k[0].eq(sink.k),
-            source.d.eq(encoder.output[0]),
-        ]
+# Key classes:
+# - Encoder(nwords=1, lsb_first=False) - Multi-word encoder with disparity
+# - Decoder(lsb_first=False) - Single-word decoder with error detection
+# - K(x, y) - Create K-character codes (e.g., K(28, 5) = 0xBC for comma)
+# - D(x, y) - Create D-character codes (e.g., D(0, 0) = 0x00)
 ```
 
-### Step 3: Test K-Character Encoding
+**Key Finding:** liteiclink uses `Encoder(nwords=2, lsb_first=True)` for GTX at PCIe speeds.
+
+### Step 2: Create PCIe K-Character Constants
 
 ```python
-# test/test_encoding.py
+# test/phy/test_8b10b_pcie.py
+
+from litex.soc.cores.code_8b10b import K, D
+
+# PCIe Training Sequences use these K-characters
+K28_5 = K(28, 5)  # 0xBC - COM (comma, for alignment)
+K23_7 = K(23, 7)  # 0xF7 - PAD (TS1/TS2 identifier)
+K27_7 = K(27, 7)  # 0xFB - STP (start of TLP)
+K29_7 = K(29, 7)  # 0xFD - END (end of TLP)
+K30_7 = K(30, 7)  # 0xFE - EDB (bad end)
+```
+
+### Step 3: Test PCIe K-Character Encoding
+
+```python
+# test/phy/test_8b10b_pcie.py
 
 import unittest
-from migen import *
-from litex.gen import run_simulation
+from migen import run_simulation
+from litex.soc.cores.code_8b10b import Encoder, K
 
-class TestPCIeEncoder(unittest.TestCase):
-    def test_k28_5_encoding(self):
-        """K28.5 (COM) should encode to 0x17C or 0x283."""
-        def testbench(encoder):
-            # Send K28.5
-            yield encoder.sink.valid.eq(1)
-            yield encoder.sink.d.eq(0xBC)  # K28.5
-            yield encoder.sink.k.eq(1)
+class Test8b10bPCIe(unittest.TestCase):
+    def test_k28_5_comma(self):
+        """K28.5 (COM) encodes correctly with both disparities."""
+        encoder = Encoder(nwords=1, lsb_first=True)
+
+        def testbench():
+            # Encode K28.5
+            yield encoder.d[0].eq(0xBC)
+            yield encoder.k[0].eq(1)
             yield
-            output = yield encoder.source.d
-            self.assertIn(output, [0x17C, 0x283])  # RD- or RD+
 
-        dut = PCIeEncoder()
-        run_simulation(dut, testbench(dut), vcd_name="encoder.vcd")
+            # Check output (one of two valid encodings)
+            output = yield encoder.output[0]
+            # RD- : 0b0011111010 = 0x0FA (LSB first) = 0x17C (MSB first)
+            # RD+ : 0b1100000101 = 0x305 (LSB first) = 0x283 (MSB first)
+            self.assertIn(output, [0x0FA, 0x305])  # LSB-first encodings
+
+        run_simulation(encoder, testbench(), vcd_name="k28_5.vcd")
+
+    def test_ts1_sequence(self):
+        """Test encoding PCIe TS1 ordered set: COM + TS1 + data."""
+        encoder = Encoder(nwords=4, lsb_first=True)
+
+        def testbench():
+            # TS1 = COM + PAD + Link_num + Lane_num
+            yield encoder.d[0].eq(0xBC)  # K28.5
+            yield encoder.k[0].eq(1)
+            yield encoder.d[1].eq(0xF7)  # K23.7
+            yield encoder.k[1].eq(1)
+            yield encoder.d[2].eq(0x00)  # D0.0 - Link number
+            yield encoder.k[2].eq(0)
+            yield encoder.d[3].eq(0x00)  # D0.0 - Lane number
+            yield encoder.k[3].eq(0)
+            yield
+
+            # Verify all outputs are valid 10-bit codes
+            for i in range(4):
+                output = yield encoder.output[i]
+                self.assertGreater(output, 0)
+                self.assertLess(output, 1024)  # 10-bit max
+
+        run_simulation(encoder, testbench(), vcd_name="ts1.vcd")
 ```
 
-### Step 4: Add Running Disparity Management
-
-Ensure disparity is tracked correctly for PCIe requirements.
-
-### Step 5: Create Decoder with Error Detection
+### Step 4: Test Decoder Error Detection
 
 ```python
-class PCIeDecoder(Module):
-    """
-    PCIe-optimized 8b/10b decoder.
+def test_decoder_invalid_code(self):
+    """Decoder detects invalid 10-bit codes."""
+    decoder = Decoder(lsb_first=True)
 
-    Decodes 10-bit symbols to 8-bit + K flag.
-    Detects encoding errors (disparity, invalid codes).
-    """
-    def __init__(self):
-        self.sink = stream.Endpoint([("d", 10)])
-        self.source = stream.Endpoint([("d", 8), ("k", 1)])
-        self.invalid = Signal()  # Encoding error flag
+    def testbench():
+        # Send invalid code (all zeros)
+        yield decoder.input.eq(0x000)
+        yield
 
-        # # #
+        # Should flag as invalid
+        invalid = yield decoder.invalid
+        self.assertEqual(invalid, 1)
 
-        decoder = Decoder(nwords=1, lsb_first=True)
-        self.submodules.decoder = decoder
-
-        self.comb += [
-            decoder.input[0].eq(self.sink.d),
-            self.source.d.eq(decoder.d[0]),
-            self.source.k.eq(decoder.k[0]),
-            self.invalid.eq(decoder.invalid[0]),
-        ]
+    run_simulation(decoder, testbench())
 ```
 
-### Step 6: Test Decoder Error Detection
+### Step 5: Test Disparity Tracking
 
-Test invalid codes, disparity errors, etc.
+```python
+def test_disparity_tracking(self):
+    """Encoder maintains running disparity across symbols."""
+    encoder = Encoder(nwords=2, lsb_first=True)
 
-### Step 7: Document and Commit
+    def testbench():
+        # Encode two D0.0 symbols
+        yield encoder.d[0].eq(0x00)
+        yield encoder.k[0].eq(0)
+        yield encoder.d[1].eq(0x00)
+        yield encoder.k[1].eq(0)
+        yield
+
+        # Check disparity flips
+        disp0 = yield encoder.disparity[0]
+        disp1 = yield encoder.disparity[1]
+        self.assertNotEqual(disp0, disp1)
+
+    run_simulation(encoder, testbench())
+```
+
+### Step 6: Document Usage Pattern
+
+Create examples showing how to use LiteX's Encoder/Decoder in transceiver code.
 
 **Success Criteria:**
-- ✅ Encoder correctly encodes all PCIe K-characters
-- ✅ Decoder detects all error conditions
-- ✅ Running disparity tracks correctly
-- ✅ Tests cover >95% of code
-- ✅ Compatible with LiteX stream interface
+- ✅ All PCIe K-characters (K28.5, K23.7, K27.7, K29.7, K30.7) encode correctly
+- ✅ Decoder detects invalid codes
+- ✅ Disparity tracking verified
+- ✅ Tests pass and document usage for Tasks 9.3-9.5
+- ✅ No wrapper needed (use LiteX directly)
 
 **Estimated Time:** 0.5 days (mostly testing existing LiteX code)
 
@@ -855,13 +872,18 @@ class S7GTXTransceiver(PIPETransceiver):
         self.submodules.pll = pll
 
         # TX/RX Datapaths (from usb3_pipe pattern)
-        # Note: For Xilinx, we use hardware 8b/10b in the GTX primitive
-        # For ECP5, we'll use software 8b/10b (see Task 9.5)
         self.submodules.tx_datapath = TransceiverTXDatapath(phy_dw=16)  # 2 bytes
         self.submodules.rx_datapath = TransceiverRXDatapath(phy_dw=16)  # 2 bytes
 
-        # No software encoder/decoder for Xilinx - hardware 8b/10b is used
-        # (Lines removed - was contradictory with p_TX_8B10B_ENABLE=True)
+        # Software 8b/10b encoder/decoder (like liteiclink GTX)
+        # Note: We use software 8b/10b for ALL platforms for consistency
+        from litex.soc.cores.code_8b10b import Encoder, Decoder
+        self.submodules.encoder = ClockDomainsRenamer("tx")(
+            Encoder(nwords=2, lsb_first=True)
+        )
+        self.submodules.decoder = ClockDomainsRenamer("rx")(
+            Decoder(lsb_first=True)
+        )
 
         # GTX primitive (next step)
         # ...
@@ -887,17 +909,16 @@ self.specials += Instance("GTXE2_CHANNEL",
     p_PMA_RSV = 0x18480,  # USB3 settings (work for PCIe)
     p_PMA_RSV2 = 0x2050,
 
-    # RX Configuration
-    p_RX_DATA_WIDTH = 20,  # 2 bytes x 10 bits
+    # RX Configuration (software 8b/10b, so 10-bit interface)
+    p_RX_DATA_WIDTH = 20,  # 2 bytes x 10 bits (encoded)
     p_RX_INT_DATAWIDTH = 0,
 
-    # TX Configuration
-    p_TX_DATA_WIDTH = 20,
+    # TX Configuration (software 8b/10b, so 10-bit interface)
+    p_TX_DATA_WIDTH = 20,  # 2 bytes x 10 bits (encoded)
     p_TX_INT_DATAWIDTH = 0,
 
-    # 8b/10b Encoder/Decoder
-    p_TX_8B10B_ENABLE = True,
-    p_RX_8B10B_ENABLE = True,
+    # 8b/10b Encoder/Decoder - DISABLED (use software encoder/decoder)
+    # (Omit p_TX_8B10B_ENABLE and p_RX_8B10B_ENABLE - defaults to False)
 
     # Output dividers (Gen1=/16, Gen2=/8)
     p_TXOUT_DIV = pll.config["d"],
@@ -912,21 +933,21 @@ self.specials += Instance("GTXE2_CHANNEL",
     o_GTXTXN = pads.tx_n,
     o_GTXTXP = pads.tx_p,
 
-    # TX User Interface (hardware 8b/10b enabled)
+    # TX User Interface (software 8b/10b, feed 10-bit encoded data)
     i_TXUSRCLK = ClockSignal("tx"),
     i_TXUSRCLK2 = ClockSignal("tx"),
     o_TXOUTCLK = self.tx_clk,
-    # Connect 8-bit data directly - GTX handles encoding
-    i_TXDATA = self.tx_datapath.source.data,    # 16-bit (2 bytes)
-    i_TXCHARISK = self.tx_datapath.source.ctrl, # 2-bit (K-char per byte)
+    # Connect 10-bit encoded data from software encoder
+    i_TXDATA = Cat(self.encoder.output[0], self.encoder.output[1]),  # 20-bit (2 x 10-bit)
+    # Note: i_TXCHARISK unused when hardware 8b/10b disabled
 
-    # RX User Interface (hardware 8b/10b enabled)
+    # RX User Interface (software 8b/10b, receive 10-bit encoded data)
     i_RXUSRCLK = ClockSignal("rx"),
     i_RXUSRCLK2 = ClockSignal("rx"),
     o_RXOUTCLK = self.rx_clk,
-    # Receive 8-bit decoded data - GTX handles decoding
-    o_RXDATA = self.rx_datapath.sink.data,      # 16-bit (2 bytes)
-    o_RXCHARISK = self.rx_datapath.sink.ctrl,   # 2-bit (K-char per byte)
+    # Receive 10-bit encoded data, feed to software decoder
+    o_RXDATA = self.rx_encoded_data,  # 20-bit (2 x 10-bit) - connect to decoder
+    # Note: o_RXCHARISK unused when hardware 8b/10b disabled
 
     # Electrical Idle
     i_TXELECIDLE = self.tx_elecidle,

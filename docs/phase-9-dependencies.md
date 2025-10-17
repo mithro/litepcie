@@ -136,13 +136,15 @@ decoder = Decoder(nwords=1)
 
 | FPGA | Hardware 8b/10b | Software 8b/10b | Phase 9 Strategy |
 |------|-----------------|-----------------|------------------|
-| **Xilinx 7-Series** | ✅ Built-in (GTX/GTP) | ✅ Available | **Use hardware** (faster, proven) |
-| **Xilinx UltraScale+** | ✅ Built-in (GTY/GTH) | ✅ Available | **Use hardware** (faster, proven) |
-| **Lattice ECP5** | ❌ Not available | ✅ Available | **Must use software** |
+| **Xilinx 7-Series** | ✅ Built-in (GTX/GTP) | ✅ Available | **Use software** (consistent, proven by liteiclink) |
+| **Xilinx UltraScale+** | ✅ Built-in (GTY/GTH) | ✅ Available | **Use software** (consistent, proven by liteiclink) |
+| **Lattice ECP5** | ❌ Not available | ✅ Available | **Use software** (only option) |
 
 **Decision (Clarifies Must Fix 3):**
-- **Xilinx:** Use hardware 8b/10b via liteiclink wrappers
-- **ECP5:** Use software 8b/10b from LiteX
+- **ALL platforms:** Use software 8b/10b from `litex.soc.cores.code_8b10b`
+- **Rationale:** liteiclink uses software 8b/10b even for Xilinx GTX/GTY at PCIe speeds (proven pattern)
+- **Benefits:** Consistent behavior, single code path, simpler testing, no transceiver-specific quirks
+- **See:** `docs/phase-9-8b10b-investigation.md` for detailed analysis
 
 ---
 
@@ -220,10 +222,10 @@ LitePCIe (Phase 9)
 from migen import *
 from litex.gen import LiteXModule
 from litex.soc.interconnect import stream
-from litex.soc.cores.code_8b10b import Encoder, Decoder  # Optional (hardware 8b/10b)
+from litex.soc.cores.code_8b10b import Encoder, Decoder, K  # Software 8b/10b
 
-# Critical dependency:
-from liteiclink.transceiver.gtx_7series import GTXChannelPLL, GTX
+# Critical dependency for PLL configuration:
+from liteiclink.transceiver.gtx_7series import GTXChannelPLL
 
 class Xilinx7SeriesGTXTransceiver(LiteXModule):
     def __init__(self, platform, pads, ...):
@@ -234,16 +236,23 @@ class Xilinx7SeriesGTXTransceiver(LiteXModule):
             linerate   = 2.5e9  # Gen1: 2.5 GT/s
         )
 
-        # GTX primitive wrapper
-        self.gtx = GTX(
-            pll         = self.pll,
-            tx_pads     = pads.tx,
-            rx_pads     = pads.rx,
-            sys_clk_freq = 125e6,
-            data_width  = 20,  # 2 bytes (8-bit data + K-char per byte)
-            # Hardware 8b/10b enabled
-            tx_buffer_enable = True,
-            rx_buffer_enable = True
+        # Software 8b/10b encoder/decoder (like liteiclink GTX)
+        self.encoder = ClockDomainsRenamer("tx")(
+            Encoder(nwords=2, lsb_first=True)  # 2 bytes
+        )
+        self.decoder = ClockDomainsRenamer("rx")(
+            Decoder(lsb_first=True)
+        )
+
+        # GTX primitive (direct instantiation, no hardware 8b/10b)
+        self.specials += Instance("GTXE2_CHANNEL",
+            # Omit p_TX_8B10B_ENABLE and p_RX_8B10B_ENABLE
+            # (use software encoder/decoder above)
+
+            # Connect to software encoder/decoder
+            i_TXDATA = Cat(self.encoder.output[0], self.encoder.output[1]),
+            o_RXDATA = self.decoder.input,
+            ...
         )
 ```
 
