@@ -14,6 +14,9 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 | Phase 4 | ✅ COMPLETE | 2025-10-17 | PIPE TX/RX Datapath + Cleanup |
 | Phase 5 | ✅ COMPLETE | 2025-10-17 | Ordered Sets & Link Training Foundation |
 | Phase 6 | ✅ COMPLETE | 2025-10-17 | LTSSM (Link Training State Machine) |
+| Phase 7 | ⏳ PLANNED | 2025-10-17 | Advanced LTSSM (Gen2, Multi-lane, Power States) |
+| Phase 8 | ⏳ PLANNED | 2025-10-17 | Hardware Validation (External PIPE PHY) |
+| Phase 9 | ⏳ PLANNED | 2025-10-17 | Internal Transceiver Support (GTX, ECP5) |
 
 ---
 
@@ -186,28 +189,64 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 ## Next Steps / Future Work
 
-### Phase 7: Advanced LTSSM Features (Not Yet Planned)
-Potential future enhancements:
-- Gen2 speed negotiation (5.0 GT/s)
-- Multi-lane support (x4, x8, x16)
-- Lane reversal detection
-- Equalization support
-- Power management states (L0s, L1, L2)
-- Advanced LTSSM substates (POLLING.Active, POLLING.Configuration, etc.)
+### Phase 7: Advanced LTSSM Features ⏳ PLANNED
 
-### Phase 8: Hardware Validation (Not Yet Planned)
-Testing with actual hardware:
-- External PIPE PHY integration (TI TUSB1310A or similar)
-- Real receiver detection and PHY capabilities
-- Hardware loopback testing
-- Interoperability with PCIe root complex
+**Status:** Implementation plan complete
+**Plan:** `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` (70 KB, 10 tasks)
+**Timeline:** ~11 hours | **Tests:** 30+ new tests
+**Goal:** Production-ready Gen2 and multi-lane PCIe features
 
-### Phase 9: Internal Transceiver Support (Not Yet Planned)
-FPGA-specific transceivers:
-- Xilinx GTX/GTH wrapper with LTSSM
-- ECP5 SERDES wrapper with LTSSM
-- Gen3 support (128b/130b encoding)
-- Advanced equalization
+**Key Features:**
+- ✅ **Gen2 Speed Negotiation** - 5.0 GT/s (2x throughput increase)
+- ✅ **Multi-Lane Support** - x1, x4, x8, x16 configurations (up to 16x parallelism)
+- ✅ **Lane Reversal Detection** - Automatic detection and mapping for flexible PCB routing
+- ✅ **Link Equalization** - 4-phase equalization for Gen2 signal integrity
+- ✅ **Power Management** - L0s, L1, L2 states for energy efficiency
+- ✅ **Detailed Substates** - POLLING.Active/Configuration/Compliance, RECOVERY substates
+
+**Potential Throughput:** Gen2 x16 = 64 Gbps (32x faster than current Gen1 x1)
+
+All features are optional and backward compatible through enable parameters.
+
+---
+
+### Phase 8: Hardware Validation ⏳ PLANNED
+
+**Status:** Implementation plan complete
+**Plan:** `docs/plans/2025-10-17-phase-8-hardware-validation.md` (74 KB, 9 tasks)
+**Timeline:** ~10 hours (implementation) + 1-4 weeks (hardware validation)
+**Goal:** Bridge simulation to real hardware with external PIPE PHY
+
+**Key Components:**
+- ✅ **Complete DLL Integration** - Addresses all TODOs in pipe_external_phy.py
+- ✅ **Layout Converters** - Handle inter-layer data format differences
+- ✅ **Hardware Debugging** - ILA/LiteScope integration for signal monitoring
+- ✅ **FPGA Test Design** - Ready-to-build hardware validation design
+- ✅ **Real Receiver Detection** - Use PHY rx_status instead of simulation placeholder
+- ✅ **Validation Framework** - 7-phase progressive validation process
+- ✅ **Interoperability Testing** - Test with PCIe root complex hosts
+
+**Target Hardware:** TI TUSB1310A PIPE PHY + Xilinx Kintex-7 or Artix-7 FPGA
+
+---
+
+### Phase 9: Internal Transceiver Support ⏳ PLANNED
+
+**Status:** Implementation plan complete
+**Plan:** `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md` (50 KB, 10 tasks)
+**Timeline:** ~11.5 days | **Coverage:** >85% target
+**Goal:** Vendor-IP-free PCIe using FPGA transceivers
+
+**Key Components:**
+- ✅ **8b/10b Encoder/Decoder** - Software implementation for Gen1/Gen2
+- ✅ **Xilinx 7-Series GTX** - GTXE2_CHANNEL wrapper with PIPE interface
+- ✅ **UltraScale+ GTH/GTY** - High-performance transceiver wrappers
+- ✅ **Lattice ECP5 SERDES** - Open-source FPGA support (nextpnr compatible)
+- ✅ **Clock Domain Crossing** - Robust CDC between system and transceiver clocks
+- ✅ **LTSSM Integration** - Automatic link training with transceivers
+- ✅ **Gen3 Architecture** - 128b/130b encoding design (implementation deferred)
+
+**Impact:** Complete transparency from TLP to physical layer, no vendor IP required, works with open-source toolchains
 
 ### Known TODOs
 The following items have TODO markers in the code:
@@ -233,11 +272,18 @@ The following items have TODO markers in the code:
 - `docs/code-quality.md` - Code quality standards
 
 ### Implementation Plans
-- `docs/plans/phase-3-pipe-interface-external-phy.md`
-- `docs/plans/phase-4-cleanup-and-documentation.md`
-- `docs/plans/2025-10-17-phase-4-pipe-tx-rx-datapath.md`
-- `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md`
-- `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
+
+**Completed Phases:**
+- `docs/plans/phase-3-pipe-interface-external-phy.md` - Phase 3: PIPE Interface & External PHY
+- `docs/plans/phase-4-cleanup-and-documentation.md` - Phase 4: Cleanup & Documentation
+- `docs/plans/2025-10-17-phase-4-pipe-tx-rx-datapath.md` - Phase 4: TX/RX Datapath
+- `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5: Ordered Sets
+- `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6: LTSSM
+
+**Future Phases (Planned):**
+- `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7: Advanced LTSSM (70 KB, 10 tasks)
+- `docs/plans/2025-10-17-phase-8-hardware-validation.md` - Phase 8: Hardware Validation (74 KB, 9 tasks)
+- `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md` - Phase 9: Internal Transceivers (50 KB, 10 tasks)
 
 ### Completion Summaries
 - `docs/phase-4-completion-summary.md`
