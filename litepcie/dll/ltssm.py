@@ -79,8 +79,12 @@ class LTSSM(LiteXModule):
     L0 = 3
     RECOVERY = 4
     RECOVERY_SPEED = 5  # Speed change substate
+    RECOVERY_EQ_PHASE0 = 6  # Equalization phase 0
+    RECOVERY_EQ_PHASE1 = 7  # Equalization phase 1
+    RECOVERY_EQ_PHASE2 = 8  # Equalization phase 2
+    RECOVERY_EQ_PHASE3 = 9  # Equalization phase 3
 
-    def __init__(self, gen=1, lanes=1):
+    def __init__(self, gen=1, lanes=1, enable_equalization=False):
         # Link status outputs
         self.link_up = Signal()
         self.current_state = Signal(3)
@@ -165,6 +169,15 @@ class LTSSM(LiteXModule):
                 self.lane_reversal.eq(0),
                 self.logical_lane_map[0].eq(0),
             ]
+
+        # Equalization support
+        self.enable_eq = enable_equalization
+        self.eq_capable = Signal(reset=1 if (gen >= 2 and enable_equalization) else 0)
+        self.force_equalization = Signal()  # Trigger equalization
+        self.eq_phase = Signal(2)  # Current equalization phase (0-3)
+
+        # Equalization phase counter
+        eq_phase_timer = Signal(16)
 
         # # #
 
@@ -257,10 +270,15 @@ class LTSSM(LiteXModule):
             NextValue(self.send_ts1, 1),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
+            # If equalization requested and capable, enter equalization
+            If(
+                self.eq_capable & self.force_equalization,
+                NextState("RECOVERY_EQ_PHASE0"),
+                NextValue(eq_phase_timer, 0),
             # Wait for partner to exit electrical idle and respond with TS1
             # Simplified recovery: if we receive TS1, return to L0
             # (Full spec would go through POLLING/CONFIGURATION again)
-            If(
+            ).Elif(
                 (~self.rx_elecidle) & self.ts1_detected,
                 NextState("L0"),
             ),
@@ -283,5 +301,65 @@ class LTSSM(LiteXModule):
                 self.ts1_detected,
                 # Speed change successful, return to L0
                 NextState("L0"),
+            ),
+        )
+
+        # RECOVERY.Equalization Phase 0 - Transmitter Preset
+        # Reference: PCIe Spec 4.0, Section 4.2.3: Link Equalization
+        self.fsm.act(
+            "RECOVERY_EQ_PHASE0",
+            NextValue(self.current_state, self.RECOVERY_EQ_PHASE0),
+            NextValue(self.eq_phase, 0),
+            NextValue(eq_phase_timer, eq_phase_timer + 1),
+            # Send TS1 with equalization request
+            NextValue(self.send_ts1, 1),
+            # Phase 0: Transmitter preset (simplified - time-based)
+            If(
+                eq_phase_timer > 100,
+                NextState("RECOVERY_EQ_PHASE1"),
+                NextValue(eq_phase_timer, 0),
+            ),
+        )
+
+        # RECOVERY.Equalization Phase 1 - Receiver Coefficient Request
+        self.fsm.act(
+            "RECOVERY_EQ_PHASE1",
+            NextValue(self.current_state, self.RECOVERY_EQ_PHASE1),
+            NextValue(self.eq_phase, 1),
+            NextValue(eq_phase_timer, eq_phase_timer + 1),
+            # Phase 1: Receiver coefficient request
+            If(
+                eq_phase_timer > 100,
+                NextState("RECOVERY_EQ_PHASE2"),
+                NextValue(eq_phase_timer, 0),
+            ),
+        )
+
+        # RECOVERY.Equalization Phase 2 - Transmitter Coefficient Update
+        self.fsm.act(
+            "RECOVERY_EQ_PHASE2",
+            NextValue(self.current_state, self.RECOVERY_EQ_PHASE2),
+            NextValue(self.eq_phase, 2),
+            NextValue(eq_phase_timer, eq_phase_timer + 1),
+            # Phase 2: Transmitter coefficient update
+            If(
+                eq_phase_timer > 100,
+                NextState("RECOVERY_EQ_PHASE3"),
+                NextValue(eq_phase_timer, 0),
+            ),
+        )
+
+        # RECOVERY.Equalization Phase 3 - Link Evaluation
+        self.fsm.act(
+            "RECOVERY_EQ_PHASE3",
+            NextValue(self.current_state, self.RECOVERY_EQ_PHASE3),
+            NextValue(self.eq_phase, 3),
+            NextValue(eq_phase_timer, eq_phase_timer + 1),
+            # Phase 3: Link evaluation
+            If(
+                eq_phase_timer > 100,
+                # Equalization complete, return to L0
+                NextState("L0"),
+                NextValue(self.force_equalization, 0),
             ),
         )
