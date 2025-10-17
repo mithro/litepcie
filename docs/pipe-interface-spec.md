@@ -337,11 +337,18 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 - ✅ TS1/TS2 RX detection in PIPERXDepacketizer (ts1_detected/ts2_detected flags)
 - ✅ Edge case handling (COM disambiguation: SKP vs TS vs START symbols)
 
-**Features Pending (Phase 6: LTSSM):**
-- ⬜ Link Training State Machine (LTSSM) implementation
-- ⬜ Automatic TS1/TS2 exchange during link training
-- ⬜ Speed negotiation (Gen1/Gen2)
-- ⬜ Lane configuration and reversal detection
+**Phase 6 Complete (LTSSM) ✅:**
+- ✅ LTSSM States: DETECT, POLLING, CONFIGURATION, L0, RECOVERY
+- ✅ Automatic link training (power-on to L0 in ~56 cycles)
+- ✅ Automatic TS1/TS2 exchange during link training
+- ✅ Error recovery (L0 → RECOVERY → L0)
+- ✅ Link status indication (link_up signal)
+
+**Features Pending (Phase 7):**
+- ⬜ Gen2 speed negotiation (5.0 GT/s)
+- ⬜ Multi-lane support (x4, x8, x16)
+- ⬜ Lane reversal detection
+- ⬜ Power management states (L0s, L1, L2)
 
 **Commits:**
 - `0747c51` - SKP TX insertion logic
@@ -359,6 +366,7 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 | 2025-10-16 | 0.1 | Initial minimal PIPE 3.0 spec for Gen1, 8-bit mode |
 | 2025-10-17 | 0.2 | Added Implementation Status section for Phase 4 completion |
 | 2025-10-17 | 0.3 | Added Phase 5 status: SKP ordered sets and TS1/TS2 structures |
+| 2025-10-17 | 0.4 | Added Phase 6 completion: LTSSM with automatic link training |
 
 ## Implementation Status
 
@@ -379,16 +387,30 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 5. ~~Coverage analysis and edge case testing~~ ✅ Complete
 6. ~~91 DLL tests passing, 99% code coverage~~ ✅ Complete
 
-### Phase 6: Link Training State Machine (LTSSM) ⏳ (Planned)
-1. Implement LTSSM states (Detect, Polling, Configuration, Recovery, L0)
-2. Add automatic TS1/TS2 exchange during link initialization
-3. Implement speed negotiation (Gen1/Gen2)
-4. Add lane configuration logic (x1 initially)
-5. Implement link up/down detection
-6. Complete external PIPE PHY wrapper integration
-7. Test with external hardware (if available)
+### Phase 6: Link Training State Machine (LTSSM) ✅ (Completed 2025-10-17)
+1. ~~Implement LTSSM states (Detect, Polling, Configuration, Recovery, L0)~~ ✅ Complete
+2. ~~Add automatic TS1/TS2 exchange during link initialization~~ ✅ Complete
+3. ~~Add lane configuration logic (x1)~~ ✅ Complete (Gen1 x1)
+4. ~~Implement link up/down detection~~ ✅ Complete
+5. ~~LTSSM integration with PIPEInterface~~ ✅ Complete
+6. ~~Automatic link training loopback test~~ ✅ Complete
+7. ~~107 DLL tests passing, 98% code coverage~~ ✅ Complete
 
-### Future Enhancements (Phase 7+)
+### Phase 7: Advanced LTSSM Features ⏳ (Planned)
+1. Gen2 speed negotiation (5.0 GT/s)
+2. Multi-lane support (x4, x8, x16)
+3. Lane reversal detection
+4. Equalization support
+5. Power management states (L0s, L1, L2)
+6. Compliance mode
+
+### Phase 8: External PHY Integration ⏳ (Planned)
+1. Complete external PIPE PHY wrapper integration
+2. Test with external hardware (TI TUSB1310A or similar)
+3. Receiver detection using PHY capabilities
+4. Validate Gen1 x1 operation on hardware
+
+### Future Enhancements (Phase 9+)
 1. Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
 2. Add multi-lane support (x4, x8, x16)
 3. Expand to Gen3, wider datapaths (16/32-bit modes)

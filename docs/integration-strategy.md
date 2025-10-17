@@ -560,13 +560,24 @@ Our custom PHY implementations will be considered successful when:
 - 91 DLL tests passing (including 35 PIPE tests), 99% code coverage, all edge cases handled
 - See: `docs/phase-5-completion-summary.md`, `docs/phase-4-cleanup-and-documentation.md`
 
-### Phase 6: Link Training State Machine (LTSSM) ⏳ (Planned)
-- Implement LTSSM states (Detect, Polling, Configuration, Recovery, L0)
-- Automatic TS1/TS2 exchange during link initialization
-- Speed negotiation (Gen1/Gen2)
-- Lane configuration (x1 initially)
-- Link up/down detection
+### Phase 6: Link Training State Machine (LTSSM) ✅ (Completed 2025-10-17)
+- **LTSSM States Implemented:** DETECT, POLLING, CONFIGURATION, L0, RECOVERY
+- **Automatic Link Training:** Links train from power-on to L0 in ~56 cycles without manual intervention
+- **TS1/TS2 Control:** LTSSM automatically controls TS1/TS2 generation during training
+- **Error Recovery:** L0 → RECOVERY → L0 on electrical idle error
+- **PIPE Integration:** Clean integration with PIPEInterface via `enable_ltssm=True` parameter
+- **Link Status:** `link_up` signal indicates trained link in L0 state
+- 107 DLL tests passing (including 16 LTSSM tests), 98% code coverage
+- See: `docs/phase-6-completion-summary.md`, `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
+
+### Phase 7: Advanced LTSSM Features ⏳ (Planned)
+- Gen2 speed negotiation (5.0 GT/s)
+- Multi-lane support (x4, x8, x16)
+- Lane reversal detection
+- Equalization support
+- Power management states (L0s, L1, L2)
+- Compliance mode
 
 ---
 
-**Status:** Active development - Phase 5 complete, Phase 6 planned.
+**Status:** Phase 6 complete - LTSSM provides automatic link training. Ready for Phase 7 (Advanced Features) or Phase 8 (Hardware Integration).

@@ -35,11 +35,13 @@ PHY:
   - Xilinx 7-Series (up to PCIe Gen2 X8).
   - Intel Cyclone5  (up to PCIe Gen2 X4).
   - PIPE 3.0 interface for external PHY chips (Gen1/Gen2).
+  - LTSSM (Link Training State Machine) with automatic link initialization.
   - 64/128/256/512-bit datapath.
   - Clock domain crossing.
 
 Core:
   - Data Link Layer (DLL) with ACK/NAK protocol, retry buffer, LCRC.
+  - PIPE TX/RX with K-character framing, SKP ordered sets, TS1/TS2 training sequences.
   - TLP layer.
   - Reordering.
   - MSI (Single, Multi-vector)/MSI-X.
@@ -94,17 +96,20 @@ $ python3 -m unittest test.test_name
 ```
 
 Current test coverage:
-- 86+ passing tests
-- DLL/PIPE: 99%+ coverage (30 PIPE-specific tests)
+- 107 passing tests (all DLL tests)
+- DLL/PIPE/LTSSM: 98% coverage
+- LTSSM: 16 tests (automatic link training validated)
+- PIPE: 34 tests (TX/RX, SKP, TS1/TS2)
 - Comprehensive edge case testing
 
 [> Documentation
 ----------------
+- [Integration Strategy](docs/integration-strategy.md) - Development phases and current status
 - [PIPE Interface User Guide](docs/pipe-interface-guide.md) - Complete guide for using PIPE interface
 - [PIPE Architecture](docs/pipe-architecture.md) - Detailed architecture with timing diagrams
 - [Integration Examples](docs/pipe-integration-examples.md) - Practical integration examples
 - [Testing Guide](docs/pipe-testing-guide.md) - How to test and debug PIPE implementations
-- [Integration Strategy](docs/integration-strategy.md) - Development phases and strategy
+- [Phase 6 Summary](docs/phase-6-completion-summary.md) - LTSSM implementation summary
 
 [> License
 ----------
