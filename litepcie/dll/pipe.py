@@ -256,7 +256,7 @@ class PIPETXPacketizer(LiteXModule):
     - PCIe Base Spec 4.0, Section 4.2.3: Framing
     """
 
-    def __init__(self, enable_skp=False, skp_interval=1180):
+    def __init__(self, enable_skp=False, skp_interval=1180, enable_training_sequences=False):
         """
         Parameters
         ----------
@@ -265,6 +265,8 @@ class PIPETXPacketizer(LiteXModule):
         skp_interval : int, optional
             Number of symbols between SKP ordered sets (default: 1180)
             PCIe spec requires SKP every 1180-1538 symbols
+        enable_training_sequences : bool, optional
+            Enable TS1/TS2 generation capability (default: False)
         """
         # DLL-facing input (64-bit packets)
         self.sink = stream.Endpoint(phy_layout(64))
@@ -280,6 +282,13 @@ class PIPETXPacketizer(LiteXModule):
         if enable_skp:
             self.skp_counter = Signal(max=skp_interval + 1)
             self.skp_interval = skp_interval
+
+        # Training sequence generation (if enabled)
+        if enable_training_sequences:
+            self.send_ts1 = Signal()
+            self.send_ts2 = Signal()
+            self.ts1_data = TS1OrderedSet(link_number=0, lane_number=0)
+            self.ts2_data = TS2OrderedSet(link_number=0, lane_number=0)
 
         # FSM for packetization
         self.submodules.fsm = FSM(reset_state="IDLE")
@@ -310,6 +319,13 @@ class PIPETXPacketizer(LiteXModule):
             ]
         )
 
+        # Training sequence symbol counters (if enabled)
+        if enable_training_sequences:
+            # TS symbol counter (0-15 for 16 symbols)
+            ts_symbol_counter = Signal(4)
+            # Current TS being sent (1=TS1, 2=TS2)
+            ts_type = Signal(2)
+
         # SKP symbol counter (if enabled)
         if enable_skp:
             # SKP ordered set counter (0-3 for 4 symbols)
@@ -333,61 +349,83 @@ class PIPETXPacketizer(LiteXModule):
                 ),
             ]
 
-        # Build IDLE state with optional SKP check
+        # Build IDLE state with optional TS and SKP checks
         idle_actions = []
 
-        if enable_skp:
-            # Check if SKP needs to be inserted (highest priority)
+        # Define normal packet handling (shared)
+        def build_normal_handling():
+            return If(
+                self.sink.valid & self.sink.first,
+                If(
+                    is_dllp,
+                    # DLLP: Send SDP (0x5C, K=1)
+                    NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
+                    NextValue(self.pipe_tx_datak, 1),
+                ).Else(
+                    # TLP: Send STP (0xFB, K=1)
+                    NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
+                    NextValue(self.pipe_tx_datak, 1),
+                ),
+                NextValue(byte_counter, 0),
+                NextState("DATA"),
+            ).Else(
+                # Default: output idle (data=0, K=0)
+                NextValue(self.pipe_tx_data, 0x00),
+                NextValue(self.pipe_tx_datak, 0),
+            )
+
+        if enable_training_sequences:
+            # Check for TS generation request (highest priority)
+            if enable_skp:
+                # TS, then SKP, then normal
+                idle_actions.append(
+                    If(
+                        self.send_ts1,
+                        NextValue(ts_type, 1),
+                        NextValue(ts_symbol_counter, 0),
+                        NextState("TS"),
+                    ).Elif(
+                        self.send_ts2,
+                        NextValue(ts_type, 2),
+                        NextValue(ts_symbol_counter, 0),
+                        NextState("TS"),
+                    ).Elif(
+                        self.skp_counter >= skp_interval,
+                        NextState("SKP"),
+                    ).Else(
+                        build_normal_handling(),
+                    )
+                )
+            else:
+                # TS, then normal (no SKP)
+                idle_actions.append(
+                    If(
+                        self.send_ts1,
+                        NextValue(ts_type, 1),
+                        NextValue(ts_symbol_counter, 0),
+                        NextState("TS"),
+                    ).Elif(
+                        self.send_ts2,
+                        NextValue(ts_type, 2),
+                        NextValue(ts_symbol_counter, 0),
+                        NextState("TS"),
+                    ).Else(
+                        build_normal_handling(),
+                    )
+                )
+        elif enable_skp:
+            # SKP, then normal (no TS)
             idle_actions.append(
                 If(
                     self.skp_counter >= skp_interval,
                     NextState("SKP"),
                 ).Else(
-                    # Normal packet/idle handling
-                    If(
-                        self.sink.valid & self.sink.first,
-                        If(
-                            is_dllp,
-                            # DLLP: Send SDP (0x5C, K=1)
-                            NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
-                            NextValue(self.pipe_tx_datak, 1),
-                        ).Else(
-                            # TLP: Send STP (0xFB, K=1)
-                            NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
-                            NextValue(self.pipe_tx_datak, 1),
-                        ),
-                        NextValue(byte_counter, 0),
-                        NextState("DATA"),
-                    ).Else(
-                        # Default: output idle (data=0, K=0)
-                        NextValue(self.pipe_tx_data, 0x00),
-                        NextValue(self.pipe_tx_datak, 0),
-                    ),
+                    build_normal_handling(),
                 )
             )
         else:
-            # No SKP, just normal handling
-            idle_actions.append(
-                If(
-                    self.sink.valid & self.sink.first,
-                    If(
-                        is_dllp,
-                        # DLLP: Send SDP (0x5C, K=1)
-                        NextValue(self.pipe_tx_data, PIPE_K28_2_SDP),
-                        NextValue(self.pipe_tx_datak, 1),
-                    ).Else(
-                        # TLP: Send STP (0xFB, K=1)
-                        NextValue(self.pipe_tx_data, PIPE_K27_7_STP),
-                        NextValue(self.pipe_tx_datak, 1),
-                    ),
-                    NextValue(byte_counter, 0),
-                    NextState("DATA"),
-                ).Else(
-                    # Default: output idle (data=0, K=0)
-                    NextValue(self.pipe_tx_data, 0x00),
-                    NextValue(self.pipe_tx_datak, 0),
-                )
-            )
+            # Just normal handling (no TS, no SKP)
+            idle_actions.append(build_normal_handling())
 
         self.fsm.act("IDLE", *idle_actions)
 
@@ -410,6 +448,38 @@ class PIPETXPacketizer(LiteXModule):
             NextValue(self.pipe_tx_datak, 1),
             NextState("IDLE"),
         )
+
+        # TS state (if enabled)
+        if enable_training_sequences:
+            # Create symbol arrays for TS1/TS2
+            ts1_symbols = Array([Signal(8, reset=sym) for sym in self.ts1_data.symbols])
+            ts2_symbols = Array([Signal(8, reset=sym) for sym in self.ts2_data.symbols])
+
+            self.fsm.act(
+                "TS",
+                # Output current symbol from TS1 or TS2
+                If(
+                    ts_type == 1,  # TS1
+                    NextValue(self.pipe_tx_data, ts1_symbols[ts_symbol_counter]),
+                ).Elif(
+                    ts_type == 2,  # TS2
+                    NextValue(self.pipe_tx_data, ts2_symbols[ts_symbol_counter]),
+                ),
+                # Symbol 0 (COM) is K-character, rest are data
+                If(
+                    ts_symbol_counter == 0,
+                    NextValue(self.pipe_tx_datak, 1),
+                ).Else(
+                    NextValue(self.pipe_tx_datak, 0),
+                ),
+                NextValue(ts_symbol_counter, ts_symbol_counter + 1),
+                # After 16 symbols, return to IDLE
+                If(
+                    ts_symbol_counter == 15,
+                    NextValue(ts_symbol_counter, 0),
+                    NextState("IDLE"),
+                ),
+            )
 
         # SKP state (if enabled)
         if enable_skp:
