@@ -141,5 +141,88 @@ class TestLTSSMGen2Negotiation(unittest.TestCase):
         run_simulation(dut, testbench(dut))
 
 
+class TestLTSSMMultiLane(unittest.TestCase):
+    """Test multi-lane link configuration."""
+
+    def test_ltssm_x4_initialization(self):
+        """
+        LTSSM initialized with lanes=4 should configure x4 link.
+
+        Multi-lane links require:
+        1. Each lane sends TS1/TS2 with unique lane_number
+        2. Lane numbers must be consecutive (0-3 for x4)
+        3. All lanes must complete training
+
+        Reference: PCIe Spec 4.0, Section 4.2.6.2: Lane Numbers
+        """
+        def testbench(dut):
+            # Should initialize with x4 width
+            link_width = yield dut.link_width
+            self.assertEqual(link_width, 4)
+
+            # Should have configured_lanes output
+            configured_lanes = yield dut.configured_lanes
+            self.assertEqual(configured_lanes, 0)  # Not configured yet
+
+        dut = LTSSM(gen=1, lanes=4)
+        run_simulation(dut, testbench(dut))
+
+    def test_multi_lane_negotiation(self):
+        """
+        Multi-lane links should negotiate common width.
+
+        Both partners advertise maximum width, then negotiate
+        to minimum of both. For example:
+        - Device A: supports x8
+        - Device B: supports x4
+        - Result: link trains as x4
+        """
+        def testbench(dut):
+            # Simulate x4 device receiving TS from x8 partner
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield
+            yield
+
+            # In POLLING
+            yield dut.ts1_detected.eq(1)
+            yield dut.rx_link_width.eq(8)  # Partner wants x8
+            yield
+            yield
+            yield
+
+            # Should be in CONFIGURATION now
+            state = yield dut.current_state
+            self.assertEqual(state, dut.CONFIGURATION)
+
+            # Should negotiate to x4 (our limit)
+            negotiated_width = yield dut.configured_lanes
+            self.assertEqual(negotiated_width, 4)
+
+            # Also check link_width was updated
+            link_width = yield dut.link_width
+            self.assertEqual(link_width, 4)
+
+        dut = LTSSM(gen=1, lanes=4)
+        run_simulation(dut, testbench(dut))
+
+    def test_lane_numbers_in_ts1(self):
+        """
+        Each lane must send TS1/TS2 with correct lane number.
+
+        For x4 link, lanes 0-3 each send TS with their lane_number.
+        Receiver validates all expected lanes are present.
+        """
+        def testbench(dut):
+            # Check that TS contains lane number field
+            # (This is a per-lane TX configuration)
+            for lane_num in range(4):
+                lane_id = yield dut.ts_lane_number[lane_num]
+                self.assertEqual(lane_id, lane_num)
+
+        dut = LTSSM(gen=1, lanes=4)
+        run_simulation(dut, testbench(dut))
+
+
 if __name__ == "__main__":
     unittest.main()

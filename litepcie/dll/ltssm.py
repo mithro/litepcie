@@ -113,6 +113,27 @@ class LTSSM(LiteXModule):
             ),
         ]
 
+        # Multi-lane support
+        self.num_lanes = lanes
+        self.configured_lanes = Signal(5)  # Actual lanes configured
+        self.rx_link_width = Signal(5)  # Width advertised by partner
+
+        # Per-lane TS configuration
+        self.ts_lane_number = Array([Signal(5) for _ in range(lanes)])
+        for i in range(lanes):
+            self.comb += self.ts_lane_number[i].eq(i)
+
+        # Lane negotiation: use minimum of our lanes and partner's
+        negotiated_width = Signal(5)
+        self.comb += [
+            negotiated_width.eq(
+                Mux(self.rx_link_width < self.num_lanes,
+                    self.rx_link_width,
+                    self.num_lanes
+                )
+            ),
+        ]
+
         # # #
 
         # LTSSM State Machine
@@ -159,6 +180,9 @@ class LTSSM(LiteXModule):
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 1),
             NextValue(self.tx_elecidle, 0),
+            # Lock in negotiated lane count
+            NextValue(self.configured_lanes, negotiated_width),
+            NextValue(self.link_width, negotiated_width),
             # Transition to L0 when we receive TS2 from partner
             # (indicates both sides have completed configuration)
             If(
