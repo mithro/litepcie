@@ -448,9 +448,32 @@ class PIPERXDepacketizer(LiteXModule):
                     # Not the 3rd SKP yet, continue counting
                     NextValue(skp_check_counter, skp_check_counter + 1),
                 ),
+            ).Elif(
+                self.pipe_rx_datak,
+                # Not SKP, but is a K-character - check if it's a START symbol
+                If(
+                    self.pipe_rx_data == PIPE_K27_7_STP,
+                    # STP: TLP start detected (COM was not start of SKP)
+                    NextValue(is_tlp, 1),
+                    NextValue(byte_counter, 0),
+                    NextValue(skp_check_counter, 0),
+                    NextState("DATA"),
+                ).Elif(
+                    self.pipe_rx_data == PIPE_K28_2_SDP,
+                    # SDP: DLLP start detected (COM was not start of SKP)
+                    NextValue(is_tlp, 0),
+                    NextValue(byte_counter, 0),
+                    NextValue(skp_check_counter, 0),
+                    NextState("DATA"),
+                ).Else(
+                    # Other K-character, not a valid SKP ordered set
+                    # Return to IDLE and ignore
+                    NextValue(skp_check_counter, 0),
+                    NextState("IDLE"),
+                ),
             ).Else(
-                # Not a valid SKP ordered set, return to IDLE
-                # (May have been COM for different purpose)
+                # Data character while expecting SKP - invalid SKP ordered set
+                # Return to IDLE
                 NextValue(skp_check_counter, 0),
                 NextState("IDLE"),
             ),
