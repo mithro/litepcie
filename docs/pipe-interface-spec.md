@@ -298,7 +298,6 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 - ✅ Debug mode for testing
 
 **Features Pending:**
-- ⬜ Link training and LTSSM (future phase)
 - ⬜ Multi-lane support (x4, x8, x16)
 - ⬜ Internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
 - ⬜ Gen3 support (128b/130b encoding)
@@ -306,25 +305,71 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 - ⬜ Complete external PHY integration
 - ⬜ Error injection (EDB - End Bad packet)
 
+### Phase 5: Ordered Sets & Link Training Foundation ✅ PARTIAL (2025-10-17)
+
+**Implementation Files:**
+- `litepcie/dll/pipe.py` - Extended with ordered set support (717 lines total)
+  - SKP ordered set generation and detection (clock compensation)
+  - TS1/TS2 ordered set data structures (link training foundation)
+  - Enhanced RX FSM with SKP_CHECK state
+  - PIPEInterface SKP parameter integration
+
+**Test Coverage:**
+- 88 DLL tests total (all passing, 100% success rate)
+- SKP Tests: 3 tests (TX generation, insertion, RX detection)
+- TS1/TS2 Tests: 2 tests (structure validation)
+- Integration: SKP loopback test validates transparent operation
+- Code coverage maintained at 99%
+
+**Features Implemented:**
+- ✅ SKP ordered set TX generation with configurable interval
+- ✅ SKP ordered set RX detection and transparent removal
+- ✅ SKP integration through PIPEInterface (enable_skp parameter)
+- ✅ TS1OrderedSet data structure (16 symbols, D10.2 identifier)
+- ✅ TS2OrderedSet data structure (16 symbols, D5.2 identifier)
+- ✅ Edge case handling (COM followed by STP/SDP)
+
+**Features Pending:**
+- ⬜ TS1/TS2 TX generation in PIPETXPacketizer
+- ⬜ TS1/TS2 RX detection in PIPERXDepacketizer
+- ⬜ Link Training State Machine (LTSSM)
+- ⬜ Speed negotiation logic
+- ⬜ Lane configuration and reversal
+
+**Commits:**
+- `0747c51` - SKP TX insertion logic
+- `d011a01` - SKP RX detection
+- `b011f3e` - SKP PIPEInterface integration
+- `7ba638e` - SKP edge case fixes
+- `2a7f614` - TS1/TS2 data structures
+
 ## Revision History
 
 | Date | Version | Changes |
 |------|---------|---------|
 | 2025-10-16 | 0.1 | Initial minimal PIPE 3.0 spec for Gen1, 8-bit mode |
 | 2025-10-17 | 0.2 | Added Implementation Status section for Phase 4 completion |
+| 2025-10-17 | 0.3 | Added Phase 5 status: SKP ordered sets and TS1/TS2 structures |
 
 ## Next Steps
 
-### Immediate (Phase 5)
+### Completed in Phase 5
 1. ~~Implement DLL layer (independent of PIPE)~~ ✅ Complete
 2. ~~Create PIPE interface abstraction in litepcie/dll/pipe.py~~ ✅ Complete
-3. ~~Integrate DLL with PIPE interface~~ ✅ Complete (basic integration)
-4. Complete external PIPE PHY wrapper integration
-5. Test with external hardware (if available)
+3. ~~Integrate DLL with PIPE interface~~ ✅ Complete
+4. ~~Add SKP ordered set generation and detection~~ ✅ Complete
+5. ~~Create TS1/TS2 ordered set data structures~~ ✅ Complete
+
+### Immediate (Complete Phase 5)
+1. Implement TS1/TS2 TX generation in PIPETXPacketizer
+2. Implement TS1/TS2 RX detection in PIPERXDepacketizer
+3. Complete external PIPE PHY wrapper integration
+4. Test with external hardware (if available)
 
 ### Future Phases
-6. Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
-7. Implement link training and LTSSM
+5. Implement Link Training State Machine (LTSSM)
+6. Add speed negotiation and lane configuration logic
+7. Add internal transceiver wrappers (Xilinx GTX, ECP5 SERDES)
 8. Add multi-lane support (x4, x8, x16)
 9. Expand to Gen2/Gen3, wider datapaths (16/32-bit modes)
 
