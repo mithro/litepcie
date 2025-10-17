@@ -85,8 +85,10 @@ class LTSSM(LiteXModule):
     RECOVERY_EQ_PHASE3 = 9  # Equalization phase 3
     L0s_IDLE = 10  # L0s low power state
     L0s_FTS = 11  # L0s exit via FTS
+    L1 = 12  # L1 deeper sleep state
+    L2 = 13  # L2 deepest sleep state
 
-    def __init__(self, gen=1, lanes=1, enable_equalization=False, enable_l0s=False):
+    def __init__(self, gen=1, lanes=1, enable_equalization=False, enable_l0s=False, enable_l1=False, enable_l2=False):
         # Link status outputs
         self.link_up = Signal()
         self.current_state = Signal(4)  # 4 bits for states 0-11
@@ -191,6 +193,16 @@ class LTSSM(LiteXModule):
         # FTS counter (n_fts field from TS1/TS2)
         fts_counter = Signal(8)
 
+        # L1 and L2 power states support
+        self.enable_l1 = enable_l1
+        self.enable_l2 = enable_l2
+        self.l1_capable = Signal(reset=1 if enable_l1 else 0)
+        self.l2_capable = Signal(reset=1 if enable_l2 else 0)
+        self.enter_l1 = Signal()  # Request L1 entry
+        self.exit_l1 = Signal()   # Request L1 exit
+        self.enter_l2 = Signal()  # Request L2 entry
+        self.exit_l2 = Signal()   # Request L2 exit
+
         # # #
 
         # LTSSM State Machine
@@ -259,8 +271,12 @@ class LTSSM(LiteXModule):
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
-            # Enter L0s if requested and capable
+            # Enter L1 if requested and capable
             If(
+                self.l1_capable & self.enter_l1,
+                NextState("L1"),
+            # Enter L0s if requested and capable
+            ).Elif(
                 self.l0s_capable & self.enter_l0s,
                 NextState("L0s_IDLE"),
             # If speed change required, enter RECOVERY.Speed
@@ -413,5 +429,43 @@ class LTSSM(LiteXModule):
                 NextState("L0"),
                 NextValue(self.send_fts, 0),
                 NextValue(self.exit_l0s, 0),
+            ),
+        )
+
+        # L1 State - Deeper Sleep State
+        # Reference: PCIe Spec 4.0, Section 5.4: L1 State
+        self.fsm.act(
+            "L1",
+            NextValue(self.current_state, self.L1),
+            # Link down during L1
+            NextValue(self.link_up, 0),
+            # TX in electrical idle (power savings)
+            NextValue(self.tx_elecidle, 1),
+            # Enter L2 if requested and capable
+            If(
+                self.l2_capable & self.enter_l2,
+                NextState("L2"),
+            # Exit L1 to RECOVERY for retraining
+            ).Elif(
+                self.exit_l1,
+                NextState("RECOVERY"),
+                NextValue(self.exit_l1, 0),
+            ),
+        )
+
+        # L2 State - Deepest Sleep State
+        # Reference: PCIe Spec 4.0, Section 5.5: L2 State
+        self.fsm.act(
+            "L2",
+            NextValue(self.current_state, self.L2),
+            # Link down during L2
+            NextValue(self.link_up, 0),
+            # TX in electrical idle (deepest power savings)
+            NextValue(self.tx_elecidle, 1),
+            # L2 exit requires full reset to DETECT
+            If(
+                self.exit_l2,
+                NextState("DETECT"),
+                NextValue(self.exit_l2, 0),
             ),
         )
