@@ -305,43 +305,52 @@ This minimal spec is Gen1, 8-bit mode only. We will iterate to add:
 - ⬜ Complete external PHY integration
 - ⬜ Error injection (EDB - End Bad packet)
 
-### Phase 5: Ordered Sets & Link Training Foundation ✅ PARTIAL (2025-10-17)
+### Phase 5: Ordered Sets & Link Training Foundation ✅ COMPLETE (2025-10-17)
 
 **Implementation Files:**
-- `litepcie/dll/pipe.py` - Extended with ordered set support (717 lines total)
+- `litepcie/dll/pipe.py` - Extended with ordered set support (924 lines total)
   - SKP ordered set generation and detection (clock compensation)
-  - TS1/TS2 ordered set data structures (link training foundation)
-  - Enhanced RX FSM with SKP_CHECK state
-  - PIPEInterface SKP parameter integration
+  - TS1/TS2 ordered set data structures and TX/RX support
+  - Enhanced TX/RX FSMs with SKP and TS states
+  - PIPEInterface integration (enable_skp, enable_training_sequences parameters)
 
 **Test Coverage:**
-- 88 DLL tests total (all passing, 100% success rate)
-- SKP Tests: 3 tests (TX generation, insertion, RX detection)
-- TS1/TS2 Tests: 2 tests (structure validation)
+- 90 DLL tests total (all passing, 100% success rate)
+- SKP Tests: 3 tests (TX generation, TX insertion, RX detection)
+- TS1/TS2 Tests: 4 tests (structure validation, TX generation, RX detection)
 - Integration: SKP loopback test validates transparent operation
-- Code coverage maintained at 99%
+- Code coverage: 99% (litepcie/dll/pipe.py - 142 statements, 2 missed)
+
+**Documentation:**
+- [Phase 5 Completion Summary](phase-5-completion-summary.md) - Detailed implementation notes
+- [Performance Analysis](pipe-performance.md) - Throughput, latency, resource analysis
+- [Testing Guide](pipe-testing-guide.md) - Updated with Phase 5 test patterns
+- [Integration Strategy](integration-strategy.md) - Updated with Phase 5 completion
 
 **Features Implemented:**
-- ✅ SKP ordered set TX generation with configurable interval
+- ✅ SKP ordered set TX generation with configurable interval (default 1180 symbols)
 - ✅ SKP ordered set RX detection and transparent removal
 - ✅ SKP integration through PIPEInterface (enable_skp parameter)
 - ✅ TS1OrderedSet data structure (16 symbols, D10.2 identifier)
 - ✅ TS2OrderedSet data structure (16 symbols, D5.2 identifier)
-- ✅ Edge case handling (COM followed by STP/SDP)
+- ✅ TS1/TS2 TX generation in PIPETXPacketizer (manual trigger via send_ts1/send_ts2)
+- ✅ TS1/TS2 RX detection in PIPERXDepacketizer (ts1_detected/ts2_detected flags)
+- ✅ Edge case handling (COM disambiguation: SKP vs TS vs START symbols)
 
-**Features Pending:**
-- ⬜ TS1/TS2 TX generation in PIPETXPacketizer
-- ⬜ TS1/TS2 RX detection in PIPERXDepacketizer
-- ⬜ Link Training State Machine (LTSSM)
-- ⬜ Speed negotiation logic
-- ⬜ Lane configuration and reversal
+**Features Pending (Phase 6: LTSSM):**
+- ⬜ Link Training State Machine (LTSSM) implementation
+- ⬜ Automatic TS1/TS2 exchange during link training
+- ⬜ Speed negotiation (Gen1/Gen2)
+- ⬜ Lane configuration and reversal detection
 
 **Commits:**
 - `0747c51` - SKP TX insertion logic
 - `d011a01` - SKP RX detection
 - `b011f3e` - SKP PIPEInterface integration
-- `7ba638e` - SKP edge case fixes
+- `7ba638e` - SKP edge case fixes (START symbols in SKP_CHECK)
 - `2a7f614` - TS1/TS2 data structures
+- `cf17359` - TS1/TS2 TX generation capability
+- `70c78cc` - TS1/TS2 RX detection capability
 
 ## Revision History
 
