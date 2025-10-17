@@ -26,6 +26,7 @@ from litepcie.dll.pipe import (
     TS2OrderedSet,
     PIPE_K28_5_COM,
     PIPETXPacketizer,
+    PIPERXDepacketizer,
 )
 
 
@@ -106,6 +107,36 @@ class TestTS1Generation(unittest.TestCase):
         dut = PIPETXPacketizer(enable_training_sequences=True)
         with tempfile.TemporaryDirectory(dir=".") as tmpdir:
             vcd_path = os.path.join(tmpdir, "test_ts1_gen.vcd")
+            run_simulation(dut, testbench(dut), vcd_name=vcd_path)
+
+
+class TestTS1Detection(unittest.TestCase):
+    """Test TS1 detection in RX path."""
+
+    def test_rx_detects_ts1(self):
+        """
+        RX should detect TS1 ordered set and set flag.
+
+        TS1 detection is first step in link training response.
+        """
+        def testbench(dut):
+            # Create TS1 to send
+            ts1 = TS1OrderedSet(link_number=0, lane_number=0)
+
+            # Send TS1 symbols
+            for i, symbol in enumerate(ts1.symbols):
+                yield dut.pipe_rx_data.eq(symbol)
+                yield dut.pipe_rx_datak.eq(1 if i == 0 else 0)  # COM is K-char
+                yield
+
+            # Check detection flag
+            yield
+            ts1_detected = yield dut.ts1_detected
+            self.assertEqual(ts1_detected, 1, "Should detect TS1 ordered set")
+
+        dut = PIPERXDepacketizer(enable_training_sequences=True)
+        with tempfile.TemporaryDirectory(dir=".") as tmpdir:
+            vcd_path = os.path.join(tmpdir, "test_ts1_detect.vcd")
             run_simulation(dut, testbench(dut), vcd_name=vcd_path)
 
 

@@ -560,7 +560,7 @@ class PIPERXDepacketizer(LiteXModule):
     - PCIe Base Spec 4.0, Section 4.2.3: Framing
     """
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, enable_training_sequences=False):
         # PIPE-facing input (8-bit symbols)
         self.pipe_rx_data = Signal(8)
         self.pipe_rx_datak = Signal()
@@ -569,6 +569,11 @@ class PIPERXDepacketizer(LiteXModule):
         self.source = stream.Endpoint(phy_layout(64))
 
         # # #
+
+        # Training sequence detection (if enabled)
+        if enable_training_sequences:
+            self.ts1_detected = Signal()
+            self.ts2_detected = Signal()
 
         # FSM for depacketization
         self.submodules.fsm = FSM(reset_state="IDLE")
@@ -587,6 +592,12 @@ class PIPERXDepacketizer(LiteXModule):
 
         # SKP ordered set detection
         skp_check_counter = Signal(2)  # Count 3 SKP symbols after COM
+
+        # Training sequence detection (if enabled)
+        if enable_training_sequences:
+            # TS symbol buffer (store 16 symbols for detection)
+            ts_buffer = Array([Signal(8) for _ in range(16)])
+            ts_buffer_counter = Signal(4)  # 0-15
 
         self.fsm.act(
             "IDLE",
@@ -607,12 +618,72 @@ class PIPERXDepacketizer(LiteXModule):
                     NextState("DATA"),
                 ).Elif(
                     self.pipe_rx_data == PIPE_K28_5_COM,
-                    # COM: Possible SKP ordered set, transition to SKP_CHECK
-                    NextState("SKP_CHECK"),
+                    # COM: Could be SKP or TS, check next symbols
+                    *(
+                        [
+                            If(
+                                enable_training_sequences,
+                                # Start buffering for TS detection
+                                NextValue(ts_buffer[0], PIPE_K28_5_COM),
+                                NextValue(ts_buffer_counter, 1),
+                                NextState("TS_CHECK"),
+                            ).Else(
+                                # Just SKP handling (existing code)
+                                NextState("SKP_CHECK"),
+                            )
+                        ]
+                        if enable_training_sequences
+                        else [
+                            # Just SKP handling (existing code)
+                            NextState("SKP_CHECK"),
+                        ]
+                    ),
                 ),
                 # Ignore other K-characters
             ),
         )
+
+        # TS_CHECK state (if enabled)
+        if enable_training_sequences:
+            # Clear detection flags when starting new TS check
+            self.sync += [
+                If(
+                    self.fsm.ongoing("TS_CHECK") & (ts_buffer_counter == 1),
+                    # Clear flags at start of new TS sequence
+                    self.ts1_detected.eq(0),
+                    self.ts2_detected.eq(0),
+                )
+            ]
+
+            self.fsm.act(
+                "TS_CHECK",
+                # Accumulate symbols into buffer
+                NextValue(ts_buffer[ts_buffer_counter], self.pipe_rx_data),
+                NextValue(ts_buffer_counter, ts_buffer_counter + 1),
+                # After 16 symbols, check if TS1 or TS2
+                If(
+                    ts_buffer_counter == 15,
+                    # Check for TS1 identifier (D10.2 = 0x4A in symbols 7-15)
+                    If(
+                        (ts_buffer[7] == 0x4A)
+                        & (ts_buffer[8] == 0x4A)
+                        & (ts_buffer[9] == 0x4A)
+                        & (ts_buffer[10] == 0x4A),
+                        # TS1 detected - latch the flag
+                        NextValue(self.ts1_detected, 1),
+                    ).Elif(
+                        # Check for TS2 identifier (D5.2 = 0x45 in symbols 7-15)
+                        (ts_buffer[7] == 0x45)
+                        & (ts_buffer[8] == 0x45)
+                        & (ts_buffer[9] == 0x45)
+                        & (ts_buffer[10] == 0x45),
+                        # TS2 detected - latch the flag
+                        NextValue(self.ts2_detected, 1),
+                    ),
+                    NextValue(ts_buffer_counter, 0),
+                    NextState("IDLE"),
+                ),
+            )
 
         self.fsm.act(
             "SKP_CHECK",
