@@ -87,11 +87,19 @@ class LTSSM(LiteXModule):
     L0s_FTS = 11  # L0s exit via FTS
     L1 = 12  # L1 deeper sleep state
     L2 = 13  # L2 deepest sleep state
+    # Detailed POLLING substates (optional)
+    POLLING_ACTIVE = 16  # POLLING.Active - Send TS1, wait for partner
+    POLLING_CONFIGURATION = 17  # POLLING.Configuration - Send TS2
+    POLLING_COMPLIANCE = 18  # POLLING.Compliance - Electrical testing
+    # Detailed RECOVERY substates (optional)
+    RECOVERY_RCVRLOCK = 19  # RECOVERY.RcvrLock - Establish bit lock
+    RECOVERY_RCVRCFG = 20  # RECOVERY.RcvrCfg - Verify configuration
+    RECOVERY_IDLE = 21  # RECOVERY.Idle - Final check before L0
 
-    def __init__(self, gen=1, lanes=1, enable_equalization=False, enable_l0s=False, enable_l1=False, enable_l2=False):
+    def __init__(self, gen=1, lanes=1, enable_equalization=False, enable_l0s=False, enable_l1=False, enable_l2=False, detailed_substates=False):
         # Link status outputs
         self.link_up = Signal()
-        self.current_state = Signal(4)  # 4 bits for states 0-11
+        self.current_state = Signal(5)  # 5 bits for states 0-21
         self.link_speed = Signal(2, reset=1)  # Always start at Gen1
         self.link_width = Signal(5, reset=lanes)
 
@@ -203,6 +211,13 @@ class LTSSM(LiteXModule):
         self.enter_l2 = Signal()  # Request L2 entry
         self.exit_l2 = Signal()   # Request L2 exit
 
+        # Detailed substates support
+        self.detailed_substates = detailed_substates
+        self.rx_compliance_request = Signal()  # Compliance request from partner
+
+        # TS1 receive counter for POLLING.Active → POLLING.Configuration
+        ts1_rx_count = Signal(4)
+
         # # #
 
         # LTSSM State Machine
@@ -219,7 +234,8 @@ class LTSSM(LiteXModule):
             # Transition to POLLING when receiver detected (rx_elecidle goes low)
             If(
                 ~self.rx_elecidle,
-                NextState("POLLING"),
+                # Use detailed substates if enabled, otherwise simple POLLING
+                NextState("POLLING_ACTIVE" if detailed_substates else "POLLING"),
             ),
         )
 
@@ -239,6 +255,59 @@ class LTSSM(LiteXModule):
                 NextState("CONFIGURATION"),
             ),
         )
+
+        # Detailed POLLING Substates (optional)
+        if detailed_substates:
+            # POLLING.Active - Send TS1 and wait for partner TS1
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.2.1
+            self.fsm.act(
+                "POLLING_ACTIVE",
+                NextValue(self.current_state, self.POLLING_ACTIVE),
+                NextValue(self.tx_elecidle, 0),
+                NextValue(self.send_ts1, 1),
+                NextValue(self.send_ts2, 0),
+                # Count received TS1
+                If(
+                    self.ts1_detected,
+                    NextValue(ts1_rx_count, ts1_rx_count + 1),
+                ),
+                # Compliance takes priority
+                If(
+                    self.rx_compliance_request,
+                    NextState("POLLING_COMPLIANCE"),
+                    NextValue(ts1_rx_count, 0),
+                # After 8 consecutive TS1, move to Configuration
+                ).Elif(
+                    ts1_rx_count >= 8,
+                    NextState("POLLING_CONFIGURATION"),
+                    NextValue(ts1_rx_count, 0),
+                ),
+            )
+
+            # POLLING.Configuration - Send TS2 after TS1 exchange
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.2.2
+            self.fsm.act(
+                "POLLING_CONFIGURATION",
+                NextValue(self.current_state, self.POLLING_CONFIGURATION),
+                NextValue(self.send_ts1, 0),
+                NextValue(self.send_ts2, 1),
+                # Transition to CONFIGURATION state when TS2 detected
+                If(
+                    self.ts2_detected,
+                    NextState("CONFIGURATION"),
+                ),
+            )
+
+            # POLLING.Compliance - Electrical testing mode
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.2.3
+            self.fsm.act(
+                "POLLING_COMPLIANCE",
+                NextValue(self.current_state, self.POLLING_COMPLIANCE),
+                # Send compliance pattern (simplified: send TS1)
+                NextValue(self.send_ts1, 1),
+                # Stay in compliance until reset/timeout
+                # (Real HW would send specific compliance patterns)
+            )
 
         # CONFIGURATION State - TS2 Exchange and Link Parameter Finalization
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.4
@@ -287,7 +356,7 @@ class LTSSM(LiteXModule):
             # If rx goes to electrical idle unexpectedly, enter RECOVERY
             ).Elif(
                 self.rx_elecidle,
-                NextState("RECOVERY"),
+                NextState("RECOVERY_RCVRLOCK" if detailed_substates else "RECOVERY"),
             ),
         )
 
@@ -315,6 +384,52 @@ class LTSSM(LiteXModule):
                 NextState("L0"),
             ),
         )
+
+        # Detailed RECOVERY Substates (optional)
+        if detailed_substates:
+            # RECOVERY.RcvrLock - Establish receiver bit/symbol lock
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.7.1
+            self.fsm.act(
+                "RECOVERY_RCVRLOCK",
+                NextValue(self.current_state, self.RECOVERY_RCVRLOCK),
+                NextValue(self.link_up, 0),
+                NextValue(self.send_ts1, 1),
+                NextValue(self.send_ts2, 0),
+                NextValue(self.tx_elecidle, 0),
+                # Wait for partner to exit electrical idle and send TS1
+                If(
+                    (~self.rx_elecidle) & self.ts1_detected,
+                    NextState("RECOVERY_RCVRCFG"),
+                ),
+            )
+
+            # RECOVERY.RcvrCfg - Verify configuration
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.7.2
+            self.fsm.act(
+                "RECOVERY_RCVRCFG",
+                NextValue(self.current_state, self.RECOVERY_RCVRCFG),
+                NextValue(self.send_ts1, 1),
+                # After configuration verified, move to Idle
+                # (Simplified - real implementation checks config fields)
+                If(
+                    self.ts1_detected,
+                    NextState("RECOVERY_IDLE"),
+                ),
+            )
+
+            # RECOVERY.Idle - Final check before L0
+            # Reference: PCIe Spec 4.0, Section 4.2.5.3.7.3
+            self.fsm.act(
+                "RECOVERY_IDLE",
+                NextValue(self.current_state, self.RECOVERY_IDLE),
+                NextValue(self.send_ts1, 0),
+                NextValue(self.send_ts2, 1),
+                # After TS2 exchange, return to L0
+                If(
+                    self.ts2_detected,
+                    NextState("L0"),
+                ),
+            )
 
         # RECOVERY.Speed State - Speed Change
         # Reference: PCIe Spec 4.0, Section 4.2.6.2.1: Speed Change
@@ -448,7 +563,7 @@ class LTSSM(LiteXModule):
             # Exit L1 to RECOVERY for retraining
             ).Elif(
                 self.exit_l1,
-                NextState("RECOVERY"),
+                NextState("RECOVERY_RCVRLOCK" if detailed_substates else "RECOVERY"),
                 NextValue(self.exit_l1, 0),
             ),
         )
