@@ -162,7 +162,7 @@ self.fsm.act("TS_CHECK",
 
 **Documentation:**
 - `docs/phases/phase-5-completion-summary.md` - Updated completion status
-- `docs/integration-strategy.md` - Added phase status section
+- `docs/architecture/integration-strategy.md` - Added phase status section
 
 ### Architecture Decisions
 
@@ -348,7 +348,7 @@ Plan document exists: `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.
 **Implementation Documents:**
 - `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5 plan
 - `docs/phases/phase-5-completion-summary.md` - Phase 5 results
-- `docs/integration-strategy.md` - Overall integration approach
+- `docs/architecture/integration-strategy.md` - Overall integration approach
 
 **Commits:**
 - `cf17359` - TS1/TS2 TX generation

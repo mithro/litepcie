@@ -46,7 +46,7 @@
 ## Part 2: Documentation
 
 ### Task 2.1: PIPE Interface User Guide
-**File:** `docs/pipe-interface-guide.md`
+**File:** `docs/guides/pipe-interface-guide.md`
 
 **Content:**
 1. **Introduction**
@@ -81,7 +81,7 @@
    - VCD analysis
 
 ### Task 2.2: Architecture Diagrams
-**File:** `docs/pipe-architecture.md`
+**File:** `docs/architecture/pipe-architecture.md`
 
 **Diagrams to Create:**
 1. **High-Level PCIe Stack**
@@ -131,7 +131,7 @@
    - Loopback operation timing
 
 ### Task 2.3: Integration Examples
-**File:** `docs/pipe-integration-examples.md`
+**File:** `docs/guides/pipe-integration-examples.md`
 
 **Examples:**
 1. **Basic Loopback**
@@ -167,7 +167,7 @@
    - Link training
 
 ### Task 2.4: Testing Guide
-**File:** `docs/pipe-testing-guide.md`
+**File:** `docs/guides/pipe-testing-guide.md`
 
 **Content:**
 1. **Running Tests**
@@ -195,7 +195,7 @@
    - COMMIT: Save progress
 
 ### Task 2.5: Performance Analysis
-**File:** `docs/pipe-performance.md`
+**File:** `docs/reference/pipe-performance.md`
 
 **Content:**
 1. **Throughput Analysis**
@@ -220,18 +220,18 @@
 
 ### Task 2.6: Update Existing Documentation
 **Files to Update:**
-1. **`docs/integration-strategy.md`** ✓ (already done)
+1. **`docs/architecture/integration-strategy.md`** ✓ (already done)
 2. **`README.md`** - Add Phase 4 completion note
-3. **`docs/pipe-interface-spec.md`** - Update with implementation details
+3. **`docs/reference/pipe-interface-spec.md`** - Update with implementation details
 
 ---
 
 ## Execution Plan
 
 ### Priority 1: Essential Documentation (1-2 hours) ✅ COMPLETE
-1. ✅ Task 2.1: PIPE Interface User Guide (`docs/pipe-interface-guide.md`)
-2. ✅ Task 2.2: Architecture Diagrams (`docs/pipe-architecture.md`)
-3. ✅ Task 2.3: Integration Examples (`docs/pipe-integration-examples.md`)
+1. ✅ Task 2.1: PIPE Interface User Guide (`docs/guides/pipe-interface-guide.md`)
+2. ✅ Task 2.2: Architecture Diagrams (`docs/architecture/pipe-architecture.md`)
+3. ✅ Task 2.3: Integration Examples (`docs/guides/pipe-integration-examples.md`)
 
 **Completion Summary:**
 - Created 2,222 lines of comprehensive documentation
@@ -247,11 +247,11 @@
 ### Priority 2: Testing & Analysis ✅ COMPLETE
 1. ✅ Task 1.1: Coverage analysis (99% achieved)
 2. ✅ Task 1.2: Edge case tests (8 tests, all passing)
-3. ✅ Task 2.5: Performance analysis (`docs/pipe-performance.md`)
+3. ✅ Task 2.5: Performance analysis (`docs/reference/pipe-performance.md`)
 
 ### Priority 3: Additional Documentation ✅ COMPLETE
-1. ✅ Task 2.4: Testing guide (`docs/pipe-testing-guide.md`)
-2. ✅ Task 2.6: Update existing docs (`docs/pipe-interface-spec.md`)
+1. ✅ Task 2.4: Testing guide (`docs/guides/pipe-testing-guide.md`)
+2. ✅ Task 2.6: Update existing docs (`docs/reference/pipe-interface-spec.md`)
 
 ---
 
@@ -264,12 +264,12 @@
 - ✅ Edge cases covered (8 comprehensive edge case tests)
 
 **Documentation:**
-- ✅ User guide completed (docs/pipe-interface-guide.md)
-- ✅ Architecture diagrams created (docs/pipe-architecture.md)
-- ✅ Integration examples working (docs/pipe-integration-examples.md)
-- ✅ Testing guide written (docs/pipe-testing-guide.md)
-- ✅ Performance analysis (docs/pipe-performance.md)
-- ✅ Spec updated (docs/pipe-interface-spec.md)
+- ✅ User guide completed (docs/guides/pipe-interface-guide.md)
+- ✅ Architecture diagrams created (docs/architecture/pipe-architecture.md)
+- ✅ Integration examples working (docs/guides/pipe-integration-examples.md)
+- ✅ Testing guide written (docs/guides/pipe-testing-guide.md)
+- ✅ Performance analysis (docs/reference/pipe-performance.md)
+- ✅ Spec updated (docs/reference/pipe-interface-spec.md)
 
 **Usability:**
 - ✅ New user can understand PIPE interface in <30 min (quick start section)
@@ -329,14 +329,14 @@
 - `test/dll/test_pipe_edge_cases.py` - 8 edge case tests
 
 **Documentation:**
-- `docs/pipe-interface-guide.md` - Complete user guide
-- `docs/pipe-architecture.md` - Architecture diagrams
-- `docs/pipe-integration-examples.md` - Integration examples
-- `docs/pipe-testing-guide.md` - Testing guide
-- `docs/pipe-performance.md` - Performance analysis
-- `docs/pipe-interface-spec.md` - Updated spec
+- `docs/guides/pipe-interface-guide.md` - Complete user guide
+- `docs/architecture/pipe-architecture.md` - Architecture diagrams
+- `docs/guides/pipe-integration-examples.md` - Integration examples
+- `docs/guides/pipe-testing-guide.md` - Testing guide
+- `docs/reference/pipe-performance.md` - Performance analysis
+- `docs/reference/pipe-interface-spec.md` - Updated spec
 
 **Plans:**
-- `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md` - Marked COMPLETE
+- `docs/archive/2025-10-17-phase-4-cleanup-and-documentation.md` - Marked COMPLETE
 
 Phase 4 provides a solid, well-tested, and thoroughly documented PIPE interface implementation ready for production use and future enhancements!

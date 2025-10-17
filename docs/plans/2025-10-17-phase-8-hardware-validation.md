@@ -406,7 +406,7 @@ Validates that DLL TX/RX properly connects to PIPE interface
 through layout converters.
 
 References:
-- docs/integration-strategy.md: PHY integration requirements
+- docs/architecture/integration-strategy.md: PHY integration requirements
 """
 
 import unittest
@@ -595,7 +595,7 @@ This completes the data path from TLP layer through DLL and
 PIPE interface to external PHY chip.
 
 References:
-- docs/integration-strategy.md: PHY integration
+- docs/architecture/integration-strategy.md: PHY integration
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -2499,10 +2499,10 @@ Requires actual hardware to verify:
 - `docs/hardware-validation-guide.md` - Complete validation process
 - `examples/hardware_test/README.md` - Hardware test build instructions
 - `test/hardware/README.md` - Hardware test framework
-- `docs/implementation-status.md` - Overall project status
+- `docs/development/implementation-status.md` - Overall project status
 
 ### Implementation Plans
-- `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - LTSSM foundation
+- `docs/archive/2025-10-17-phase-6-ltssm-link-training.md` - LTSSM foundation
 - `docs/plans/2025-10-17-phase-8-hardware-validation.md` - This plan
 
 ## Conclusion
@@ -2528,7 +2528,7 @@ The implementation is **ready for hardware deployment**. Next step is physical h
 
 ### Step 4: Update implementation status
 
-Modify `docs/implementation-status.md`:
+Modify `docs/development/implementation-status.md`:
 
 ```markdown
 # Add to "Implementation Phases Overview" table:
@@ -2570,7 +2570,7 @@ Modify `docs/implementation-status.md`:
 ### Step 5: Commit completion summary
 
 ```bash
-git add docs/phase-8-completion-summary.md docs/implementation-status.md
+git add docs/phase-8-completion-summary.md docs/development/implementation-status.md
 git commit -m "docs: Add Phase 8 completion summary
 
 Document completion of Phase 8 implementation:

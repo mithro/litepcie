@@ -1333,7 +1333,7 @@ Expected: All tests PASS, no regressions
 
 ### Step 5: Document Phase 5 completion
 
-Update docs/integration-strategy.md:
+Update docs/architecture/integration-strategy.md:
 
 ```markdown
 ### Phase 5: Ordered Sets & Link Training Foundation (Completed - 2025-10-17)
@@ -1357,7 +1357,7 @@ Phase 5 implemented ordered set foundations:
 Commit documentation:
 
 ```bash
-git add docs/integration-strategy.md
+git add docs/architecture/integration-strategy.md
 git commit -m "docs: Update integration strategy with Phase 5 completion
 
 Phase 5 complete: Ordered sets and training sequence foundations.
@@ -1387,7 +1387,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - `test/dll/test_pipe_skp.py` - SKP generation/detection tests
 - `test/dll/test_pipe_training_sequences.py` - TS1/TS2 structure and behavior tests
 - `test/dll/test_pipe_loopback.py` - SKP loopback integration test
-- `docs/integration-strategy.md` - Phase 5 completion status
+- `docs/architecture/integration-strategy.md` - Phase 5 completion status
 
 **Key Achievements:**
 1. Clock compensation via SKP ordered sets (Gen1/Gen2 compliant)

@@ -713,8 +713,8 @@ When integrating PIPE interface into your design:
 
 ## References
 
-- **docs/pipe-interface-guide.md** - Complete API reference and user guide
-- **docs/pipe-architecture.md** - Detailed architecture diagrams
+- **docs/guides/pipe-interface-guide.md** - Complete API reference and user guide
+- **docs/architecture/pipe-architecture.md** - Detailed architecture diagrams
 - **Intel PIPE 3.0 Specification** - Official PIPE protocol specification
 - **test/dll/test_pipe_loopback.py** - Loopback test implementation
 - **litepcie/phy/pipe_external_phy.py** - External PHY wrapper (work in progress)

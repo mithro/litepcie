@@ -144,7 +144,7 @@ decoder = Decoder(nwords=1)
 - **ALL platforms:** Use software 8b/10b from `litex.soc.cores.code_8b10b`
 - **Rationale:** liteiclink uses software 8b/10b even for Xilinx GTX/GTY at PCIe speeds (proven pattern)
 - **Benefits:** Consistent behavior, single code path, simpler testing, no transceiver-specific quirks
-- **See:** `docs/phases/phase-9-8b10b-investigation.md` for detailed analysis
+- **See:** `docs/investigations/phase-9/8b10b-investigation.md` for detailed analysis
 
 ---
 

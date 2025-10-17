@@ -674,7 +674,7 @@ Step 3: RX Depacketizer receives
 
 - **Intel PIPE 3.0 Specification** - Complete signal and protocol definitions
 - **PCIe Base Spec 4.0, Section 4.2** - Symbol Encoding and Framing
-- **docs/pipe-interface-guide.md** - User guide and API reference
+- **docs/guides/pipe-interface-guide.md** - User guide and API reference
 - **litepcie/dll/pipe.py** - Implementation source code
 - **test/dll/test_pipe_*.py** - Test implementations with timing examples
 

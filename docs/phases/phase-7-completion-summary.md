@@ -128,7 +128,7 @@ Phase 7 extended the LTSSM implementation with production-ready Gen2 and multi-l
   - Added power states: enter/exit signals for L0s/L1/L2, send_fts, tx_elecidle control
   - Added detailed substates: detailed_substates parameter, rx_compliance_request, ts1_rx_count
 - `test/dll/test_ltssm_integration.py` - Added TestPhase7Integration class (4 new tests)
-- `docs/implementation-status.md` - Updated Phase 7 status to COMPLETE
+- `docs/development/implementation-status.md` - Updated Phase 7 status to COMPLETE
 
 ### Test Coverage
 - **Gen2 tests:** 3 tests (Gen1 init, Gen2 capability, Gen2 negotiation)
@@ -407,7 +407,7 @@ Users can incrementally adopt features:
 - **Implementation Documents:**
   - `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7 plan
   - `docs/phases/phase-6-completion-summary.md` - Phase 6 results (LTSSM baseline)
-  - `docs/integration-strategy.md` - Overall integration approach
+  - `docs/architecture/integration-strategy.md` - Overall integration approach
 
 ## Conclusion
 

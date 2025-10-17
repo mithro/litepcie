@@ -52,39 +52,39 @@ All tests validate robust operation under unusual conditions.
 
 ## Documentation Created
 
-### 1. PIPE Interface User Guide (`docs/pipe-interface-guide.md`)
+### 1. PIPE Interface User Guide (`docs/guides/pipe-interface-guide.md`)
 - Quick start guide
 - Complete API reference
 - Signal descriptions
 - Troubleshooting guide with VCD analysis
 
-### 2. Architecture Diagrams (`docs/pipe-architecture.md`)
+### 2. Architecture Diagrams (`docs/architecture/pipe-architecture.md`)
 - PCIe stack layering
 - TX/RX dataflow diagrams
 - State machine flows
 - Cycle-accurate timing diagrams
 
-### 3. Integration Examples (`docs/pipe-integration-examples.md`)
+### 3. Integration Examples (`docs/guides/pipe-integration-examples.md`)
 - Basic loopback configuration
 - External PHY integration
 - Multi-packet scenarios
 - Error handling examples
 - All examples tested and working
 
-### 4. Testing Guide (`docs/pipe-testing-guide.md`)
+### 4. Testing Guide (`docs/guides/pipe-testing-guide.md`)
 - Running tests with pytest
 - Writing new tests
 - TDD workflow
 - VCD debugging
 - Coverage analysis
 
-### 5. Performance Analysis (`docs/pipe-performance.md`)
+### 5. Performance Analysis (`docs/reference/pipe-performance.md`)
 - Throughput calculations (Gen1: 2.0 Gb/s effective)
 - Latency measurements (TX: 10 cycles, RX: 9 cycles)
 - Resource utilization estimates
 - Optimization opportunities
 
-### 6. Specification Updates (`docs/pipe-interface-spec.md`)
+### 6. Specification Updates (`docs/reference/pipe-interface-spec.md`)
 - Implementation status
 - Signal mappings
 - Feature compatibility
@@ -119,12 +119,12 @@ All tests validate robust operation under unusual conditions.
 - `test/dll/test_pipe_edge_cases.py` - 8 new edge case tests
 
 **Documentation (6 files, ~2,500 lines):**
-- `docs/pipe-interface-guide.md`
-- `docs/pipe-architecture.md`
-- `docs/pipe-integration-examples.md`
-- `docs/pipe-testing-guide.md`
-- `docs/pipe-performance.md`
-- `docs/pipe-interface-spec.md`
+- `docs/guides/pipe-interface-guide.md`
+- `docs/architecture/pipe-architecture.md`
+- `docs/guides/pipe-integration-examples.md`
+- `docs/guides/pipe-testing-guide.md`
+- `docs/reference/pipe-performance.md`
+- `docs/reference/pipe-interface-spec.md`
 
 ## Key Metrics
 

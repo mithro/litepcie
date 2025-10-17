@@ -12,9 +12,9 @@
 
 **Context:**
 - DLL layer complete (litepcie/dll/): DLLP, sequence numbers, LCRC, retry buffer, TX/RX paths
-- PIPE spec documented: docs/pipe-interface-spec.md
-- Integration strategy documented: docs/integration-strategy.md
-- Code quality standards: docs/code-quality.md
+- PIPE spec documented: docs/reference/pipe-interface-spec.md
+- Integration strategy documented: docs/architecture/integration-strategy.md
+- Code quality standards: docs/development/code-quality.md
 
 ---
 
@@ -123,7 +123,7 @@ References
 ----------
 - Intel PIPE 3.0 Specification
 - PCIe Base Spec 4.0, Section 4: Physical Layer
-- docs/pipe-interface-spec.md
+- docs/reference/pipe-interface-spec.md
 """
 
 from migen import *
@@ -156,7 +156,7 @@ def pipe_layout_8b(data_width=8):
     References
     ----------
     Intel PIPE 3.0 Specification, Section 3: Signal Descriptions
-    docs/pipe-interface-spec.md
+    docs/reference/pipe-interface-spec.md
     """
     return [
         # TX Interface (MAC → PHY)
@@ -276,7 +276,7 @@ class PIPEInterface(LiteXModule):
     ----------
     - Intel PIPE 3.0 Specification
     - PCIe Base Spec 4.0, Section 4: Physical Layer
-    - docs/pipe-interface-spec.md
+    - docs/reference/pipe-interface-spec.md
     """
     def __init__(self, data_width=8, gen=1):
         if data_width != 8:
@@ -412,7 +412,7 @@ Next steps: TX data path, RX path, power management.
 References:
 - Intel PIPE 3.0 Specification
 - PCIe Base Spec 4.0, Section 4
-- docs/pipe-interface-spec.md
+- docs/reference/pipe-interface-spec.md
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -458,7 +458,7 @@ Tests for external PIPE PHY wrapper.
 Tests that the external PHY wrapper provides required PHY interface
 for drop-in replacement of vendor IP.
 
-Reference: docs/integration-strategy.md
+Reference: docs/architecture/integration-strategy.md
 """
 
 import unittest
@@ -480,7 +480,7 @@ class TestPIPEExternalPHYStructure(unittest.TestCase):
         - source: RX data to TLP layer
         - msi: MSI interrupt endpoint
 
-        Reference: docs/integration-strategy.md
+        Reference: docs/architecture/integration-strategy.md
         """
         # Create mock platform (we'll use None for structure test)
         dut = PIPEExternalPHY(
@@ -566,8 +566,8 @@ endpoint = LitePCIeEndpoint(phy, ...)
 
 References
 ----------
-- docs/integration-strategy.md: Drop-in replacement strategy
-- docs/pipe-interface-spec.md: PIPE signal definitions
+- docs/architecture/integration-strategy.md: Drop-in replacement strategy
+- docs/reference/pipe-interface-spec.md: PIPE signal definitions
 - Intel PIPE 3.0 Specification
 """
 
@@ -627,7 +627,7 @@ class PIPEExternalPHY(LiteXModule):
 
     References
     ----------
-    - docs/integration-strategy.md: PHY interface contract
+    - docs/architecture/integration-strategy.md: PHY interface contract
     - Intel PIPE 3.0 Specification
     """
     def __init__(self, platform, pads, data_width=64, cd="sys", bar0_size=0x10000):
@@ -736,8 +736,8 @@ Components:
 Next steps: Wire up connections, implement MSI handling.
 
 References:
-- docs/integration-strategy.md
-- docs/pipe-interface-spec.md
+- docs/architecture/integration-strategy.md
+- docs/reference/pipe-interface-spec.md
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
@@ -923,7 +923,7 @@ Expected: All tests PASS
 Update integration strategy document with completion status:
 
 ```bash
-# Edit docs/integration-strategy.md and update Phase 3 status to ✅
+# Edit docs/architecture/integration-strategy.md and update Phase 3 status to ✅
 ```
 
 ---

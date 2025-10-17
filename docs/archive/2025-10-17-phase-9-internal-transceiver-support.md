@@ -1315,7 +1315,7 @@ Create comprehensive documentation for Phase 9.
 **Files:**
 - Create: `docs/transceiver-integration-guide.md`
 - Create: `docs/phase-9-completion-summary.md`
-- Update: `docs/implementation-status.md`
+- Update: `docs/development/implementation-status.md`
 
 ### Step 1: Write integration guide
 
@@ -1690,14 +1690,14 @@ This completes the path from TLP layer (user) down to physical signaling
 
 ### Step 3: Update implementation status
 
-Update `docs/implementation-status.md`:
+Update `docs/development/implementation-status.md`:
 
 ```markdown
 ## Phase 9: Internal Transceiver Support (Planned)
 
 **Status:** PLANNED
 **Date:** TBD
-**Plan:** `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md`
+**Plan:** `docs/archive/2025-10-17-phase-9-internal-transceiver-support.md`
 
 ### Planned Features
 - 8b/10b encoder/decoder
@@ -1721,7 +1721,7 @@ Update `docs/implementation-status.md`:
 ### Step 4: Commit documentation
 
 ```bash
-git add docs/transceiver-integration-guide.md docs/phase-9-completion-summary.md docs/implementation-status.md
+git add docs/transceiver-integration-guide.md docs/phase-9-completion-summary.md docs/development/implementation-status.md
 git commit -m "docs: Add Phase 9 implementation plan and guides
 
 Create comprehensive Phase 9 documentation:

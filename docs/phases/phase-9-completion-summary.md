@@ -23,7 +23,7 @@ Phase 9 successfully implements vendor-IP-free PCIe physical layer using FPGA in
 
 **Deliverables:**
 - `test/phy/test_8b10b_pcie.py` - PCIe-specific validation tests
-- `docs/phases/phase-9-8b10b-validation.md` - Architecture decision document
+- `docs/investigations/phase-9/8b10b-validation.md` - Architecture decision document
 
 **Key Decision:** Use LiteX's software 8b/10b for **ALL platforms** (Xilinx + ECP5)
 
@@ -173,7 +173,7 @@ Phase 9 successfully implements vendor-IP-free PCIe physical layer using FPGA in
 
 **Deliverables:**
 - 7 test files with 53 test cases
-- `docs/phases/phase-9-testing-summary.md` - Test documentation
+- `docs/investigations/phase-9/testing-summary.md` - Test documentation
 
 **Test Coverage:**
 - Unit tests: All base classes and components
@@ -189,8 +189,8 @@ Phase 9 successfully implements vendor-IP-free PCIe physical layer using FPGA in
 **Goal:** Create comprehensive documentation and usage examples
 
 **Deliverables:**
-- `docs/phases/phase-9-8b10b-validation.md` - 8b/10b architecture decision
-- `docs/phases/phase-9-testing-summary.md` - Complete test documentation
+- `docs/investigations/phase-9/8b10b-validation.md` - 8b/10b architecture decision
+- `docs/investigations/phase-9/testing-summary.md` - Complete test documentation
 - `docs/phases/phase-9-completion-summary.md` - This document
 - Inline documentation in all source files
 - Example integration patterns in `integrated_phy.py`

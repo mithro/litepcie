@@ -724,9 +724,9 @@ def test_single_packet_latency(self):
 
 - **PIPE Implementation:** `litepcie/dll/pipe.py`
 - **Test Examples:** `test/dll/test_pipe_*.py`
-- **User Guide:** `docs/pipe-interface-guide.md`
-- **Architecture:** `docs/pipe-architecture.md`
-- **Integration Examples:** `docs/pipe-integration-examples.md`
+- **User Guide:** `docs/guides/pipe-interface-guide.md`
+- **Architecture:** `docs/architecture/pipe-architecture.md`
+- **Integration Examples:** `docs/guides/pipe-integration-examples.md`
 - **Intel PIPE 3.0 Specification**
 - **PCIe Base Spec 4.0, Section 4: Physical Layer**
 

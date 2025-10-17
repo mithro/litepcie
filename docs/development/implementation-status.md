@@ -49,7 +49,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 **Status:** COMPLETE
 **Date:** 2025-10-17
-**Plan:** `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md`
+**Plan:** `docs/archive/2025-10-17-phase-4-cleanup-and-documentation.md`
 **Completion Summary:** `docs/phases/phase-4-completion-summary.md`
 
 ### Completed Tasks
@@ -65,12 +65,12 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 - **Edge Case Tests:** 8 tests in `test/dll/test_pipe_edge_cases.py`
 
 ### Documentation Created
-- `docs/pipe-interface-guide.md` - Complete user guide
-- `docs/pipe-architecture.md` - Architecture diagrams
-- `docs/pipe-integration-examples.md` - Integration examples
-- `docs/pipe-testing-guide.md` - Testing guide
-- `docs/pipe-performance.md` - Performance analysis
-- `docs/pipe-interface-spec.md` - Updated specification
+- `docs/guides/pipe-interface-guide.md` - Complete user guide
+- `docs/architecture/pipe-architecture.md` - Architecture diagrams
+- `docs/guides/pipe-integration-examples.md` - Integration examples
+- `docs/guides/pipe-testing-guide.md` - Testing guide
+- `docs/reference/pipe-performance.md` - Performance analysis
+- `docs/reference/pipe-interface-spec.md` - Updated specification
 
 ### Key Achievements
 - Functional TX/RX datapath for PIPE symbols
@@ -117,7 +117,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 
 **Status:** COMPLETE
 **Date:** 2025-10-17
-**Plan:** `docs/plans/2025-10-17-phase-6-ltssm-link-training.md`
+**Plan:** `docs/archive/2025-10-17-phase-6-ltssm-link-training.md`
 **Completion Summary:** `docs/phases/phase-6-completion-summary.md`
 
 ### Completed Tasks
@@ -256,7 +256,7 @@ This document tracks the implementation status of all phases for the LitePCIe PI
 #### Task 8.4: Hardware Debugging - LiteScope Integration ✅
 - **Files Created:**
   - `examples/pcie_pipe_debug.py` - Complete debug SoC with LiteScope (6.3 KB)
-  - `docs/hardware-debugging.md` - Comprehensive debugging guide (10.6 KB)
+  - `docs/guides/hardware-debugging.md` - Comprehensive debugging guide (10.6 KB)
 - **Captured Signals:** 22 signals across LTSSM, PIPE, DLL, and datapaths
 - **Sample Depth:** 4096 samples in PCIE clock domain
 - **Features:**
@@ -344,7 +344,7 @@ Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
 ### Phase 9: Internal Transceiver Support ⏳ PLANNED
 
 **Status:** Implementation plan complete
-**Plan:** `docs/plans/2025-10-17-phase-9-internal-transceiver-support.md` (50 KB, 10 tasks)
+**Plan:** `docs/archive/2025-10-17-phase-9-internal-transceiver-support.md` (50 KB, 10 tasks)
 **Timeline:** ~11.5 days | **Coverage:** >85% target
 **Goal:** Vendor-IP-free PCIe using FPGA transceivers
 
@@ -371,20 +371,20 @@ Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
 - **Intel PIPE 3.0 Specification:** PHY Interface for PCI Express
 
 ### Project Documentation
-- `docs/pipe-interface-spec.md` - PIPE interface specification
-- `docs/pipe-interface-guide.md` - User guide
-- `docs/pipe-architecture.md` - Architecture diagrams
-- `docs/integration-strategy.md` - Integration strategy
-- `docs/code-quality.md` - Code quality standards
+- `docs/reference/pipe-interface-spec.md` - PIPE interface specification
+- `docs/guides/pipe-interface-guide.md` - User guide
+- `docs/architecture/pipe-architecture.md` - Architecture diagrams
+- `docs/architecture/integration-strategy.md` - Integration strategy
+- `docs/development/code-quality.md` - Code quality standards
 
 ### Implementation Plans
 
 **Completed Phases:**
 - `docs/plans/2025-10-16-phase-3-pipe-interface-external-phy.md` - Phase 3: PIPE Interface & External PHY
-- `docs/plans/2025-10-17-phase-4-cleanup-and-documentation.md` - Phase 4: Cleanup & Documentation
-- `docs/plans/2025-10-17-phase-4-pipe-tx-rx-datapath.md` - Phase 4: TX/RX Datapath
+- `docs/archive/2025-10-17-phase-4-cleanup-and-documentation.md` - Phase 4: Cleanup & Documentation
+- `docs/archive/2025-10-17-phase-4-pipe-tx-rx-datapath.md` - Phase 4: TX/RX Datapath
 - `docs/plans/2025-10-17-phase-5-ordered-sets-link-training.md` - Phase 5: Ordered Sets
-- `docs/plans/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6: LTSSM
+- `docs/archive/2025-10-17-phase-6-ltssm-link-training.md` - Phase 6: LTSSM
 - `docs/plans/2025-10-17-phase-7-advanced-ltssm-features.md` - Phase 7: Advanced LTSSM (70 KB, 10 tasks)
 
 **In Progress:**
@@ -392,10 +392,10 @@ Tasks 8.5-8.9 require actual hardware (FPGA + external PIPE PHY chip):
 
 **Pre-Implementation (Phase 9):**
 - `docs/plans/2025-10-17-phase-9-internal-transceiver-support-v2.md` - Phase 9: Internal Transceivers (54 KB, 10 tasks)
-- `docs/phases/phase-9-plan-review.md` - Critical review identifying 4 "Must Fix" items
-- `docs/clock-domain-architecture.md` - Clock domain strategy (Must Fix 1) ✅
-- `docs/phases/phase-9-dependencies.md` - liteiclink dependency documentation (Must Fix 2) ✅
-- `docs/phases/phase-9-testing-strategy.md` - Tiered testing strategy (Must Fix 4) ✅
+- `docs/investigations/phase-9/plan-review.md` - Critical review identifying 4 "Must Fix" items
+- `docs/architecture/clock-domain-architecture.md` - Clock domain strategy (Must Fix 1) ✅
+- `docs/investigations/phase-9/dependencies.md` - liteiclink dependency documentation (Must Fix 2) ✅
+- `docs/investigations/phase-9/testing-strategy.md` - Tiered testing strategy (Must Fix 4) ✅
 - Phase 9 plan corrections - 8b/10b strategy fixed (Must Fix 3) ✅
 
 ### Completion Summaries

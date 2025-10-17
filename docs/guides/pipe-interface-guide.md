@@ -799,9 +799,9 @@ pipe.dll_rx_source.dat
 
 - **Intel PIPE 3.0 Specification** - Complete PIPE protocol definition
 - **PCIe Base Spec 4.0, Section 4** - Physical Layer and Symbol Encoding
-- **docs/pipe-interface-spec.md** - LitePCIe PIPE implementation specification
-- **docs/pipe-architecture.md** - Detailed architecture diagrams
-- **docs/pipe-testing-guide.md** - Comprehensive testing documentation
+- **docs/reference/pipe-interface-spec.md** - LitePCIe PIPE implementation specification
+- **docs/architecture/pipe-architecture.md** - Detailed architecture diagrams
+- **docs/guides/pipe-testing-guide.md** - Comprehensive testing documentation
 - **test/dll/test_pipe_*.py** - Example test implementations
 
 ---

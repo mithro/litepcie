@@ -151,7 +151,7 @@ self.comb += [
 ## Files Created
 
 1. `test/phy/test_8b10b_pcie.py` - PCIe-specific validation tests
-2. `docs/phases/phase-9-8b10b-validation.md` - This document
+2. `docs/investigations/phase-9/8b10b-validation.md` - This document
 
 ---
 

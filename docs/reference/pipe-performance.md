@@ -501,7 +501,7 @@ Solution: Multi-lane or wider PIPE mode for Gen3+.
 
 - **PCIe Base Specification 4.0** - Chapter 4: Physical Layer
 - **Intel PIPE 3.0 Specification** - PHY Interface for PCIe
-- **LitePCIe Documentation** - docs/pipe-interface-guide.md
+- **LitePCIe Documentation** - docs/guides/pipe-interface-guide.md
 - **Test Results** - test/dll/test_pipe_loopback.py
 
 ---

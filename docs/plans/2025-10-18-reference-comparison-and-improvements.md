@@ -1164,7 +1164,7 @@ def benchmark_litepcie_vs_liteiclink():
 - Update: `docs/phase-9-completion-summary.md`
 - Create: `docs/reference-comparison.md`
 - Create: `docs/hardware-validation-results.md`
-- Update: `docs/implementation-status.md`
+- Update: `docs/development/implementation-status.md`
 
 ```markdown
 # docs/reference-comparison.md
