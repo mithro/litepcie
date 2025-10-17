@@ -174,5 +174,77 @@ class TestLTSSMPolling(unittest.TestCase):
         run_simulation(dut, testbench(dut))
 
 
+class TestLTSSMConfiguration(unittest.TestCase):
+    """Test LTSSM CONFIGURATION state."""
+
+    def test_configuration_sends_ts2_ordered_sets(self):
+        """
+        CONFIGURATION should send TS2 ordered sets.
+
+        After POLLING (TS1 exchange), devices move to CONFIGURATION
+        and exchange TS2 ordered sets to finalize link parameters.
+
+        Reference: PCIe Spec 4.0, Section 4.2.5.3.4: Configuration
+        """
+        def testbench(dut):
+            # Simulate path: DETECT → POLLING → CONFIGURATION
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield  # Now in POLLING
+
+            # Simulate receiving TS1 from partner
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield  # Transition to CONFIGURATION (need extra cycle for state transition)
+            yield dut.ts1_detected.eq(0)  # Clear detection flag
+
+            # Should be in CONFIGURATION state
+            state = yield dut.current_state
+            self.assertEqual(state, dut.CONFIGURATION)
+
+            # Should be sending TS2 ordered sets
+            send_ts2 = yield dut.send_ts2
+            self.assertEqual(send_ts2, 1)
+
+            # Should NOT be sending TS1 anymore
+            send_ts1 = yield dut.send_ts1
+            self.assertEqual(send_ts1, 0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+    def test_configuration_transitions_to_l0_when_ts2_received(self):
+        """
+        CONFIGURATION should transition to L0 when TS2 received from partner.
+
+        Receiving TS2 confirms partner has also received TS1 and moved
+        to CONFIGURATION. After exchanging TS2, link is ready for L0.
+        """
+        def testbench(dut):
+            # Get to CONFIGURATION state
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield  # POLLING
+            yield dut.ts1_detected.eq(1)
+            yield
+            yield
+            yield  # CONFIGURATION (need extra cycle for state transition)
+            yield dut.ts1_detected.eq(0)
+
+            # Simulate receiving TS2 from partner
+            yield dut.ts2_detected.eq(1)
+            yield
+            yield
+            yield  # Should transition to L0 (need extra cycle for state transition)
+
+            # Should be in L0 state
+            state = yield dut.current_state
+            self.assertEqual(state, dut.L0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+
 if __name__ == "__main__":
     unittest.main()

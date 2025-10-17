@@ -133,8 +133,21 @@ class LTSSM(LiteXModule):
             ),
         )
 
+        # CONFIGURATION State - TS2 Exchange and Link Parameter Finalization
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.4
         self.fsm.act("CONFIGURATION",
             NextValue(self.current_state, self.CONFIGURATION),
+
+            # Send TS2 ordered sets (stop sending TS1)
+            NextValue(self.send_ts1, 0),
+            NextValue(self.send_ts2, 1),
+            NextValue(self.tx_elecidle, 0),
+
+            # Transition to L0 when we receive TS2 from partner
+            # (indicates both sides have completed configuration)
+            If(self.ts2_detected,
+                NextState("L0"),
+            ),
         )
 
         self.fsm.act("L0",
