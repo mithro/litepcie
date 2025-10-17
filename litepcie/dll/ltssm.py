@@ -116,9 +116,21 @@ class LTSSM(LiteXModule):
             ),
         )
 
-        # Placeholder states (to be implemented in subsequent tasks)
+        # POLLING State - TS1/TS2 Exchange for Speed/Lane Negotiation
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.2
         self.fsm.act("POLLING",
             NextValue(self.current_state, self.POLLING),
+
+            # Exit electrical idle and start sending TS1
+            NextValue(self.tx_elecidle, 0),
+            NextValue(self.send_ts1, 1),
+            NextValue(self.send_ts2, 0),
+
+            # Transition to CONFIGURATION when we receive TS1 from partner
+            # (indicates both sides are sending TS1 successfully)
+            If(self.ts1_detected,
+                NextState("CONFIGURATION"),
+            ),
         )
 
         self.fsm.act("CONFIGURATION",

@@ -138,5 +138,41 @@ class TestLTSSMDetect(unittest.TestCase):
         run_simulation(dut, testbench(dut))
 
 
+class TestLTSSMPolling(unittest.TestCase):
+    """Test LTSSM POLLING state."""
+
+    def test_polling_sends_ts1_ordered_sets(self):
+        """
+        POLLING.Active should send TS1 ordered sets continuously.
+
+        POLLING state has substates:
+        - POLLING.Active: Send TS1 ordered sets
+        - POLLING.Configuration: Send TS2 after receiving TS1 from partner
+        - POLLING.Compliance: Compliance pattern (not implemented in Gen1)
+
+        Reference: PCIe Spec 4.0, Section 4.2.5.3.2: Polling
+        """
+        def testbench(dut):
+            # Start in DETECT, simulate receiver detection
+            yield dut.rx_elecidle.eq(0)
+            yield
+            yield  # Transition to POLLING
+
+            # Should be in POLLING state
+            state = yield dut.current_state
+            self.assertEqual(state, dut.POLLING)
+
+            # Should be sending TS1 ordered sets
+            send_ts1 = yield dut.send_ts1
+            self.assertEqual(send_ts1, 1)
+
+            # TX should exit electrical idle
+            tx_elecidle = yield dut.tx_elecidle
+            self.assertEqual(tx_elecidle, 0)
+
+        dut = LTSSM()
+        run_simulation(dut, testbench(dut))
+
+
 if __name__ == "__main__":
     unittest.main()
