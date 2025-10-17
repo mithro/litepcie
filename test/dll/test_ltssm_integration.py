@@ -21,7 +21,6 @@ from litex.gen import run_simulation
 from migen import *
 
 from litepcie.dll.pipe import PIPEInterface
-from litepcie.dll.ltssm import LTSSM
 
 
 class TestLTSSMPIPEIntegration(unittest.TestCase):
@@ -49,6 +48,7 @@ class TestLTSSMPIPEIntegration(unittest.TestCase):
         """
         LTSSM should control TS1/TS2 generation automatically.
         """
+
         def testbench(dut):
             # Initially in DETECT, no TS generation
             send_ts1 = yield dut.ltssm.send_ts1
@@ -87,6 +87,7 @@ class TestLTSSMAutoLinkTraining(unittest.TestCase):
 
         This validates the full LTSSM training sequence.
         """
+
         def testbench(dut):
             # Initially in DETECT, link down
             link_up = yield dut.link_up

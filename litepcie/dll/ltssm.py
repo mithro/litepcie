@@ -16,8 +16,8 @@ References
 - Intel PIPE 3.0 Specification
 """
 
-from migen import *
 from litex.gen import LiteXModule
+from migen import *
 
 
 class LTSSM(LiteXModule):
@@ -73,29 +73,29 @@ class LTSSM(LiteXModule):
     """
 
     # LTSSM State Definitions (PCIe Spec Section 4.2.5.2)
-    DETECT         = 0
-    POLLING        = 1
-    CONFIGURATION  = 2
-    L0             = 3
-    RECOVERY       = 4
+    DETECT = 0
+    POLLING = 1
+    CONFIGURATION = 2
+    L0 = 3
+    RECOVERY = 4
 
     def __init__(self, gen=1, lanes=1):
         # Link status outputs
-        self.link_up       = Signal()
+        self.link_up = Signal()
         self.current_state = Signal(3)
-        self.link_speed    = Signal(2, reset=gen)
-        self.link_width    = Signal(5, reset=lanes)
+        self.link_speed = Signal(2, reset=gen)
+        self.link_width = Signal(5, reset=lanes)
 
         # PIPE control outputs (to PIPE TX)
-        self.send_ts1    = Signal()
-        self.send_ts2    = Signal()
+        self.send_ts1 = Signal()
+        self.send_ts2 = Signal()
         self.tx_elecidle = Signal(reset=1)  # Start in electrical idle
-        self.powerdown   = Signal(2)
+        self.powerdown = Signal(2)
 
         # PIPE status inputs (from PIPE RX)
         self.ts1_detected = Signal()
         self.ts2_detected = Signal()
-        self.rx_elecidle  = Signal()
+        self.rx_elecidle = Signal()
 
         # # #
 
@@ -104,89 +104,88 @@ class LTSSM(LiteXModule):
 
         # DETECT State - Receiver Detection
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.1
-        self.fsm.act("DETECT",
+        self.fsm.act(
+            "DETECT",
             # In DETECT, TX is in electrical idle
             NextValue(self.tx_elecidle, 1),
             NextValue(self.link_up, 0),
             NextValue(self.current_state, self.DETECT),
-
             # Transition to POLLING when receiver detected (rx_elecidle goes low)
-            If(~self.rx_elecidle,
+            If(
+                ~self.rx_elecidle,
                 NextState("POLLING"),
             ),
         )
 
         # POLLING State - TS1/TS2 Exchange for Speed/Lane Negotiation
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.2
-        self.fsm.act("POLLING",
+        self.fsm.act(
+            "POLLING",
             NextValue(self.current_state, self.POLLING),
-
             # Exit electrical idle and start sending TS1
             NextValue(self.tx_elecidle, 0),
             NextValue(self.send_ts1, 1),
             NextValue(self.send_ts2, 0),
-
             # Transition to CONFIGURATION when we receive TS1 from partner
             # (indicates both sides are sending TS1 successfully)
-            If(self.ts1_detected,
+            If(
+                self.ts1_detected,
                 NextState("CONFIGURATION"),
             ),
         )
 
         # CONFIGURATION State - TS2 Exchange and Link Parameter Finalization
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.4
-        self.fsm.act("CONFIGURATION",
+        self.fsm.act(
+            "CONFIGURATION",
             NextValue(self.current_state, self.CONFIGURATION),
-
             # Send TS2 ordered sets (stop sending TS1)
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 1),
             NextValue(self.tx_elecidle, 0),
-
             # Transition to L0 when we receive TS2 from partner
             # (indicates both sides have completed configuration)
-            If(self.ts2_detected,
+            If(
+                self.ts2_detected,
                 NextState("L0"),
             ),
         )
 
         # L0 State - Normal Operation (Link Up)
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.5
-        self.fsm.act("L0",
+        self.fsm.act(
+            "L0",
             NextValue(self.current_state, self.L0),
-
             # Link is up and operational
             NextValue(self.link_up, 1),
-
             # Stop sending training sequences
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
-
             # Monitor for link errors
             # If rx goes to electrical idle unexpectedly, enter RECOVERY
-            If(self.rx_elecidle,
+            If(
+                self.rx_elecidle,
                 NextState("RECOVERY"),
             ),
         )
 
         # RECOVERY State - Error Recovery and Link Retraining
         # Reference: PCIe Spec 4.0, Section 4.2.5.3.7
-        self.fsm.act("RECOVERY",
+        self.fsm.act(
+            "RECOVERY",
             NextValue(self.current_state, self.RECOVERY),
-
             # Link is down during recovery
             NextValue(self.link_up, 0),
-
             # Send TS1 to attempt retraining
             NextValue(self.send_ts1, 1),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
-
             # Wait for partner to exit electrical idle and respond with TS1
             # Simplified recovery: if we receive TS1, return to L0
             # (Full spec would go through POLLING/CONFIGURATION again)
-            If((~self.rx_elecidle) & self.ts1_detected,
+            If(
+                (~self.rx_elecidle) & self.ts1_detected,
                 NextState("L0"),
             ),
         )

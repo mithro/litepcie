@@ -17,9 +17,10 @@ References:
 
 import unittest
 
-from migen import *
-from litepcie.dll.ltssm import LTSSM
 from litex.gen import run_simulation
+from migen import *
+
+from litepcie.dll.ltssm import LTSSM
 
 
 class TestLTSSMStructure(unittest.TestCase):
@@ -97,6 +98,7 @@ class TestLTSSMDetect(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.5.3.1: Detect
         """
+
         def testbench(dut):
             # After reset, should be in DETECT
             state = yield dut.current_state
@@ -120,6 +122,7 @@ class TestLTSSMDetect(unittest.TestCase):
         In real hardware, receiver detection is done by PHY. For this implementation,
         we use rx_elecidle signal: when it goes low, receiver is detected.
         """
+
         def testbench(dut):
             # Start in DETECT
             state = yield dut.current_state
@@ -152,6 +155,7 @@ class TestLTSSMPolling(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.5.3.2: Polling
         """
+
         def testbench(dut):
             # Start in DETECT, simulate receiver detection
             yield dut.rx_elecidle.eq(0)
@@ -186,6 +190,7 @@ class TestLTSSMConfiguration(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.5.3.4: Configuration
         """
+
         def testbench(dut):
             # Simulate path: DETECT → POLLING → CONFIGURATION
             yield dut.rx_elecidle.eq(0)
@@ -221,6 +226,7 @@ class TestLTSSMConfiguration(unittest.TestCase):
         Receiving TS2 confirms partner has also received TS1 and moved
         to CONFIGURATION. After exchanging TS2, link is ready for L0.
         """
+
         def testbench(dut):
             # Get to CONFIGURATION state
             yield dut.rx_elecidle.eq(0)
@@ -260,6 +266,7 @@ class TestLTSSML0(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.5.3.5: L0
         """
+
         def testbench(dut):
             # Simulate full training sequence to reach L0
             # DETECT → POLLING → CONFIGURATION → L0
@@ -305,6 +312,7 @@ class TestLTSSML0(unittest.TestCase):
         Unexpected electrical idle indicates link error or partner initiated
         link retrain. RECOVERY state will attempt to restore the link.
         """
+
         def testbench(dut):
             # Get to L0 state (same sequence as above)
             yield dut.rx_elecidle.eq(0)
@@ -349,6 +357,7 @@ class TestLTSSMRecovery(unittest.TestCase):
 
         Reference: PCIe Spec 4.0, Section 4.2.5.3.7: Recovery
         """
+
         def testbench(dut):
             # Get to L0, then trigger recovery
             yield dut.rx_elecidle.eq(0)
@@ -391,6 +400,7 @@ class TestLTSSMRecovery(unittest.TestCase):
         When partner responds with TS1 (exits electrical idle), recovery
         can transition back to L0 (simplified - full spec uses TS2 exchange).
         """
+
         def testbench(dut):
             # Get to RECOVERY state
             yield dut.rx_elecidle.eq(0)

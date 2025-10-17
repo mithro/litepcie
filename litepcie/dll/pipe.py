@@ -867,8 +867,15 @@ class PIPEInterface(LiteXModule):
     - docs/pipe-interface-spec.md
     """
 
-    def __init__(self, data_width=8, gen=1, enable_skp=False, skp_interval=1180,
-                 enable_training_sequences=False, enable_ltssm=False):
+    def __init__(
+        self,
+        data_width=8,
+        gen=1,
+        enable_skp=False,
+        skp_interval=1180,
+        enable_training_sequences=False,
+        enable_ltssm=False,
+    ):
         if data_width != 8:
             raise ValueError("Only 8-bit PIPE mode supported currently")
         if gen not in [1, 2]:
