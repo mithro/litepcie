@@ -46,6 +46,7 @@ from litex.gen import *
 from migen import *
 
 from litepcie.common import *
+from litepcie.dll.converters import PHYToDLLConverter, DLLToPHYConverter
 from litepcie.dll.pipe import PIPEInterface
 from litepcie.dll.rx import DLLRX
 from litepcie.dll.tx import DLLTX
@@ -146,38 +147,76 @@ class PIPEExternalPHY(LiteXModule):
         self.dll_tx = ClockDomainsRenamer("pcie")(DLLTX(data_width=64))
         self.dll_rx = ClockDomainsRenamer("pcie")(DLLRX(data_width=64))
 
-        # TODO: Connect TX datapath to DLL
-        # Requires layout converter: datapath.source uses phy_layout(dat, be),
-        # but dll_tx.tlp_sink expects [("data", 64)]
-        # self.comb += self.tx_datapath.source.connect(self.dll_tx.tlp_sink)
-
-        # TODO: Connect DLL to RX datapath
-        # Requires layout converter: dll_rx.tlp_source outputs [("data", 64)],
-        # but rx_datapath.sink expects phy_layout(dat, be)
-        # self.comb += self.dll_rx.tlp_source.connect(self.rx_datapath.sink)
-
         # PIPE Interface (in "pcie" clock domain)
-        self.pipe = ClockDomainsRenamer("pcie")(PIPEInterface(data_width=8, gen=1))
+        # Enable LTSSM for automatic link training
+        self.pipe = ClockDomainsRenamer("pcie")(
+            PIPEInterface(
+                data_width=8,
+                gen=1,
+                enable_skp=True,
+                enable_training_sequences=True,
+                enable_ltssm=True,
+            )
+        )
 
-        # TODO: Connect DLL to PIPE interface
-        # Requires layout converter: DLL uses [("data", 64)], PIPE uses phy_layout(64)
-        # Also requires 64-bit to 8-bit width conversion for PIPE symbols
-        # self.comb += [
-        #     self.dll_tx.phy_source.connect(self.pipe.dll_tx_sink),
-        #     self.pipe.dll_rx_source.connect(self.dll_rx.phy_sink),
-        # ]
+        # Layout converters for TX path (phy_layout ↔ dll_layout)
+        self.tx_phy_to_dll_conv = ClockDomainsRenamer("pcie")(
+            PHYToDLLConverter(data_width=64)
+        )
+        self.tx_dll_to_phy_conv = ClockDomainsRenamer("pcie")(
+            DLLToPHYConverter(data_width=64)
+        )
+
+        # Connect TX: Datapath → DLL → PIPE
+        self.comb += [
+            self.tx_datapath.source.connect(self.tx_phy_to_dll_conv.sink),
+            self.tx_phy_to_dll_conv.source.connect(self.dll_tx.tlp_sink),
+            self.dll_tx.phy_source.connect(self.tx_dll_to_phy_conv.sink),
+            self.tx_dll_to_phy_conv.source.connect(self.pipe.dll_tx_sink),
+        ]
+
+        # Layout converters for RX path (phy_layout ↔ dll_layout)
+        self.rx_phy_to_dll_conv = ClockDomainsRenamer("pcie")(
+            PHYToDLLConverter(data_width=64)
+        )
+        self.rx_dll_to_phy_conv = ClockDomainsRenamer("pcie")(
+            DLLToPHYConverter(data_width=64)
+        )
+
+        # Connect RX: PIPE → DLL → Datapath
+        self.comb += [
+            self.pipe.dll_rx_source.connect(self.rx_phy_to_dll_conv.sink),
+            self.rx_phy_to_dll_conv.source.connect(self.dll_rx.phy_sink),
+            self.dll_rx.tlp_source.connect(self.rx_dll_to_phy_conv.sink),
+            self.rx_dll_to_phy_conv.source.connect(self.rx_datapath.sink),
+        ]
+
+        # Expose link status from LTSSM
+        self.link_up = Signal()
+        self.comb += self.link_up.eq(self.pipe.link_up)
 
         # Connect PIPE interface to external chip pads
         if pads is not None:
-            # TODO: Connect PIPE signals to pads
-            # self.comb += [
-            #     pads.tx_data.eq(self.pipe.pipe_tx_data),
-            #     pads.tx_datak.eq(self.pipe.pipe_tx_datak),
-            #     self.pipe.pipe_rx_data.eq(pads.rx_data),
-            #     self.pipe.pipe_rx_datak.eq(pads.rx_datak),
-            #     # ... etc
-            # ]
-            pass
+            self.comb += [
+                # TX signals
+                pads.tx_data.eq(self.pipe.pipe_tx_data),
+                pads.tx_datak.eq(self.pipe.pipe_tx_datak),
 
-        # MSI handling (placeholder)
+                # RX signals
+                self.pipe.pipe_rx_data.eq(pads.rx_data),
+                self.pipe.pipe_rx_datak.eq(pads.rx_datak),
+
+                # LTSSM control signals
+                pads.tx_elecidle.eq(self.pipe.ltssm.tx_elecidle),
+                pads.powerdown.eq(self.pipe.ltssm.powerdown),
+
+                # LTSSM status signals
+                self.pipe.ltssm.rx_elecidle.eq(pads.rx_elecidle),
+
+                # Clock from PHY (PCLK drives "pcie" clock domain)
+                # Note: Platform must define "pcie" clock domain from pads.pclk
+            ]
+
+        # MSI handling
         # TODO: Implement MSI CDC from pcie → core clock domain
+        # For now, MSI endpoint exists but is not connected
