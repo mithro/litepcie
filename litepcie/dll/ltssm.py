@@ -83,11 +83,13 @@ class LTSSM(LiteXModule):
     RECOVERY_EQ_PHASE1 = 7  # Equalization phase 1
     RECOVERY_EQ_PHASE2 = 8  # Equalization phase 2
     RECOVERY_EQ_PHASE3 = 9  # Equalization phase 3
+    L0s_IDLE = 10  # L0s low power state
+    L0s_FTS = 11  # L0s exit via FTS
 
-    def __init__(self, gen=1, lanes=1, enable_equalization=False):
+    def __init__(self, gen=1, lanes=1, enable_equalization=False, enable_l0s=False):
         # Link status outputs
         self.link_up = Signal()
-        self.current_state = Signal(3)
+        self.current_state = Signal(4)  # 4 bits for states 0-11
         self.link_speed = Signal(2, reset=1)  # Always start at Gen1
         self.link_width = Signal(5, reset=lanes)
 
@@ -179,6 +181,16 @@ class LTSSM(LiteXModule):
         # Equalization phase counter
         eq_phase_timer = Signal(16)
 
+        # L0s power state support
+        self.enable_l0s = enable_l0s
+        self.l0s_capable = Signal(reset=1 if enable_l0s else 0)
+        self.enter_l0s = Signal()  # Request L0s entry
+        self.exit_l0s = Signal()   # Request L0s exit
+        self.send_fts = Signal()   # Send FTS (Fast Training Sequence)
+
+        # FTS counter (n_fts field from TS1/TS2)
+        fts_counter = Signal(8)
+
         # # #
 
         # LTSSM State Machine
@@ -247,8 +259,12 @@ class LTSSM(LiteXModule):
             NextValue(self.send_ts1, 0),
             NextValue(self.send_ts2, 0),
             NextValue(self.tx_elecidle, 0),
-            # If speed change required, enter RECOVERY.Speed
+            # Enter L0s if requested and capable
             If(
+                self.l0s_capable & self.enter_l0s,
+                NextState("L0s_IDLE"),
+            # If speed change required, enter RECOVERY.Speed
+            ).Elif(
                 self.speed_change_required,
                 NextState("RECOVERY_SPEED"),
             # Monitor for link errors
@@ -361,5 +377,41 @@ class LTSSM(LiteXModule):
                 # Equalization complete, return to L0
                 NextState("L0"),
                 NextValue(self.force_equalization, 0),
+            ),
+        )
+
+        # L0s.Idle State - Low Power Standby
+        # Reference: PCIe Spec 4.0, Section 4.2.5.3.6: L0s State
+        self.fsm.act(
+            "L0s_IDLE",
+            NextValue(self.current_state, self.L0s_IDLE),
+            # Link still up, but in low power
+            NextValue(self.link_up, 1),
+            # TX in electrical idle (power savings)
+            NextValue(self.tx_elecidle, 1),
+            # Exit L0s when data needs to be sent
+            If(
+                self.exit_l0s,
+                NextState("L0s_FTS"),
+                NextValue(fts_counter, 0),
+            ),
+        )
+
+        # L0s.FTS State - Exit via Fast Training Sequence
+        self.fsm.act(
+            "L0s_FTS",
+            NextValue(self.current_state, self.L0s_FTS),
+            # Exit electrical idle
+            NextValue(self.tx_elecidle, 0),
+            # Send FTS sequences for receiver lock
+            NextValue(self.send_fts, 1),
+            NextValue(fts_counter, fts_counter + 1),
+            # After N_FTS sequences, return to L0
+            # (Using n_fts value - typically 128 for Gen1)
+            If(
+                fts_counter >= 128,
+                NextState("L0"),
+                NextValue(self.send_fts, 0),
+                NextValue(self.exit_l0s, 0),
             ),
         )
