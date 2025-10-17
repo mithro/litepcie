@@ -556,8 +556,9 @@ Our custom PHY implementations will be considered successful when:
 - **TS1/TS2 Structures:** 16-symbol Training Sequences with proper formatting
 - **TS1/TS2 TX Generation:** Manual trigger support via `send_ts1`/`send_ts2` signals
 - **TS1/TS2 RX Detection:** Pattern identification with `ts1_detected`/`ts2_detected` flags
-- 90 DLL tests passing, 34 PIPE tests, all edge cases handled
-- See: `docs/phase-5-completion-summary.md`
+- **Phase 4 Cleanup:** Coverage analysis (99%), edge case tests, TS+SKP combination test
+- 91 DLL tests passing (including 35 PIPE tests), 99% code coverage, all edge cases handled
+- See: `docs/phase-5-completion-summary.md`, `docs/phase-4-cleanup-and-documentation.md`
 
 ### Phase 6: Link Training State Machine (LTSSM) ⏳ (Planned)
 - Implement LTSSM states (Detect, Polling, Configuration, Recovery, L0)

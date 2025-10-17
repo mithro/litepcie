@@ -546,14 +546,22 @@ test_pipe_tx_packetizer.py::TestPIPETXPacketizerStart::test_tx_sends_stp_for_tlp
 test_pipe_tx_packetizer.py::TestPIPETXPacketizerData::test_tx_transmits_data_bytes PASSED
 test_pipe_tx_packetizer.py::TestPIPETXPacketizerEnd::test_tx_sends_end_after_data PASSED
 
-========================== 34 tests passed in 1.2s ==========================
+========================== 91 tests passed in 8.96s ==========================
 ```
 
 **Coverage:**
-- pipe.py: 99% (142/144 statements)
-- pipe_external_phy.py: 96% (24/25 statements)
+- pipe.py: 99% (142/143 statements, line 381 now covered by TS+SKP combination test)
+- pipe_external_phy.py: 0% (25 statements, hardware integration code)
+
+**Note:** Total test count increased from 34 to 91 with addition of:
+- Edge case tests (8 tests)
+- Parameter validation tests (3 tests)
+- SKP tests (3 tests)
+- TS1/TS2 tests (5 tests, including TS+SKP combination)
+- Additional compliance and integration tests (38 tests)
 
 ---
 
 *Document generated: 2025-10-17*
 *LitePCIe PIPE Interface - Phase 4/5*
+*Last updated: 2025-10-17 (Post-Phase 5, test count updated to 91)*
