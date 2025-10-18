@@ -7,9 +7,18 @@ This directory contains comprehensive documentation for the LitePCIe PIPE interf
 ### 🏗️ Architecture Documentation
 **Location:** `architecture/`
 
-Core architecture and design documents explaining the overall system design:
+Complete system architecture with detailed layer documentation:
 
-- [PIPE Architecture](architecture/pipe-architecture.md) - PIPE interface architecture and component diagrams
+#### Standalone Architecture Guide (Start Here!)
+- **[Complete System Architecture](architecture/complete-system-architecture.md)** - Master architecture document with full stack overview
+- **[SERDES Layer](architecture/serdes-layer.md)** - Physical transceiver layer (GTX/GTY/ECP5)
+- **[PIPE Layer](architecture/pipe-layer.md)** - PHY Interface layer with protocol details
+- **[DLL Layer](architecture/dll-layer.md)** - Data Link Layer with LTSSM and reliability
+- **[TLP Layer](architecture/tlp-layer.md)** - Transaction Layer with flow control
+- **[Integration Patterns](architecture/integration-patterns.md)** - Cross-layer integration guide
+
+#### Component-Specific Architecture
+- [PIPE Architecture](architecture/pipe-architecture.md) - PIPE interface component diagrams (detailed)
 - [Clock Domain Architecture](architecture/clock-domain-architecture.md) - Multi-domain clock strategy and CDC patterns
 - [Integration Strategy](architecture/integration-strategy.md) - Overall integration approach and roadmap
 
@@ -117,10 +126,11 @@ Superseded plans and historical documents (kept for reference):
 ## Getting Started
 
 ### For New Users
-1. Start with [PIPE Interface Guide](guides/pipe-interface-guide.md)
-2. Review [PIPE Architecture](architecture/pipe-architecture.md)
-3. Explore [Integration Examples](guides/pipe-integration-examples.md)
-4. Check [Implementation Status](development/implementation-status.md) for current progress
+1. **Start here:** [Complete System Architecture](architecture/complete-system-architecture.md) - Comprehensive overview of the entire PCIe stack
+2. **Review layer-specific docs:** [SERDES](architecture/serdes-layer.md) → [PIPE](architecture/pipe-layer.md) → [DLL](architecture/dll-layer.md) → [TLP](architecture/tlp-layer.md)
+3. **Understand integration:** [Integration Patterns](architecture/integration-patterns.md)
+4. **Practical usage:** [PIPE Interface Guide](guides/pipe-interface-guide.md) and [Integration Examples](guides/pipe-integration-examples.md)
+5. **Check status:** [Implementation Status](development/implementation-status.md) for current progress
 
 ### For Developers
 1. Review [Integration Strategy](architecture/integration-strategy.md)
