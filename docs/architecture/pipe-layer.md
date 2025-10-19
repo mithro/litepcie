@@ -373,20 +373,20 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │       │  │                                               │                       │
 │  │   │       │                                                  │  (enable_training_sequences)                │ │
 │  │   │       │  │                                               │                       │
-│  │   │       │  └────────────┐                                  │                       │
+│  │   │                                  │  └────────────┐     │ │
 │  │   │       │                          │                     │ │
 │  │   │       │          ┌────▼────────┐                         │                       │
 │  │   │       │          │  TS_CHECK     │                     │ │
-│  │   │       │          │               │                     │ │
+│  │   │                  │             │ │                     │ │
 │  │   │       │          │  Buffer 16    │                     │ │
 │  │   │       │          │  symbols      │                     │ │
-│  │   │       │          │               │                     │ │
+│  │   │                  │             │ │                     │ │
 │  │   │       │          │  Check for:   │                     │ │
 │  │   │       │          │  • TS1 ID     │                     │ │
 │  │   │       │          │    (D10.2)    │                     │ │
 │  │   │       │          │  • TS2 ID     │                     │ │
 │  │   │       │          │    (D5.2)     │                     │ │
-│  │   │       │          │               │                     │ │
+│  │   │                  │             │ │                     │ │
 │  │   │       │          │  Set flags:   │                     │ │
 │  │   │       │          │  ts1/ts2      │                     │ │
 │  │   │       │          │  _detected    │                     │ │
@@ -395,9 +395,9 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │       │        After 16 symbols                          │                       │
 │  │   │       │                          │                     │ │
 │  │   │                                                          │               └───────────────────────────────┘  │
-│  │   │       │                                                  │                       │
-│  │   │       │ STP/SDP                                          │                       │
-│  │   │       │                                                  │                       │
+│  │   │                                  │                     │ │
+│  │   │                                  │ STP/SDP             │ │
+│  │   │                                  │                     │ │
 │  │   │  ┌────▼────────────┐                                     │                       │
 │  │   │  │  START Detected               │                     │ │
 │  │   │  │                               │                     │ │
@@ -408,7 +408,7 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  │  byte_counter=0               │                     │ │
 │  │   │  │  data_buffer=0                │                     │ │
 │  │   │  └────────┬────────┘                                     │                       │
-│  │   │           │                                              │                       │
+│  │   │                                  │                     │ │
 │  │   │           ▼                                              │                       │
 │  │   │  ┌──────────────────┐                                    │                       │
 │  │   │  │   DATA State                  │                     │ │
@@ -440,9 +440,9 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  │     data_buffer               │                     │ │
 │  │   │  │   • Go to IDLE                │                     │ │
 │  │   │  └──────────────────┘                                    │                       │
-│  │   │           │                                              │                       │
+│  │   │                                  │                     │ │
 │  │   │    END detected                                          │                       │
-│  │   │           │                                              │                       │
+│  │   │                                  │                     │ │
 │  │   └───────────┘                                            │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘

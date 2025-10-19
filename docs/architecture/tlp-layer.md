@@ -579,8 +579,8 @@ Routing Decision:
                               │
          ▼
     ┌────────────┐
-                              │ Endpoint                │  Bus=1, Dev=0, Func=0
-                              │ (Requester)             │  ← Completion delivered
+    │ Endpoint                │  Bus=1, Dev=0, Func=0
+    │ (Requester)             │  ← Completion delivered
     └────────────┘
 
 Routing Decision:

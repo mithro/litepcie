@@ -162,7 +162,7 @@ Add comprehensive ASCII diagram showing all layers:
 │  │              PIPETransceiver Base Class                  │   │
 │  │                                                          │   │
 │  │  Common interface for all transceivers                   │   │
-│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)                │     │
+│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)            │   │
 │  │  • Reset sequencing (PLL → PCS → CDR)                    │   │
 │  │  • Speed control (Gen1/Gen2 switching)                   │   │
 │  └──────────────────────────────────────────────────────────┘   │
