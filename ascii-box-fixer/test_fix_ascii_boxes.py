@@ -400,39 +400,7 @@ class TestEdgeCases(unittest.TestCase):
         aligner = BoxAligner()
         result = aligner.fix(input_text)
 
-        # Parse to verify boxes are detected
-        parser = BoxParser()
-        boxes = parser.parse(result)
-        self.assertGreater(len(boxes), 0, "Should detect at least one box")
-
-        # The critical issue: after fixing, ALL boxes should have consistent alignment
-        lines = result.split('\n')
-        outer_box_right = lines[0].rfind('┐')  # Should be position 66
-
-        # Check that outer box borders are aligned
-        for i, line in enumerate(lines[1:-1], 1):  # Skip first and last
-            if '│' in line:
-                rightmost_bar = line.rfind('│')
-                self.assertEqual(rightmost_bar, outer_box_right,
-                    f"Line {i} has rightmost │ at position {rightmost_bar}, expected {outer_box_right}\n" +
-                    f"Content: {line}")
-
-        # Also check that the LTSSM nested box (lines 13-16) has consistent internal alignment
-        # The LTSSM box starts at line 12 with ┌...┐ at position 62
-        ltssm_top = lines[12]
-        ltssm_right_pos = ltssm_top.rfind('┐')  # Should be 62
-
-        # Lines 13-16 should have their SECOND-to-last │ at position 62 (LTSSM box border)
-        # (The last │ is the outer box at position 66)
-        for i in range(13, 17):
-            line = lines[i]
-            bars = [j for j, c in enumerate(line) if c == '│']
-            if len(bars) >= 2:  # Has both inner and outer borders
-                ltssm_border = bars[-2]  # Second-to-last │ is the LTSSM box border
-                self.assertEqual(ltssm_border, ltssm_right_pos,
-                    f"Line {i}: LTSSM box border at position {ltssm_border}, expected {ltssm_right_pos}\n" +
-                    f"Content: {line}\n" +
-                    f"All │ positions: {bars}")
+        self.assertEqual(result, expected)
 
 
 class TestCommandLineIntegration(unittest.TestCase):
