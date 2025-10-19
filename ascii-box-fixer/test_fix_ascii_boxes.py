@@ -11,7 +11,8 @@ class TestBoxParser(unittest.TestCase):
     
     def test_detect_simple_box(self):
         """Test detection of a simple single box"""
-        text = """Some text before
+        text = """\
+Some text before
 ┌─────────┐
 │ Content │
 │ More    │
@@ -29,7 +30,8 @@ Text after
 
     def test_detect_nested_boxes(self):
         """Test detection of nested boxes"""
-        text = """┌────────────────┐
+        text = """\
+┌────────────────┐
 │ Outer Box      │
 │  ┌──────┐      │
 │  │ Inner│      │
@@ -80,7 +82,8 @@ class TestBoxParserEdgeCases(unittest.TestCase):
     
     def test_deeply_nested_boxes(self):
         """Test boxes nested 3+ levels deep"""
-        text = """┌─────────────┐
+        text = """\
+┌─────────────┐
 │ ┌─────────┐ │
 │ │ ┌─────┐ │ │
 │ │ │ ┌─┐ │ │ │
@@ -108,12 +111,14 @@ class TestBoxAligner(unittest.TestCase):
     
     def test_align_simple_box(self):
         """Test alignment of a simple box"""
-        input_text = """┌─────────┐
+        input_text = """\
+┌─────────┐
 │ Content │
 │ More   │
 └─────────┘
 """
-        expected = """┌─────────┐
+        expected = """\
+┌─────────┐
 │ Content │
 │ More    │
 └─────────┘
@@ -125,14 +130,16 @@ class TestBoxAligner(unittest.TestCase):
 
     def test_align_nested_boxes(self):
         """Test that nested boxes align independently"""
-        input_text = """┌────────────────┐
+        input_text = """\
+┌────────────────┐
 │ Outer Box     │
 │  ┌──────┐     │
 │  │ Inner│     │
 │  └──────┘     │
 └────────────────┘
 """
-        expected = """┌────────────────┐
+        expected = """\
+┌────────────────┐
 │ Outer Box      │
 │  ┌──────┐      │
 │  │ Inner│      │
@@ -146,7 +153,8 @@ class TestBoxAligner(unittest.TestCase):
 
     def test_align_multiple_boxes(self):
         """Test alignment of multiple separate boxes"""
-        input_text = """First box:
+        input_text = """\
+First box:
 ┌─────────┐
 │ Box 1  │
 └─────────┘
@@ -156,7 +164,8 @@ Second box:
 │ Box 2        │
 └───────────────┘
 """
-        expected = """First box:
+        expected = """\
+First box:
 ┌─────────┐
 │ Box 1   │
 └─────────┘
@@ -337,6 +346,93 @@ class TestEdgeCases(unittest.TestCase):
         aligner = BoxAligner()
         result = aligner.fix(input_text)
         self.assertEqual(result, input_text)
+
+    def test_complex_nested_box_with_malformed_inner_box(self):
+        """Test malformed nested box from real docs - inner box has inconsistent borders"""
+        # This is the ACTUAL box from complete-system-architecture.md
+        # The LTSSM inner box has inconsistent right borders (61, 62, 63)
+        # The outer box also has inconsistent right borders (64, 65, 66)
+        input_text = """\
+┌────────────────────────────▼────────────────────────────────────┐
+│                    DATA LINK LAYER (DLL)                         │
+│                    Location: litepcie/dll/                       │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐│
+│  │   DLL TX     │  │   DLL RX     │  │   Retry Buffer         ││
+│  │              │  │              │  │                        ││
+│  │ • LCRC gen   │  │ • LCRC check │  │ • Store TLPs           ││
+│  │ • Seq num    │  │ • ACK/NAK    │  │ • Replay on NAK        ││
+│  │ • DLLP gen   │  │ • DLLP parse │  │ • 4KB circular buffer  ││
+│  └──────────────┘  └──────────────┘  └────────────────────────┘│
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              LTSSM (Link Training State Machine)         │  │
+│  │                                                           │  │
+│  │  States: DETECT → POLLING → CONFIG → L0 → RECOVERY      │  │
+│  │  Controls: Speed negotiation, TS1/TS2 exchange          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  DLLP Types: ACK, NAK, UpdateFC, PM_Enter_L1, etc.             │
+└────────────────────────────┬────────────────────────────────────┘"""
+        expected = """\
+┌────────────────────────────▼────────────────────────────────────┐
+│                    DATA LINK LAYER (DLL)                        │
+│                    Location: litepcie/dll/                      │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐ │
+│  │   DLL TX     │  │   DLL RX     │  │   Retry Buffer         │ │
+│  │              │  │              │  │                        │ │
+│  │ • LCRC gen   │  │ • LCRC check │  │ • Store TLPs           │ │
+│  │ • Seq num    │  │ • ACK/NAK    │  │ • Replay on NAK        │ │
+│  │ • DLLP gen   │  │ • DLLP parse │  │ • 4KB circular buffer  │ │
+│  └──────────────┘  └──────────────┘  └────────────────────────┘ │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              LTSSM (Link Training State Machine)         │   │
+│  │                                                          │   │
+│  │  States: DETECT → POLLING → CONFIG → L0 → RECOVERY       │   │
+│  │  Controls: Speed negotiation, TS1/TS2 exchange           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  DLLP Types: ACK, NAK, UpdateFC, PM_Enter_L1, etc.              │
+└────────────────────────────┬────────────────────────────────────┘"""
+
+        aligner = BoxAligner()
+        result = aligner.fix(input_text)
+
+        # Parse to verify boxes are detected
+        parser = BoxParser()
+        boxes = parser.parse(result)
+        self.assertGreater(len(boxes), 0, "Should detect at least one box")
+
+        # The critical issue: after fixing, ALL boxes should have consistent alignment
+        lines = result.split('\n')
+        outer_box_right = lines[0].rfind('┐')  # Should be position 66
+
+        # Check that outer box borders are aligned
+        for i, line in enumerate(lines[1:-1], 1):  # Skip first and last
+            if '│' in line:
+                rightmost_bar = line.rfind('│')
+                self.assertEqual(rightmost_bar, outer_box_right,
+                    f"Line {i} has rightmost │ at position {rightmost_bar}, expected {outer_box_right}\n" +
+                    f"Content: {line}")
+
+        # Also check that the LTSSM nested box (lines 13-16) has consistent internal alignment
+        # The LTSSM box starts at line 12 with ┌...┐ at position 62
+        ltssm_top = lines[12]
+        ltssm_right_pos = ltssm_top.rfind('┐')  # Should be 62
+
+        # Lines 13-16 should have their SECOND-to-last │ at position 62 (LTSSM box border)
+        # (The last │ is the outer box at position 66)
+        for i in range(13, 17):
+            line = lines[i]
+            bars = [j for j, c in enumerate(line) if c == '│']
+            if len(bars) >= 2:  # Has both inner and outer borders
+                ltssm_border = bars[-2]  # Second-to-last │ is the LTSSM box border
+                self.assertEqual(ltssm_border, ltssm_right_pos,
+                    f"Line {i}: LTSSM box border at position {ltssm_border}, expected {ltssm_right_pos}\n" +
+                    f"Content: {line}\n" +
+                    f"All │ positions: {bars}")
 
 
 class TestCommandLineIntegration(unittest.TestCase):
