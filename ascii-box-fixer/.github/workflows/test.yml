@@ -1,0 +1,109 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run tests with unittest
+      run: |
+        python -m unittest test_fix_ascii_boxes -v
+
+    - name: Run tests with pytest
+      run: |
+        pytest test_fix_ascii_boxes.py -v --tb=short
+
+    - name: Test CLI help
+      run: |
+        python fix_ascii_boxes.py --help
+
+    - name: Test CLI basic functionality
+      run: |
+        echo "┌───┐" > test_input.txt
+        echo "│ X│" >> test_input.txt
+        echo "└───┘" >> test_input.txt
+        python fix_ascii_boxes.py test_input.txt
+        python fix_ascii_boxes.py --dry-run test_input.txt
+
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black ruff mypy
+
+    - name: Check formatting with black
+      run: |
+        black --check --diff .
+
+    - name: Lint with ruff
+      run: |
+        ruff check .
+
+    - name: Type check with mypy
+      run: |
+        mypy fix_ascii_boxes.py --check-untyped-defs
+      continue-on-error: true  # Don't fail on mypy errors initially
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov coverage
+
+    - name: Run tests with coverage
+      run: |
+        coverage run -m pytest test_fix_ascii_boxes.py
+        coverage report -m
+        coverage html
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/
