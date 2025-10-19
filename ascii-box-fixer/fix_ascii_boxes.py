@@ -32,7 +32,7 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 @dataclass
 class Box:
     """Represents a single ASCII box in the text.
-    
+
     Attributes:
         start_line: Line number where box starts (┌)
         end_line: Line number where box ends (┘)
@@ -49,7 +49,7 @@ class Box:
 
 class BoxParser:
     """Parses text to identify ASCII box structures.
-    
+
     This class scans text to find complete ASCII boxes, including nested
     boxes. A complete box must have all four corners (┌ ┐ └ ┘) and at
     least one vertical bar on lines between top and bottom.
@@ -113,7 +113,7 @@ class BoxParser:
         for i in range(start + 1, len(lines)):
             box_lines.append(lines[i])
             # Check if this line has a bottom-left at the expected position
-            if (left_pos < len(lines[i]) and 
+            if (left_pos < len(lines[i]) and
                 lines[i][left_pos] == BOTTOM_LEFT and
                 BOTTOM_RIGHT in lines[i][left_pos:]):
                 # Verify the bottom-right is approximately at the right position
@@ -132,7 +132,7 @@ class BoxParser:
             if left_pos < len(lines[i]) and lines[i][left_pos] == VERTICAL:
                 has_vertical = True
                 break
-        
+
         # For single-line boxes (start+1 == end_idx), skip this check
         if end_idx > start + 1 and not has_vertical:
             return None
@@ -147,16 +147,16 @@ class BoxParser:
 
     def _calculate_nesting_levels(self, boxes: List[Box]) -> None:
         """Calculate nesting level for each box.
-        
+
         A box is nested if it's completely contained within another box.
         The nesting level is the count of boxes that contain it.
-        
+
         Algorithm: For each box, count how many other boxes completely
         contain it (start before it and end after it).
-        
+
         Args:
             boxes: List of Box objects to calculate nesting for
-            
+
         Note:
             Modifies boxes in-place by setting their nesting_level attribute.
         """
@@ -174,7 +174,7 @@ class BoxParser:
 
 class BoxAligner:
     """Aligns box borders to their top-right corners.
-    
+
     This class takes text containing ASCII boxes and aligns all vertical
     borders to match the position of their corresponding top-right corners.
     Nested boxes are processed independently.
@@ -291,7 +291,7 @@ class BoxAligner:
 
 class FileProcessor:
     """Processes files to fix ASCII box alignment.
-    
+
     Handles reading files, applying box alignment fixes, and writing
     results back to disk or stdout. Supports both single file and
     recursive directory processing.
@@ -300,7 +300,7 @@ class FileProcessor:
     def __init__(self, verbose: bool = False):
         self.aligner = BoxAligner()
         self.verbose = verbose
-        
+
         # Set up logging
         log_level = logging.INFO if verbose else logging.WARNING
         logging.basicConfig(
@@ -312,15 +312,15 @@ class FileProcessor:
     def process_file(self, file_path: str, in_place: bool = False,
                     dry_run: bool = False) -> str:
         """Process a single file.
-        
+
         Args:
             file_path: Path to the file to process
             in_place: Whether to modify the file in place
             dry_run: If True, don't actually write changes
-            
+
         Returns:
             The fixed content
-            
+
         Raises:
             FileNotFoundError: If file doesn't exist
             PermissionError: If file cannot be read/written
@@ -331,17 +331,17 @@ class FileProcessor:
 
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}")
-        
+
         if not path.is_file():
             raise ValueError(f"Not a regular file: {file_path}")
-        
+
         # Check file size
         file_size = path.stat().st_size
         if file_size > MAX_FILE_SIZE:
             raise ValueError(
                 f"File too large: {file_size} bytes (max {MAX_FILE_SIZE})"
             )
-        
+
         # Check if file is writable before attempting to modify
         if in_place and not dry_run and not os.access(path, os.W_OK):
             raise PermissionError(f"File not writable: {file_path}")
@@ -375,16 +375,16 @@ class FileProcessor:
     def process_directory(self, dir_path: str, pattern: str = '*.md',
                          in_place: bool = False, dry_run: bool = False) -> int:
         """Process all matching files in directory.
-        
+
         Args:
             dir_path: Directory to process
             pattern: Glob pattern for files (default: *.md)
             in_place: Whether to modify files in place
             dry_run: If True, don't actually write changes
-            
+
         Returns:
             Number of files successfully processed
-            
+
         Raises:
             NotADirectoryError: If dir_path is not a directory
         """
@@ -407,7 +407,7 @@ class FileProcessor:
 
 def main() -> int:
     """Main CLI entry point.
-    
+
     Returns:
         Exit code (0 for success, non-zero for errors)
     """

@@ -8,7 +8,7 @@ from fix_ascii_boxes import BoxParser, Box, BoxAligner, FileProcessor
 
 class TestBoxParser(unittest.TestCase):
     """Test box detection functionality"""
-    
+
     def test_detect_simple_box(self):
         """Test detection of a simple single box"""
         text = """\
@@ -58,28 +58,28 @@ Text after
 
 class TestBoxParserEdgeCases(unittest.TestCase):
     """Additional edge case tests for BoxParser"""
-    
+
     def test_incomplete_box_no_bottom(self):
         """Test that incomplete boxes (no bottom) are ignored"""
         text = "┌───┐\n│ X │\n"  # No bottom
         parser = BoxParser()
         boxes = parser.parse(text)
         self.assertEqual(len(boxes), 0)
-    
+
     def test_incomplete_box_no_top_right(self):
         """Test that boxes without top-right corner are ignored"""
         text = "┌───\n│ X │\n└───┘"  # No ┐
         parser = BoxParser()
         boxes = parser.parse(text)
         self.assertEqual(len(boxes), 0)
-    
+
     def test_multiple_boxes_same_line(self):
         """Test multiple boxes starting on the same line"""
         text = "┌───┐ ┌───┐\n│ A │ │ B │\n└───┘ └───┘"
         parser = BoxParser()
         boxes = parser.parse(text)
         self.assertEqual(len(boxes), 2)
-    
+
     def test_deeply_nested_boxes(self):
         """Test boxes nested 3+ levels deep"""
         text = """\
@@ -96,7 +96,7 @@ class TestBoxParserEdgeCases(unittest.TestCase):
         self.assertEqual(len(boxes), 4)
         max_nesting = max(b.nesting_level for b in boxes)
         self.assertEqual(max_nesting, 3)
-    
+
     def test_box_without_vertical_bars(self):
         """Test that boxes without vertical bars between top/bottom are rejected"""
         text = "┌───┐\ntext\n└───┘"  # No │ characters
@@ -108,7 +108,7 @@ class TestBoxParserEdgeCases(unittest.TestCase):
 
 class TestBoxAligner(unittest.TestCase):
     """Test box alignment functionality"""
-    
+
     def test_align_simple_box(self):
         """Test alignment of a simple box"""
         input_text = """\
@@ -183,7 +183,7 @@ Second box:
 
 class TestAlignmentEdgeCases(unittest.TestCase):
     """Test edge cases in box alignment"""
-    
+
     def test_content_longer_than_box(self):
         """Test handling when content extends beyond box border"""
         input_text = "┌───┐\n│ This is way too long │\n└───┘"
@@ -191,7 +191,7 @@ class TestAlignmentEdgeCases(unittest.TestCase):
         result = aligner.fix(input_text)
         # Should not corrupt the text
         self.assertIn('This is way too long', result)
-    
+
     def test_box_with_trailing_whitespace(self):
         """Test box with trailing spaces on lines"""
         input_text = "┌───┐   \n│ X│   \n└───┘   "
@@ -199,14 +199,14 @@ class TestAlignmentEdgeCases(unittest.TestCase):
         result = aligner.fix(input_text)
         # Should handle gracefully
         self.assertIn('│ X', result)
-    
+
     def test_minimal_width_box(self):
         """Test box with minimal width (2 characters)"""
         input_text = "┌┐\n││\n└┘"
         aligner = BoxAligner()
         result = aligner.fix(input_text)
         self.assertIn('┌┐', result)
-    
+
     def test_very_wide_box(self):
         """Test box with very wide content"""
         width = 200
@@ -220,7 +220,7 @@ class TestAlignmentEdgeCases(unittest.TestCase):
 
 class TestFileProcessor(unittest.TestCase):
     """Test file processing functionality"""
-    
+
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
 
@@ -240,13 +240,13 @@ class TestFileProcessor(unittest.TestCase):
             result = f.read()
 
         self.assertIn('│ X │', result)
-    
+
     def test_process_file_not_found(self):
         """Test handling of non-existent file"""
         processor = FileProcessor()
         with self.assertRaises(FileNotFoundError):
             processor.process_file('/nonexistent/file.md')
-    
+
     def test_process_directory(self):
         """Test processing multiple files in directory"""
         # Create multiple test files
@@ -254,76 +254,76 @@ class TestFileProcessor(unittest.TestCase):
             test_file = os.path.join(self.temp_dir, f'test{i}.md')
             with open(test_file, 'w') as f:
                 f.write("┌───┐\n│ X│\n└───┘\n")
-        
+
         processor = FileProcessor()
         count = processor.process_directory(self.temp_dir, pattern='*.md', in_place=True)
-        
+
         self.assertEqual(count, 3)
-        
+
         # Verify all files were fixed
         for i in range(3):
             test_file = os.path.join(self.temp_dir, f'test{i}.md')
             with open(test_file, 'r') as f:
                 result = f.read()
             self.assertIn('│ X │', result)
-    
+
     def test_process_directory_with_subdirs(self):
         """Test recursive directory processing"""
         # Create subdirectory
         subdir = os.path.join(self.temp_dir, 'subdir')
         os.makedirs(subdir)
-        
+
         test_file = os.path.join(subdir, 'test.md')
         with open(test_file, 'w') as f:
             f.write("┌───┐\n│ X│\n└───┘\n")
-        
+
         processor = FileProcessor()
         count = processor.process_directory(self.temp_dir, pattern='*.md', in_place=True)
-        
+
         self.assertEqual(count, 1)
-    
+
     def test_process_file_dry_run(self):
         """Test dry-run mode doesn't modify files"""
         test_file = os.path.join(self.temp_dir, 'test.md')
         original_content = "┌───┐\n│ X│\n└───┘\n"
         with open(test_file, 'w') as f:
             f.write(original_content)
-        
+
         processor = FileProcessor()
         result = processor.process_file(test_file, in_place=True, dry_run=True)
-        
+
         # File should not be modified
         with open(test_file, 'r') as f:
             file_content = f.read()
-        
+
         self.assertEqual(file_content, original_content)
         # But result should show what would be fixed
         self.assertIn('│ X │', result)
-    
+
     def test_process_directory_not_a_directory(self):
         """Test error handling for non-directory path"""
         test_file = os.path.join(self.temp_dir, 'test.md')
         with open(test_file, 'w') as f:
             f.write("test")
-        
+
         processor = FileProcessor()
         with self.assertRaises(NotADirectoryError):
             processor.process_directory(test_file)
-    
+
     def test_unicode_file_handling(self):
         """Test processing files with Unicode content"""
         test_file = os.path.join(self.temp_dir, 'unicode.md')
         with open(test_file, 'w', encoding='utf-8') as f:
             f.write("┌───┐\n│ 中文│\n└───┘\n")
-        
+
         processor = FileProcessor()
         processor.process_file(test_file, in_place=True)
-        
+
         with open(test_file, 'r', encoding='utf-8') as f:
             result = f.read()
-        
+
         self.assertIn('中文', result)
-    
+
     def test_file_not_a_regular_file(self):
         """Test error when path is not a regular file"""
         processor = FileProcessor()
@@ -333,7 +333,7 @@ class TestFileProcessor(unittest.TestCase):
 
 class TestEdgeCases(unittest.TestCase):
     """Test general edge cases"""
-    
+
     def test_empty_box(self):
         """Test handling of empty box"""
         aligner = BoxAligner()
@@ -405,13 +405,13 @@ class TestEdgeCases(unittest.TestCase):
 
 class TestCommandLineIntegration(unittest.TestCase):
     """Integration tests for command-line interface"""
-    
+
     def setUp(self):
         self.temp_dir = tempfile.mkdtemp()
-    
+
     def tearDown(self):
         shutil.rmtree(self.temp_dir)
-    
+
     def test_cli_help(self):
         """Test that --help works"""
         result = subprocess.run(
@@ -420,55 +420,55 @@ class TestCommandLineIntegration(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0)
         self.assertIn('usage:', result.stdout.lower())
-    
+
     def test_cli_single_file_stdout(self):
         """Test processing single file to stdout"""
         test_file = os.path.join(self.temp_dir, 'test.md')
         with open(test_file, 'w') as f:
             f.write("┌───┐\n│ X│\n└───┘\n")
-        
+
         result = subprocess.run(
             ['python3', 'fix_ascii_boxes.py', test_file],
             capture_output=True, text=True
         )
-        
+
         self.assertEqual(result.returncode, 0)
         self.assertIn('│ X │', result.stdout)
-    
+
     def test_cli_in_place_modification(self):
         """Test in-place file modification via CLI"""
         test_file = os.path.join(self.temp_dir, 'test.md')
         with open(test_file, 'w') as f:
             f.write("┌───┐\n│ X│\n└───┘\n")
-        
+
         result = subprocess.run(
             ['python3', 'fix_ascii_boxes.py', '--in-place', test_file],
             capture_output=True, text=True
         )
-        
+
         self.assertEqual(result.returncode, 0)
-        
+
         with open(test_file, 'r') as f:
             content = f.read()
         self.assertIn('│ X │', content)
-    
+
     def test_cli_directory_without_recursive_flag(self):
         """Test that directory requires --recursive flag"""
         result = subprocess.run(
             ['python3', 'fix_ascii_boxes.py', self.temp_dir],
             capture_output=True, text=True
         )
-        
+
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('recursive', result.stderr.lower())
-    
+
     def test_cli_nonexistent_file(self):
         """Test CLI with non-existent file"""
         result = subprocess.run(
             ['python3', 'fix_ascii_boxes.py', '/nonexistent/file.md'],
             capture_output=True, text=True
         )
-        
+
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('not found', result.stderr.lower())
 
