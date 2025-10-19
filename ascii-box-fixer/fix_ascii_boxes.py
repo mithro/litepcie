@@ -210,38 +210,47 @@ class BoxAligner:
 
         boxes = self.parser.parse(text)
 
-        # Process boxes from innermost to outermost
-        # This prevents outer box changes from affecting inner boxes
-        boxes_by_level = sorted(boxes, key=lambda b: b.nesting_level, reverse=True)
-
-        for box in boxes_by_level:
-            self._align_box(lines, box)
+        # Instead of processing boxes individually, process each line and align
+        # all bars to all corners on that line (working left to right)
+        self._align_all_lines(lines, boxes)
 
         if preserve_newlines:
             return ''.join(lines)
         else:
             return '\n'.join(line.rstrip('\n') for line in lines)
 
-    def _align_box(self, lines: List[str], box: Box) -> None:
-        """Align a single box's right borders to its top-right corner.
+    def _align_all_lines(self, lines: List[str], boxes: List[Box]) -> None:
+        """Align all bars to corners on each line, working left to right.
 
         Args:
             lines: All lines (modified in place)
-            box: Box to align
+            boxes: All boxes in the text
         """
-        target_pos = box.top_right_pos
-        left_pos = box.left_pos
-
-        # Process each line in the box
-        for line_idx in range(box.start_line, box.end_line + 1):
+        for line_idx in range(len(lines)):
             line = lines[line_idx].rstrip('\n')
 
-            # Skip top and bottom borders (they define the position)
-            if line_idx == box.start_line or line_idx == box.end_line:
+            # Find all boxes that contain this line (but not on their border lines)
+            active_boxes = []
+            for box in boxes:
+                # Check if this line is inside the box (not on top/bottom border)
+                if box.start_line < line_idx < box.end_line:
+                    active_boxes.append(box)
+
+            if not active_boxes:
+                # No boxes on this line, skip
                 continue
 
-            # Align this line
-            new_line = self._align_line(line, left_pos, target_pos)
+            # Collect corner positions from all active boxes, sorted left-to-right
+            corners = []
+            for box in active_boxes:
+                corners.append(box.left_pos)
+                corners.append(box.top_right_pos)
+
+            # Remove duplicates and sort
+            corners = sorted(set(corners))
+
+            # Align bars to corners
+            new_line = self._align_bars_to_corners(line, corners)
 
             # Preserve original line ending
             if lines[line_idx].endswith('\n'):
@@ -249,79 +258,70 @@ class BoxAligner:
 
             lines[line_idx] = new_line
 
-    def _align_line(self, line: str, left_pos: int, target_pos: int) -> str:
-        """Align the vertical bar belonging to this box to target position.
+    def _align_bars_to_corners(self, line: str, corners: List[int]) -> str:
+        """Align vertical bars to corner positions, working left to right.
 
         Args:
-            line: Single line of text
-            left_pos: Column position of box's left border
-            target_pos: Column position for box's right border
+            line: Line of text
+            corners: List of corner positions where bars should be placed
 
         Returns:
-            Aligned line
+            Line with bars aligned to corners
+
+        Raises:
+            ValueError: If bar count doesn't match corner count
         """
+        if not corners:
+            # No corners specified, nothing to align
+            return line
+
         # Find all vertical bars
-        positions = [i for i, ch in enumerate(line) if ch == VERTICAL]
+        bars = [i for i, ch in enumerate(line) if ch == VERTICAL]
 
-        if not positions:
-            return line
+        if len(bars) != len(corners):
+            raise ValueError(
+                f"Bar/corner mismatch on line: {len(bars)} bars but {len(corners)} corners\n"
+                f"Line: {repr(line)}\n"
+                f"Bars at: {bars}\n"
+                f"Corners at: {corners}"
+            )
 
-        # Find the vertical bar that belongs to THIS box
-        # Work left to right: find all bars after left_pos
-        candidates = [pos for pos in positions if pos > left_pos]
+        # Work left to right, rebuilding the line with bars at corner positions
+        result = []
+        current_pos = 0
 
-        if not candidates:
-            # No bars found after left border (shouldn't happen)
-            return line
+        for bar_idx, (bar_pos, corner_pos) in enumerate(zip(bars, corners)):
+            # Get content between previous bar and this bar (excluding the bar itself)
+            content_start = bars[bar_idx - 1] + 1 if bar_idx > 0 else 0
+            content = line[content_start:bar_pos]
 
-        # Working left to right: find bars after left_pos, prefer bars at or
-        # before target (inner box borders) over bars after target (outer box borders)
-        candidates_before = [pos for pos in candidates if pos <= target_pos]
-        candidates_after = [pos for pos in candidates if pos > target_pos]
+            # Strip trailing spaces (flexible padding), keep leading spaces (content formatting)
+            content = content.rstrip(' ')
 
-        if candidates_before:
-            # Pick the one closest to target among bars at/before target
-            right_pos = min(candidates_before, key=lambda p: abs(p - target_pos))
-        else:
-            # No bars before target, use the closest bar after target
-            right_pos = min(candidates_after, key=lambda p: abs(p - target_pos))
+            # Calculate current position in result
+            result_pos = len(''.join(result))
 
-        if right_pos == target_pos:
-            # Already aligned
-            return line
+            # Calculate padding needed to place bar at corner_pos
+            padding_needed = corner_pos - result_pos - len(content)
 
-        # Calculate how much to adjust
-        adjustment = target_pos - right_pos
+            if padding_needed < 0:
+                raise ValueError(
+                    f"Cannot align bar {bar_idx} to corner {corner_pos}: content too long\n"
+                    f"Content: {repr(content)} (length {len(content)})\n"
+                    f"Current result position: {result_pos}\n"
+                    f"Would place bar at {result_pos + len(content)} but corner is at {corner_pos}"
+                )
 
-        if adjustment > 0:
-            # Need to add spaces before right border
-            # Important: Only shift this bar, not everything after it
-            return line[:right_pos] + ' ' * adjustment + VERTICAL + line[right_pos+1:]
-        elif adjustment < 0:
-            # Need to remove spaces before right border
-            content_end = right_pos
-            # Search backwards from right_pos to find last non-space, non-vertical-bar character
-            for i in range(right_pos - 1, -1, -1):
-                if line[i] == VERTICAL:
-                    # Stop at the previous vertical bar (likely left border or another box)
-                    content_end = i + 1
-                    break
-                elif line[i] != ' ':
-                    content_end = i + 1
-                    break
+            # Add content, padding, and bar
+            result.append(content)
+            result.append(' ' * padding_needed)
+            result.append(VERTICAL)
 
-            content = line[:content_end]
-            padding_needed = target_pos - len(content)
+        # Add any remaining content after the last bar (strip trailing spaces)
+        remaining = line[bars[-1] + 1:].rstrip(' ')
+        result.append(remaining)
 
-            if padding_needed >= 0:
-                # Preserve everything after the bar we're adjusting
-                return content + ' ' * padding_needed + VERTICAL + line[right_pos+1:]
-            else:
-                # Content is too long, can't fix without data loss
-                return line
-
-        return line
-
+        return ''.join(result)
 
 class FileProcessor:
     """Processes files to fix ASCII box alignment.
