@@ -25,6 +25,7 @@ Text after
         self.assertEqual(len(boxes), 1)
         self.assertEqual(boxes[0].start_line, 1)
         self.assertEqual(boxes[0].end_line, 4)
+        self.assertEqual(boxes[0].left_pos, 0)
         self.assertEqual(boxes[0].top_right_pos, 10)
         self.assertEqual(boxes[0].nesting_level, 0)
 
@@ -46,12 +47,14 @@ Text after
         # Outer box
         self.assertEqual(boxes[0].start_line, 0)
         self.assertEqual(boxes[0].end_line, 5)
+        self.assertEqual(boxes[0].left_pos, 0)
         self.assertEqual(boxes[0].top_right_pos, 17)
         self.assertEqual(boxes[0].nesting_level, 0)
 
         # Inner box
         self.assertEqual(boxes[1].start_line, 2)
         self.assertEqual(boxes[1].end_line, 4)
+        self.assertEqual(boxes[1].left_pos, 3)
         self.assertEqual(boxes[1].top_right_pos, 10)
         self.assertEqual(boxes[1].nesting_level, 1)
 

@@ -36,12 +36,14 @@ class Box:
     Attributes:
         start_line: Line number where box starts (┌)
         end_line: Line number where box ends (┘)
+        left_pos: Column position of ┌ character
         top_right_pos: Column position of ┐ character
         nesting_level: Depth of nesting (0 = top level)
         lines: Original lines of the box
     """
     start_line: int
     end_line: int
+    left_pos: int
     top_right_pos: int
     nesting_level: int
     lines: List[str]
@@ -142,6 +144,7 @@ class BoxParser:
         return Box(
             start_line=start,
             end_line=end_idx,
+            left_pos=left_pos,
             top_right_pos=top_right_pos,
             nesting_level=0,  # Calculate later
             lines=box_lines
@@ -227,6 +230,7 @@ class BoxAligner:
             box: Box to align
         """
         target_pos = box.top_right_pos
+        left_pos = box.left_pos
 
         # Process each line in the box
         for line_idx in range(box.start_line, box.end_line + 1):
@@ -237,7 +241,7 @@ class BoxAligner:
                 continue
 
             # Align this line
-            new_line = self._align_line(line, target_pos)
+            new_line = self._align_line(line, left_pos, target_pos)
 
             # Preserve original line ending
             if lines[line_idx].endswith('\n'):
@@ -245,12 +249,13 @@ class BoxAligner:
 
             lines[line_idx] = new_line
 
-    def _align_line(self, line: str, target_pos: int) -> str:
-        """Align the rightmost vertical bar in a line to target position.
+    def _align_line(self, line: str, left_pos: int, target_pos: int) -> str:
+        """Align the vertical bar belonging to this box to target position.
 
         Args:
             line: Single line of text
-            target_pos: Column position for rightmost vertical bar
+            left_pos: Column position of box's left border
+            target_pos: Column position for box's right border
 
         Returns:
             Aligned line
@@ -261,7 +266,22 @@ class BoxAligner:
         if not positions:
             return line
 
-        right_pos = positions[-1]
+        # Find the vertical bar that belongs to THIS box
+        # It should be at or near target_pos, within the box's horizontal range
+        # For nested boxes, we want the bar closest to target_pos that's >= left_pos
+        right_pos = None
+        min_distance = float('inf')
+
+        for pos in positions:
+            if pos >= left_pos:  # Must be at or after the box's left border
+                distance = abs(pos - target_pos)
+                if distance < min_distance:
+                    min_distance = distance
+                    right_pos = pos
+
+        # If no suitable bar found (shouldn't happen), fall back to rightmost
+        if right_pos is None:
+            right_pos = positions[-1]
 
         if right_pos == target_pos:
             # Already aligned
@@ -286,7 +306,8 @@ class BoxAligner:
             padding_needed = target_pos - len(content)
 
             if padding_needed >= 0:
-                return content + ' ' * padding_needed + VERTICAL
+                # Preserve everything after the bar we're adjusting
+                return content + ' ' * padding_needed + VERTICAL + line[right_pos+1:]
             else:
                 # Content is too long, can't fix without data loss
                 return line
