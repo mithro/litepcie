@@ -279,12 +279,8 @@ class BoxAligner:
         bars = [i for i, ch in enumerate(line) if ch == VERTICAL]
 
         if len(bars) != len(corners):
-            raise ValueError(
-                f"Bar/corner mismatch on line: {len(bars)} bars but {len(corners)} corners\n"
-                f"Line: {repr(line)}\n"
-                f"Bars at: {bars}\n"
-                f"Corners at: {corners}"
-            )
+            # Bar/corner count mismatch - return line unchanged to avoid corruption
+            return line
 
         # Work left to right, rebuilding the line with bars at corner positions
         result = []
@@ -295,7 +291,7 @@ class BoxAligner:
             content_start = bars[bar_idx - 1] + 1 if bar_idx > 0 else 0
             content = line[content_start:bar_pos]
 
-            # Strip trailing spaces (flexible padding), keep leading spaces (content formatting)
+            # Strip trailing spaces only - these are flexible padding
             content = content.rstrip(' ')
 
             # Calculate current position in result
@@ -305,12 +301,8 @@ class BoxAligner:
             padding_needed = corner_pos - result_pos - len(content)
 
             if padding_needed < 0:
-                raise ValueError(
-                    f"Cannot align bar {bar_idx} to corner {corner_pos}: content too long\n"
-                    f"Content: {repr(content)} (length {len(content)})\n"
-                    f"Current result position: {result_pos}\n"
-                    f"Would place bar at {result_pos + len(content)} but corner is at {corner_pos}"
-                )
+                # Content is too long to fit - return line unchanged to avoid corruption
+                return line
 
             # Add content, padding, and bar
             result.append(content)
