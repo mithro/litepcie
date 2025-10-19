@@ -64,6 +64,8 @@ class BoxParser:
         Returns:
             List of Box objects in order of appearance
         """
+        # Expand tabs to spaces for consistent positioning
+        text = text.expandtabs()
         lines = text.splitlines()
         boxes = []
 
@@ -192,6 +194,9 @@ class BoxAligner:
         Returns:
             Text with aligned boxes
         """
+        # Expand tabs to spaces for consistent positioning
+        text = text.expandtabs()
+
         lines = text.splitlines(keepends=True)
         # Handle case where there are no line endings
         if not lines or not any(line.endswith('\n') for line in lines):

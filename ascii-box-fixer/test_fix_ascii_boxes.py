@@ -347,6 +347,20 @@ class TestEdgeCases(unittest.TestCase):
         result = aligner.fix(input_text)
         self.assertEqual(result, input_text)
 
+    def test_box_with_tabs(self):
+        """Test that tabs are expanded to spaces for consistent alignment"""
+        # Input has tabs (represented as \t) which should be expanded
+        input_text = "┌─────────┐\n│\tContent │\n│ Text\t│\n└─────────┘\n"
+        aligner = BoxAligner()
+        result = aligner.fix(input_text)
+
+        # Result should have no tabs, all converted to spaces
+        self.assertNotIn('\t', result)
+        # Should still contain the box characters
+        self.assertIn('┌', result)
+        self.assertIn('│', result)
+        self.assertIn('└', result)
+
     def test_complex_nested_box_with_malformed_inner_box(self):
         """Test malformed nested box from real docs - inner box has inconsistent borders"""
         # This is the ACTUAL box from complete-system-architecture.md
