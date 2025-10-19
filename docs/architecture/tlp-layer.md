@@ -20,10 +20,10 @@ The TLP (Transaction Layer Packet) layer implements PCIe Section 2 requirements 
                      │ (64-512 bit wide)
 ┌────────────────────▼────────────────────────────────────┐
 │           TRANSACTION LAYER (TLP)                       │ ◄── THIS LAYER
-│  • TLP Packetizer: Encode requests/completions         │
-│  • TLP Depacketizer: Decode incoming TLPs              │
-│  • TLP Controller: Tag management, reordering          │
-│  • Flow Control: Credit-based throttling               │
+│  • TLP Packetizer: Encode requests/completions          │
+│  • TLP Depacketizer: Decode incoming TLPs               │
+│  • TLP Controller: Tag management, reordering           │
+│  • Flow Control: Credit-based throttling                │
 └────────────────────┬────────────────────────────────────┘
                      │ phy_layout (64-512 bit)
                      │ TLP packets with headers
@@ -109,11 +109,11 @@ Used for Memory Read/Write with addresses below 4GB.
 ```
 Byte 0          Byte 1          Byte 2          Byte 3
 ┌───────────────────────────────────────────────────────┐
-│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length    │  DW0
+│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length     │  DW0
 ├───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───────────────┤
-│        Requester ID       │  Tag  │ LBE │   FBE     │  DW1
+│        Requester ID       │  Tag  │ LBE │   FBE       │  DW1
 ├───────────────────────────┴───────┴─────┴─────────────┤
-│                    Address [31:2]                │ R │  DW2
+│                    Address [31:2]                │ R  │  DW2
 └───────────────────────────────────────────────────────┘
 
 Field Descriptions:
@@ -139,13 +139,13 @@ Used for Memory Read/Write with addresses above 4GB (or forced on UltraScale+ wi
 ```
 Byte 0          Byte 1          Byte 2          Byte 3
 ┌───────────────────────────────────────────────────────┐
-│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length    │  DW0
+│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length     │  DW0
 ├───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───────────────┤
-│        Requester ID       │  Tag  │ LBE │   FBE     │  DW1
+│        Requester ID       │  Tag  │ LBE │   FBE       │  DW1
 ├───────────────────────────┴───────┴─────┴─────────────┤
 │                 Address [63:32]                       │  DW2
 ├───────────────────────────────────────────────────────┤
-│                 Address [31:2]                   │ R │  DW3
+│                 Address [31:2]                   │ R  │  DW3
 └───────────────────────────────────────────────────────┘
 
 Field Descriptions:
@@ -167,11 +167,11 @@ Used for both Completions with Data (CplD) and without Data (Cpl).
 ```
 Byte 0          Byte 1          Byte 2          Byte 3
 ┌───────────────────────────────────────────────────────┐
-│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length    │  DW0
+│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length     │  DW0
 ├───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───────────────┤
-│        Completer ID       │ S│BCM│   Byte Count      │  DW1
+│        Completer ID       │ S│BCM│   Byte Count       │  DW1
 ├───────────────────────────┴───┴───┴───────────────────┤
-│        Requester ID       │  Tag  │ R │ Lower Addr  │  DW2
+│        Requester ID       │  Tag  │ R │ Lower Addr    │  DW2
 └───────────────────────────────────────────────────────┘
 
 Field Descriptions:
@@ -198,11 +198,11 @@ Used for Configuration Read/Write Type 0.
 ```
 Byte 0          Byte 1          Byte 2          Byte 3
 ┌───────────────────────────────────────────────────────┐
-│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length    │  DW0
+│fmt│ type│ R │TC │  R│TH│TD│EP│Attr│  R│    Length     │  DW0
 ├───┴───┴───┴───┴───┴───┴───┴───┴───┴───┴───────────────┤
-│        Requester ID       │  Tag  │ R  R│   FBE     │  DW1
+│        Requester ID       │  Tag  │ R  R│   FBE       │  DW1
 ├───────────────────────────┴───────┴─────┴─────────────┤
-│  Bus  │ Dev │Fn │ExtRg│ Register │ R R│              │  DW2
+│  Bus  │ Dev │Fn │ExtRg│ Register │ R R│               │  DW2
 └───────────────────────────────────────────────────────┘
 
 Field Descriptions:
@@ -412,24 +412,24 @@ PCIe uses **credit-based flow control** to prevent buffer overflow. The TLP laye
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Flow Control Credits                 │
+│                    Flow Control Credits           │
 ├─────────────────────────────────────────────────────────┤
-│                                                         │
+│                                                   │
 │  Posted (P)           Non-Posted (NP)      Completion(Cpl)│
 │  ┌──────────┐         ┌──────────┐         ┌──────────┐ │
 │  │ Header   │         │ Header   │         │ Header   │ │
 │  │ Credits  │         │ Credits  │         │ Credits  │ │
 │  │ (PHC)    │         │ (NPHC)   │         │ (CPLHC)  │ │
 │  ├──────────┤         ├──────────┤         ├──────────┤ │
-│  │ Data     │         │ Data     │         │ Data     │ │
+│  │ Data     │         │ Data     │         │ Data │ │
 │  │ Credits  │         │ Credits  │         │ Credits  │ │
 │  │ (PDC)    │         │ (NPDC)   │         │ (CPLD)   │ │
 │  └──────────┘         └──────────┘         └──────────┘ │
-│                                                         │
-│  Memory Writes       Memory Reads        Completions   │
-│  I/O Writes          I/O Reads           (MRd, CfgRd)  │
-│  Messages            Config Reads                      │
-│                      Atomics                           │
+│                                                   │
+│  Memory Writes       Memory Reads        Completions    │
+│  I/O Writes          I/O Reads           (MRd, CfgRd)   │
+│  Messages            Config Reads                 │
+│                      Atomics                      │
 └─────────────────────────────────────────────────────────┘
 
 Credit Types:
@@ -446,23 +446,23 @@ Credit Management:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│              TLP Transmission Decision                  │
+│              TLP Transmission Decision            │
 └─────────────────────────────────────────────────────────┘
-                          │
+                                                    │
                           ▼
                  ┌─────────────────┐
-                 │ TLP ready to TX │
+                 │ TLP ready to TX                  │
                  └────────┬────────┘
-                          │
+                                                    │
           ┌───────────────┼───────────────┐
-          │               │               │
+          │               │                         │
           ▼               ▼               ▼
     Memory Write?   Memory Read?    Completion?
-          │               │               │
+          │               │                         │
           ▼               ▼               ▼
      Check Posted    Check Non-Posted  Check Cpl
      Credits (P)     Credits (NP)      Credits (Cpl)
-          │               │               │
+          │               │                         │
     ┌─────┴─────┐   ┌─────┴─────┐   ┌─────┴─────┐
     │           │   │           │   │           │
     ▼           ▼   ▼           ▼   ▼           ▼
@@ -558,29 +558,29 @@ Routing Decision:
 
 ```
 ┌────────────────────────────────────────────┐
-│             Completion TLP                 │
+│             Completion TLP  │
 ├────────────────────────────────────────────┤
 │  Requester ID: Bus=1, Dev=0, Func=0        │
 │  (Who sent the original request)           │
 └────────────────┬───────────────────────────┘
-                 │
+                              │
                  ▼
          ┌───────────────┐
-         │ PCIe Switch   │
-         │               │
-         │ Check Bus#    │
-         │ in Req ID     │
+         │ PCIe Switch        │
+         │                    │
+         │ Check Bus#         │
+         │ in Req ID          │
          └───────┬───────┘
-                 │
+                              │
     Bus 1 downstream?
-         │
+                              │
          ▼
        Port 1 (secondary bus = 1)
-         │
+                              │
          ▼
     ┌────────────┐
-    │ Endpoint   │  Bus=1, Dev=0, Func=0
-    │ (Requester)│  ← Completion delivered
+                 │ Endpoint                │  Bus=1, Dev=0, Func=0
+                 │ (Requester)             │  ← Completion delivered
     └────────────┘
 
 Routing Decision:
@@ -618,50 +618,50 @@ APPLICATION INTERFACES:
 │                         TLP PACKETIZER                                  │
 │                     (litepcie/tlp/packetizer.py)                        │
 │                                                                         │
-│  ┌───────────────────┐   ┌───────────────────┐   ┌─────────────────┐  │
-│  │ Request Formatter │   │ Completion Format │   │  PTM Formatter  │  │
-│  │                   │   │                   │   │                 │  │
-│  │ • Detect 32/64-bit│   │ • Set CplD/Cpl    │   │ • Set Req/Res   │  │
-│  │ • Set MRd32/MRd64 │   │ • Set status SC/UR│   │ • Insert time   │  │
-│  │   or MWr32/MWr64  │   │ • Set byte_count  │   │ • Message code  │  │
-│  │ • Set length      │   │ • Set lower_addr  │   │                 │  │
-│  │ • Tag assignment  │   │ • Match req tag   │   │                 │  │
-│  └─────────┬─────────┘   └─────────┬─────────┘   └────────┬────────┘  │
-│            │                       │                      │            │
-│            └───────────────┬───────┴──────────────────────┘            │
-│                            │                                           │
-│                            ▼                                           │
-│                   ┌─────────────────┐                                  │
-│                   │    Arbiter      │                                  │
-│                   │  (Round-Robin)  │                                  │
-│                   └────────┬────────┘                                  │
-│                            │                                           │
-│                            ▼                                           │
-│                   ┌─────────────────┐                                  │
-│                   │  Stream Buffer  │                                  │
-│                   └────────┬────────┘                                  │
-│                            │                                           │
-│                            ▼                                           │
-│            ┌───────────────────────────────┐                           │
-│            │   Header Inserter (3DW/4DW)   │                           │
-│            │                               │                           │
-│            │  Select based on fmt field:   │                           │
-│            │    fmt[1]=0 → 3DW inserter    │                           │
-│            │    fmt[1]=1 → 4DW inserter    │                           │
-│            │                               │                           │
-│            │  Data widths: 64/128/256/512  │                           │
-│            │                               │                           │
-│            │  Header alignment:            │                           │
-│            │   - 64b:  2 beats for header  │                           │
-│            │   - 128b: 1 beat for header   │                           │
-│            │   - 256b: header + data       │                           │
-│            │   - 512b: header + more data  │                           │
-│            └───────────────┬───────────────┘                           │
-│                            │                                           │
-│                    ┌───────┴────────┐                                  │
-│                    │ Endianness Swap│                                  │
-│                    │ (if needed)    │                                  │
-│                    └───────┬────────┘                                  │
+│  ┌───────────────────┐   ┌───────────────────┐   ┌─────────────────┐    │
+│  │ Request Formatter │   │ Completion Format │   │  PTM Formatter  │    │
+│  │                   │   │                   │   │                 │    │
+│  │ • Detect 32/64-bit│   │ • Set CplD/Cpl    │   │ • Set Req/Res   │    │
+│  │ • Set MRd32/MRd64 │   │ • Set status SC/UR│   │ • Insert time   │    │
+│  │   or MWr32/MWr64  │   │ • Set byte_count  │   │ • Message code  │    │
+│  │ • Set length      │   │ • Set lower_addr  │   │                 │    │
+│  │ • Tag assignment  │   │ • Match req tag   │   │                 │    │
+│  └─────────┬─────────┘   └─────────┬─────────┘   └────────┬────────┘    │
+│            │                       │                      │             │
+│            └───────────────┬───────┴──────────────────────┘             │
+│                            │                                            │
+│                            ▼                                            │
+│                   ┌─────────────────┐                                   │
+│                   │    Arbiter      │                                   │
+│                   │  (Round-Robin)  │                                   │
+│                   └────────┬────────┘                                   │
+│                            │                                            │
+│                            ▼                                            │
+│                   ┌─────────────────┐                                   │
+│                   │  Stream Buffer  │                                   │
+│                   └────────┬────────┘                                   │
+│                            │                                            │
+│                            ▼                                            │
+│            ┌───────────────────────────────┐                            │
+│            │   Header Inserter (3DW/4DW)   │                            │
+│            │                               │                            │
+│            │  Select based on fmt field:   │                            │
+│            │    fmt[1]=0 → 3DW inserter    │                            │
+│            │    fmt[1]=1 → 4DW inserter    │                            │
+│            │                               │                            │
+│            │  Data widths: 64/128/256/512  │                            │
+│            │                               │                            │
+│            │  Header alignment:            │                            │
+│            │   - 64b:  2 beats for header  │                            │
+│            │   - 128b: 1 beat for header   │                            │
+│            │   - 256b: header + data       │                            │
+│            │   - 512b: header + more data  │                            │
+│            └───────────────┬───────────────┘                            │
+│                            │                                            │
+│                    ┌───────┴────────┐                                   │
+│                    │ Endianness Swap│                                   │
+│                    │ (if needed)    │                                   │
+│                    └───────┬────────┘                                   │
 └────────────────────────────┼────────────────────────────────────────────┘
                              │ phy_layout(data_width)
                              │ {dat[N], be[N/8]}
@@ -695,32 +695,32 @@ APPLICATION INTERFACES:
 │                            ▼                                            │
 │                   ┌─────────────────┐                                   │
 │                   │ Header Decoder  │                                   │
-│                   │ (Extract fmt:type)                                  │
+│                                     │ (Extract fmt:type)                │
 │                   └────────┬────────┘                                   │
 │                            │                                            │
 │                            ▼                                            │
 │                   ┌─────────────────┐                                   │
 │                   │   Dispatcher    │                                   │
-│                   │ Route by fmt:type                                   │
+│                                     │ Route by fmt:type                 │
 │                   └────────┬────────┘                                   │
 │                            │                                            │
-│        ┌───────────────────┼───────────────────┬─────────────┐         │
-│        │                   │                   │             │         │
-│        ▼                   ▼                   ▼             ▼         │
-│  ┌──────────┐       ┌──────────┐       ┌──────────┐   ┌─────────┐    │
-│  │ Memory   │       │Completion│       │  Config  │   │   PTM   │    │
-│  │ Request  │       │ Decoder  │       │ Decoder  │   │ Decoder │    │
-│  │ Decoder  │       │          │       │          │   │         │    │
-│  │          │       │ • Extract│       │ • Bus/   │   │ • Time  │    │
-│  │ • Address│       │   status │       │   Dev/   │   │   stamp │    │
-│  │ • Length │       │ • Match  │       │   Func   │   │ • Msg   │    │
-│  │ • Detect │       │   tag    │       │ • Reg    │   │   code  │    │
-│  │   Rd/Wr  │       │ • Byte   │       │          │   │         │    │
-│  │          │       │   count  │       │          │   │         │    │
-│  └─────┬────┘       └─────┬────┘       └─────┬────┘   └────┬────┘    │
-│        │                  │                  │             │         │
-│                        TLP DEPACKETIZER                                │
-│                     (litepcie/tlp/depacketizer.py)                     │
+│        ┌───────────────────┼───────────────────┬─────────────┐          │
+│        │                   │                   │             │          │
+│        ▼                   ▼                   ▼             ▼          │
+│  ┌──────────┐       ┌──────────┐       ┌──────────┐   ┌─────────┐       │
+│  │ Memory   │       │Completion│       │  Config  │   │   PTM   │       │
+│  │ Request  │       │ Decoder  │       │ Decoder  │   │ Decoder │       │
+│  │ Decoder  │       │          │       │          │   │         │       │
+│  │          │       │ • Extract│       │ • Bus/   │   │ • Time  │       │
+│  │ • Address│       │   status │       │   Dev/   │   │   stamp │       │
+│  │ • Length │       │ • Match  │       │   Func   │   │ • Msg   │       │
+│  │ • Detect │       │   tag    │       │ • Reg    │   │   code  │       │
+│  │   Rd/Wr  │       │ • Byte   │       │          │   │         │       │
+│  │          │       │   count  │       │          │   │         │       │
+│  └─────┬────┘       └─────┬────┘       └─────┬────┘   └────┬────┘       │
+│        │                  │                  │             │            │
+│                        TLP DEPACKETIZER                                 │
+│                     (litepcie/tlp/depacketizer.py)                      │
 └────────┼──────────────────┼──────────────────┼─────────────┼──────────┘
          │                  │                  │             │
          ▼                  ▼                  ▼             ▼
@@ -740,7 +740,7 @@ APPLICATION INTERFACES:
 │  └──────┬───────┘  │      │
 │         │          │      │
 │         ▼          │      │
-│    Allocate tag ───┼──────┘
+                     │    Allocate tag ───┼──────┘
 │    on read req     │
 │         │          │
 │         ▼          │
@@ -757,20 +757,20 @@ APPLICATION INTERFACES:
 │  │ Completion   │  │      with tag=X
 │  │ Buffers      │  │
 │  │              │  │      ┌────────────────┐
-│  │ Buffer[0] ◄──┼──┼──────┤ Demux on tag   │
-│  │ Buffer[1] ◄──┼──┼──────┤ (tag → buffer) │
-│  │    ...    ◄──┼──┼──────┤                │
-│  │ Buffer[N] ◄──┼──┼──────┤                │
+│                    │ Buffer[0] ◄──┼──┼──────┤ Demux on tag   │
+│                    │ Buffer[1] ◄──┼──┼──────┤ (tag → buffer) │
+│                    │    ...    ◄──┼──┼──────┤                │
+│                    │ Buffer[N] ◄──┼──┼──────┤                │
 │  │              │  │      └────────────────┘
 │  │              │  │
 │  │ Reorder:     │  │
 │  │ Output in    │  │      ┌────────────────┐
-│  │ request order├──┼──────► Mux based on   │
+│                    │ request order├──┼──────► Mux based on   │
 │  │              │  │        req_queue order│
 │  └──────────────┘  │      └────────────────┘
 │                    │              │
 │  Return tag to     │              │
-│  tag queue when ◄──┼──────────────┘
+                     │  tag queue when ◄──┼──────────────┘
 │  completion done   │       (when end=1)
 │                    │
 └────────────────────┘

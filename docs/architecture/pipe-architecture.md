@@ -27,60 +27,60 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 ┌────────────────────────────────────────────────────────────┐
 │                     Application Layer                      │
 │                                                            │
-│  User logic, DMA engines, configuration registers         │
+│  User logic, DMA engines, configuration registers          │
 └────────────────────┬───────────────────────────────────────┘
                      │
 ┌────────────────────▼───────────────────────────────────────┐
 │                   Transaction Layer (TL)                   │
 │                                                            │
-│  • TLP assembly/disassembly                               │
+│  • TLP assembly/disassembly                                │
 │  • Flow control credit management                          │
-│  • TLP routing and addressing                             │
+│  • TLP routing and addressing                              │
 │  • Virtual channel management                              │
 └────────────────────┬───────────────────────────────────────┘
                      │ TLPs (Transaction Layer Packets)
 ┌────────────────────▼───────────────────────────────────────┐
 │                  Data Link Layer (DLL)                     │
 │                                                            │
-│  • LCRC generation/checking                               │
+│  • LCRC generation/checking                                │
 │  • ACK/NAK protocol                                        │
 │  • Retry buffer management                                 │
 │  • Sequence numbers                                        │
-│  • DLLPs (Flow Control, ACK/NAK)                          │
+│  • DLLPs (Flow Control, ACK/NAK)                           │
 └────────────────────┬───────────────────────────────────────┘
                      │ 64-bit DLL packets
 ┌────────────────────▼───────────────────────────────────────┐
 │              PIPE Interface (THIS MODULE)                  │
 │                                                            │
-│  ┌──────────────────────────────────────────────────────┐ │
-│  │          TX Packetizer (PIPETXPacketizer)            │ │
-│  │  • 64-bit DLL packets → 8-bit PIPE symbols          │ │
-│  │  • K-character framing (STP/SDP/END)                 │ │
-│  │  • Packet type detection (TLP vs DLLP)              │ │
-│  │  • Byte serialization (little-endian)                │ │
-│  └──────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │          TX Packetizer (PIPETXPacketizer)            │  │
+│  │  • 64-bit DLL packets → 8-bit PIPE symbols           │  │
+│  │  • K-character framing (STP/SDP/END)                 │  │
+│  │  • Packet type detection (TLP vs DLLP)               │  │
+│  │  • Byte serialization (little-endian)                │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                            │
-│  ┌──────────────────────────────────────────────────────┐ │
-│  │         RX Depacketizer (PIPERXDepacketizer)         │ │
-│  │  • 8-bit PIPE symbols → 64-bit DLL packets          │ │
-│  │  • K-character detection (STP/SDP/END)               │ │
-│  │  • Byte accumulation (little-endian)                 │ │
-│  │  • Packet reconstruction                              │ │
-│  └──────────────────────────────────────────────────────┘ │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │         RX Depacketizer (PIPERXDepacketizer)         │  │
+│  │  • 8-bit PIPE symbols → 64-bit DLL packets           │  │
+│  │  • K-character detection (STP/SDP/END)               │  │
+│  │  • Byte accumulation (little-endian)                 │  │
+│  │  • Packet reconstruction                             │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                            │
-│  Control Signals: powerdown, rate, rx_polarity            │
+│  Control Signals: powerdown, rate, rx_polarity             │
 │  Status Signals: rx_status, elecidle                       │
 └────────────────────┬───────────────────────────────────────┘
                      │ 8-bit PIPE symbols + control/status
 ┌────────────────────▼───────────────────────────────────────┐
 │                    Physical Layer (PHY)                    │
 │                                                            │
-│  • 8b/10b encoding/decoding                               │
-│  • Serializer/Deserializer (SerDes)                       │
+│  • 8b/10b encoding/decoding                                │
+│  • Serializer/Deserializer (SerDes)                        │
 │  • Clock recovery and data alignment                       │
-│  • Ordered set generation (SKP, COM, TS1, TS2)           │
+│  • Ordered set generation (SKP, COM, TS1, TS2)             │
 │  • Electrical characteristics (voltage, impedance)         │
-│  • Link training and state machine (LTSSM)                │
+│  • Link training and state machine (LTSSM)                 │
 └────────────────────┬───────────────────────────────────────┘
                      │ Differential serial data
                      ▼
@@ -124,18 +124,18 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                       PIPEInterface                              │
-│                                                                  │
-│  Parameters:                                                     │
+│                       PIPEInterface                             │
+│                                                                 │
+│  Parameters:                                                    │
 │    • data_width = 8 (fixed for Gen1/Gen2)                       │
 │    • gen = 1 or 2 (PCIe generation)                             │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    TX PATH                                  │ │
-│  │                                                             │ │
-│  │   dll_tx_sink (input)                                       │ │
-│  │        │                                                    │ │
-│  │        ▼                                                    │ │
+│  │                    TX PATH                                 │ │
+│  │                                                            │ │
+│  │   dll_tx_sink (input)                                      │ │
+│  │        │                                                   │ │
+│  │        ▼                                                   │ │
 │  │   ┌────────────────────────────────┐                       │ │
 │  │   │   PIPETXPacketizer             │                       │ │
 │  │   │   (submodules.tx_packetizer)   │                       │ │
@@ -146,24 +146,24 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │   │  • Send 8 data bytes           │                       │ │
 │  │   │  • Send END symbol             │                       │ │
 │  │   └────────────┬───────────────────┘                       │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   pipe_tx_data[7:0] ──────────────────────►                │ │
-│  │   pipe_tx_datak ───────────────────────────►                │ │
-│  │   pipe_tx_elecidle ────────────────────────►                │ │
-│  │                                              (TX to PHY)    │ │
+│  │   pipe_tx_datak ───────────────────────────►               │ │
+│  │   pipe_tx_elecidle ────────────────────────►               │ │
+│  │                                              (TX to PHY)   │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    RX PATH                                  │ │
-│  │                                              (RX from PHY)  │ │
+│  │                    RX PATH                                 │ │
+│  │                                              (RX from PHY) │ │
 │  │   pipe_rx_data[7:0] ◄──────────────────────                │ │
-│  │   pipe_rx_datak ◄───────────────────────────                │ │
-│  │   pipe_rx_valid ◄───────────────────────────                │ │
-│  │   pipe_rx_status[2:0] ◄─────────────────────                │ │
-│  │   pipe_rx_elecidle ◄─────────────────────────               │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │   pipe_rx_datak ◄───────────────────────────               │ │
+│  │   pipe_rx_valid ◄───────────────────────────               │ │
+│  │   pipe_rx_status[2:0] ◄─────────────────────               │ │
+│  │   pipe_rx_elecidle ◄─────────────────────────              │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   ┌────────────────────────────────┐                       │ │
 │  │   │   PIPERXDepacketizer           │                       │ │
 │  │   │   (submodules.rx_depacketizer) │                       │ │
@@ -174,14 +174,14 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │   │  • Detect END symbol           │                       │ │
 │  │   │  • Output complete packet      │                       │ │
 │  │   └────────────┬───────────────────┘                       │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   dll_rx_source (output)                                   │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                 CONTROL/STATUS                              │ │
-│  │                                                             │ │
+│  │                 CONTROL/STATUS                             │ │
+│  │                                                            │ │
 │  │   pipe_powerdown[1:0] ──────────────────►  (to PHY)        │ │
 │  │   pipe_rate ─────────────────────────────►  (to PHY)       │ │
 │  │   pipe_rx_polarity ──────────────────────►  (to PHY)       │ │
@@ -197,19 +197,19 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     PIPETXPacketizer                             │
-│                                                                  │
+│                     PIPETXPacketizer                            │
+│                                                                 │
 │  INPUT: sink (64-bit DLL packets)                               │
 │    • sink.valid, sink.first, sink.last                          │
 │    • sink.dat[63:0]                                             │
-│                                                                  │
+│                                                                 │
 │  OUTPUT: PIPE TX symbols (8-bit)                                │
 │    • pipe_tx_data[7:0]                                          │
 │    • pipe_tx_datak (K-character indicator)                      │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                       FSM FLOW                              │ │
-│  │                                                             │ │
+│  │                       FSM FLOW                             │ │
+│  │                                                            │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   IDLE State     │                                │ │
 │  │        │                  │                                │ │
@@ -217,9 +217,9 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │        │  sink.valid &    │                                │ │
 │  │        │  sink.first      │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 │ Packet detected                           │ │
-│  │                 │                                           │ │
+│  │                 │                                          │ │
+│  │                 │ Packet detected                          │ │
+│  │                 │                                          │ │
 │  │        ┌────────▼─────────┐                                │ │
 │  │        │  Packet Type     │                                │ │
 │  │        │  Detection       │                                │ │
@@ -231,21 +231,21 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │        │  (first_byte &   │                                │ │
 │  │        │   0xC0) == 0x00  │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
+│  │                 │                                          │ │
 │  │        ┌────────▼─────────┐                                │ │
 │  │        │   Send START     │                                │ │
 │  │        │                  │                                │ │
 │  │        │  If is_dllp:     │                                │ │
-│  │        │    tx_data = SDP │  SDP = 0x5C                   │ │
+│  │        │    tx_data = SDP │  SDP = 0x5C                    │ │
 │  │        │           (0x5C) │  K=1                           │ │
 │  │        │  Else:           │                                │ │
-│  │        │    tx_data = STP │  STP = 0xFB                   │ │
+│  │        │    tx_data = STP │  STP = 0xFB                    │ │
 │  │        │           (0xFB) │  K=1                           │ │
 │  │        │  tx_datak = 1    │                                │ │
 │  │        │  byte_counter=0  │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 ▼                                           │ │
+│  │                 │                                          │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │   ┌───►│   DATA State     │                                │ │
 │  │   │    │                  │                                │ │
@@ -255,28 +255,28 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │   │    │  tx_data =       │                                │ │
 │  │   │    │   byte_array[    │                                │ │
 │  │   │    │   byte_counter]  │                                │ │
-│  │   │    │  tx_datak = 0    │  Data byte (not K-char)       │ │
+│  │   │    │  tx_datak = 0    │  Data byte (not K-char)        │ │
 │  │   │    │                  │                                │ │
 │  │   │    │  byte_counter++  │                                │ │
 │  │   │    └────────┬─────────┘                                │ │
-│  │   │             │                                           │ │
+│  │   │             │                                          │ │
 │  │   │ Loop 8x     │ After 8 bytes                            │ │
 │  │   │ (0-7)       │ (counter == 7)                           │ │
-│  │   │             │                                           │ │
-│  │   └─────────────┘                                           │ │
-│  │                 │                                           │ │
-│  │                 ▼                                           │ │
+│  │   │             │                                          │ │
+│  │   └─────────────┘                                          │ │
+│  │                 │                                          │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   END State      │                                │ │
 │  │        │                  │                                │ │
 │  │        │  Send END:       │                                │ │
-│  │        │  tx_data = END   │  END = 0xFD                   │ │
+│  │        │  tx_data = END   │  END = 0xFD                    │ │
 │  │        │         (0xFD)   │  K=1                           │ │
 │  │        │  tx_datak = 1    │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 │ Return to IDLE                            │ │
-│  │                 ▼                                           │ │
+│  │                 │                                          │ │
+│  │                 │ Return to IDLE                           │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   IDLE State     │                                │ │
 │  │        │                  │                                │ │
@@ -285,12 +285,12 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │        │  tx_datak = 0    │                                │ │
 │  │        └──────────────────┘                                │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                 BYTE ARRAY MAPPING                          │ │
-│  │                                                             │ │
+│  │                 BYTE ARRAY MAPPING                         │ │
+│  │                                                            │ │
 │  │   sink.dat[63:0]  (64-bit input word)                      │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │   Byte 0: dat[7:0]    ──►  Sent first   (LSB)              │ │
 │  │   Byte 1: dat[15:8]   ──►  Sent second                     │ │
 │  │   Byte 2: dat[23:16]  ──►  Sent third                      │ │
@@ -299,8 +299,8 @@ This document provides detailed architecture diagrams for the LitePCIe PIPE inte
 │  │   Byte 5: dat[47:40]  ──►  Sent sixth                      │ │
 │  │   Byte 6: dat[55:48]  ──►  Sent seventh                    │ │
 │  │   Byte 7: dat[63:56]  ──►  Sent last    (MSB)              │ │
-│  │                                                             │ │
-│  │   Little-endian ordering: LSB sent first                    │ │
+│  │                                                            │ │
+│  │   Little-endian ordering: LSB sent first                   │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -336,19 +336,19 @@ Cycle │ FSM State │ Output            │ Notes
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    PIPERXDepacketizer                            │
-│                                                                  │
+│                    PIPERXDepacketizer                           │
+│                                                                 │
 │  INPUT: PIPE RX symbols (8-bit)                                 │
 │    • pipe_rx_data[7:0]                                          │
 │    • pipe_rx_datak (K-character indicator)                      │
-│                                                                  │
+│                                                                 │
 │  OUTPUT: source (64-bit DLL packets)                            │
 │    • source.valid, source.first, source.last                    │
 │    • source.dat[63:0]                                           │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                       FSM FLOW                              │ │
-│  │                                                             │ │
+│  │                       FSM FLOW                             │ │
+│  │                                                            │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   IDLE State     │                                │ │
 │  │        │                  │                                │ │
@@ -357,10 +357,10 @@ Cycle │ FSM State │ Output            │ Notes
 │  │        │  • STP (0xFB)    │  TLP start                     │ │
 │  │        │  • SDP (0x5C)    │  DLLP start                    │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 │ rx_datak=1 and                            │ │
-│  │                 │ (rx_data==STP or rx_data==SDP)            │ │
-│  │                 │                                           │ │
+│  │                 │                                          │ │
+│  │                 │ rx_datak=1 and                           │ │
+│  │                 │ (rx_data==STP or rx_data==SDP)           │ │
+│  │                 │                                          │ │
 │  │        ┌────────▼─────────┐                                │ │
 │  │        │  START Detected  │                                │ │
 │  │        │                  │                                │ │
@@ -371,12 +371,12 @@ Cycle │ FSM State │ Output            │ Notes
 │  │        │  byte_counter=0  │                                │ │
 │  │        │  data_buffer=0   │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 ▼                                           │ │
+│  │                 │                                          │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │   ┌───►│   DATA State     │                                │ │
 │  │   │    │                  │                                │ │
-│  │   │    │  If rx_datak=0:  │  Data byte received           │ │
+│  │   │    │  If rx_datak=0:  │  Data byte received            │ │
 │  │   │    │                  │                                │ │
 │  │   │    │   Store byte in  │                                │ │
 │  │   │    │   data_buffer:   │                                │ │
@@ -388,7 +388,7 @@ Cycle │ FSM State │ Output            │ Notes
 │  │   │    │                  │                                │ │
 │  │   │    │   byte_counter++ │                                │ │
 │  │   │    │                  │                                │ │
-│  │   │    │  If rx_datak=1:  │  K-character received         │ │
+│  │   │    │  If rx_datak=1:  │  K-character received          │ │
 │  │   │    │                  │                                │ │
 │  │   │    │   If rx_data=END:│                                │ │
 │  │   │    │                  │                                │ │
@@ -403,13 +403,13 @@ Cycle │ FSM State │ Output            │ Notes
 │  │   │    │     data_buffer  │                                │ │
 │  │   │    │   • Go to IDLE   │                                │ │
 │  │   │    └────────┬─────────┘                                │ │
-│  │   │             │                                           │ │
+│  │   │             │                                          │ │
 │  │   │ Loop while  │ END detected                             │ │
-│  │   │ accumulating│                                           │ │
-│  │   │             │                                           │ │
-│  │   └─────────────┘                                           │ │
-│  │                 │                                           │ │
-│  │                 ▼                                           │ │
+│  │   │ accumulating│                                          │ │
+│  │   │             │                                          │ │
+│  │   └─────────────┘                                          │ │
+│  │                 │                                          │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   IDLE State     │                                │ │
 │  │        │                  │                                │ │
@@ -417,12 +417,12 @@ Cycle │ FSM State │ Output            │ Notes
 │  │        │  START symbol    │                                │ │
 │  │        └──────────────────┘                                │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              DATA BUFFER ACCUMULATION                       │ │
-│  │                                                             │ │
+│  │              DATA BUFFER ACCUMULATION                      │ │
+│  │                                                            │ │
 │  │   data_buffer[63:0]  (64-bit accumulation)                 │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │   Byte 0 (first): rx_data → buffer[7:0]    (LSB)           │ │
 │  │   Byte 1:         rx_data → buffer[15:8]                   │ │
 │  │   Byte 2:         rx_data → buffer[23:16]                  │ │
@@ -431,8 +431,8 @@ Cycle │ FSM State │ Output            │ Notes
 │  │   Byte 5:         rx_data → buffer[47:40]                  │ │
 │  │   Byte 6:         rx_data → buffer[55:48]                  │ │
 │  │   Byte 7 (last):  rx_data → buffer[63:56]  (MSB)           │ │
-│  │                                                             │ │
-│  │   Little-endian ordering: LSB received first                │ │
+│  │                                                            │ │
+│  │   Little-endian ordering: LSB received first               │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```

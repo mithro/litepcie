@@ -21,30 +21,30 @@
 │  APPLICATION: User Logic / DMA Engines                     │
 ├────────────────────────────────────────────────────────────┤
 │  TLP LAYER (litepcie/tlp/)                                 │
-│    • Packetizer/Depacketizer (3DW/4DW headers)            │
+│    • Packetizer/Depacketizer (3DW/4DW headers)             │
 │    • Flow control (credit management)                      │
 │    • Types: MRd/MWr, Config, Completion                    │
 ├────────────────────────────────────────────────────────────┤
 │  DLL LAYER (litepcie/dll/)                                 │
 │    • LCRC-32 generation/checking                           │
 │    • ACK/NAK protocol with retry buffer (4KB)              │
-│    • LTSSM: DETECT → POLLING → CONFIG → L0                │
+│    • LTSSM: DETECT → POLLING → CONFIG → L0                 │
 │    • Sequence numbering (12-bit)                           │
 ├────────────────────────────────────────────────────────────┤
 │  PIPE LAYER (litepcie/dll/pipe.py)                         │
-│    • TX Packetizer: 64-bit → 8-bit + framing              │
-│    • RX Depacketizer: 8-bit → 64-bit                      │
+│    • TX Packetizer: 64-bit → 8-bit + framing               │
+│    • RX Depacketizer: 8-bit → 64-bit                       │
 │    • K-char framing: STP/SDP/END                           │
 │    • Ordered sets: SKP (every 1180), TS1/TS2               │
 ├────────────────────────────────────────────────────────────┤
 │  TRANSCEIVER BASE (litepcie/phy/transceiver_base/)         │
 │    • TX/RX datapaths (AsyncFIFO CDC)                       │
 │    • Software 8b/10b encoder/decoder                       │
-│    • Reset sequencing (PLL → TX → RX)                     │
+│    • Reset sequencing (PLL → TX → RX)                      │
 ├────────────────────────────────────────────────────────────┤
 │  SERDES (litepcie/phy/xilinx/, litepcie/phy/lattice/)      │
-│    • GTX (7-Series), GTY (UltraScale+), ECP5              │
-│    • Serialization: 20-bit → 1-bit serial                 │
+│    • GTX (7-Series), GTY (UltraScale+), ECP5               │
+│    • Serialization: 20-bit → 1-bit serial                  │
 │    • CDR, DFE, CTLE equalization                           │
 └────────────────────────────────────────────────────────────┘
      ↕ Differential Serial (TX+/-, RX+/-)

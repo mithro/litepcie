@@ -38,113 +38,113 @@ LitePCIe implements the complete PCIe protocol stack:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      APPLICATION LAYER                          │
-│                                                                  │
+│                                                                 │
 │  User Logic: DMA Engines, Memory Controllers, Custom Logic      │
 │  Interface: TLP-level read/write requests                       │
 └────────────────────────────┬────────────────────────────────────┘
                              │ 64-512 bit TLP interface
 ┌────────────────────────────▼────────────────────────────────────┐
-│                    TRANSACTION LAYER (TLP)                       │
-│                    Location: litepcie/tlp/                       │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  TLP Packetizer  │  │ TLP Depacketizer │  │ Flow Control │  │
-│  │                  │  │                  │  │              │  │
-│  │ • Header gen     │  │ • Header parse   │  │ • Credits    │  │
-│  │ • CRC calc       │  │ • CRC check      │  │ • Throttling │  │
-│  │ • Routing        │  │ • Type decode    │  │              │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
-│                                                                  │
+│                    TRANSACTION LAYER (TLP)                      │
+│                    Location: litepcie/tlp/                      │
+│                                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐   │
+│  │  TLP Packetizer  │  │ TLP Depacketizer │  │ Flow Control │   │
+│  │                  │  │                  │  │              │   │
+│  │ • Header gen     │  │ • Header parse   │  │ • Credits    │   │
+│  │ • CRC calc       │  │ • CRC check      │  │ • Throttling │   │
+│  │ • Routing        │  │ • Type decode    │  │              │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘   │
+│                                                                 │
 │  TLP Types: Memory Read/Write, Config, Completion, Messages     │
 └────────────────────────────┬────────────────────────────────────┘
                              │ 64-bit packets (phy_layout)
 ┌────────────────────────────▼────────────────────────────────────┐
-│                    DATA LINK LAYER (DLL)                         │
-│                    Location: litepcie/dll/                       │
-│                                                                  │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐│
-│  │   DLL TX     │  │   DLL RX     │  │   Retry Buffer         ││
-│  │              │  │              │  │                        ││
-│  │ • LCRC gen   │  │ • LCRC check │  │ • Store TLPs           ││
-│  │ • Seq num    │  │ • ACK/NAK    │  │ • Replay on NAK        ││
-│  │ • DLLP gen   │  │ • DLLP parse │  │ • 4KB circular buffer  ││
-│  └──────────────┘  └──────────────┘  └────────────────────────┘│
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              LTSSM (Link Training State Machine)         │  │
-│  │                                                           │  │
-│  │  States: DETECT → POLLING → CONFIG → L0 → RECOVERY      │  │
-│  │  Controls: Speed negotiation, TS1/TS2 exchange          │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  DLLP Types: ACK, NAK, UpdateFC, PM_Enter_L1, etc.             │
+│                    DATA LINK LAYER (DLL)                        │
+│                    Location: litepcie/dll/                      │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐ │
+│  │   DLL TX     │  │   DLL RX     │  │   Retry Buffer         │ │
+│  │              │  │              │  │                        │ │
+│  │ • LCRC gen   │  │ • LCRC check │  │ • Store TLPs           │ │
+│  │ • Seq num    │  │ • ACK/NAK    │  │ • Replay on NAK        │ │
+│  │ • DLLP gen   │  │ • DLLP parse │  │ • 4KB circular buffer  │ │
+│  └──────────────┘  └──────────────┘  └────────────────────────┘ │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              LTSSM (Link Training State Machine)         │   │
+│  │                                                          │   │
+│  │  States: DETECT → POLLING → CONFIG → L0 → RECOVERY       │   │
+│  │  Controls: Speed negotiation, TS1/TS2 exchange           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  DLLP Types: ACK, NAK, UpdateFC, PM_Enter_L1, etc.              │
 └────────────────────────────┬────────────────────────────────────┘
                              │ 64-bit packets + ordered sets
 ┌────────────────────────────▼────────────────────────────────────┐
-│                      PIPE INTERFACE LAYER                        │
-│                      Location: litepcie/dll/pipe.py              │
-│                                                                  │
-│  ┌──────────────────┐         ┌──────────────────┐             │
-│  │  TX Packetizer   │         │  RX Depacketizer │             │
-│  │                  │         │                  │             │
-│  │ • 64→8 bit conv  │         │ • 8→64 bit conv  │             │
-│  │ • STP/SDP/END    │         │ • START detect   │             │
-│  │ • K-char framing │         │ • Symbol accum   │             │
-│  └──────────────────┘         └──────────────────┘             │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │           Ordered Set Generation/Detection               │  │
-│  │                                                           │  │
-│  │  • SKP insertion (every 1180 symbols)                    │  │
-│  │  • TS1/TS2 generation (link training)                    │  │
-│  │  • COM symbol handling (alignment)                       │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
+│                      PIPE INTERFACE LAYER                       │
+│                      Location: litepcie/dll/pipe.py             │
+│                                                                 │
+│  ┌──────────────────┐         ┌──────────────────┐              │
+│  │  TX Packetizer   │         │  RX Depacketizer │              │
+│  │                  │         │                  │              │
+│  │ • 64→8 bit conv  │         │ • 8→64 bit conv  │              │
+│  │ • STP/SDP/END    │         │ • START detect   │              │
+│  │ • K-char framing │         │ • Symbol accum   │              │
+│  └──────────────────┘         └──────────────────┘              │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           Ordered Set Generation/Detection               │   │
+│  │                                                          │   │
+│  │  • SKP insertion (every 1180 symbols)                    │   │
+│  │  • TS1/TS2 generation (link training)                    │   │
+│  │  • COM symbol handling (alignment)                       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
 │  Interface: 8-bit data + K-char flag + control signals          │
 └────────────────────────────┬────────────────────────────────────┘
                              │ PIPE signals (8-bit + ctrl)
 ┌────────────────────────────▼────────────────────────────────────┐
-│                    TRANSCEIVER BASE LAYER                        │
-│                    Location: litepcie/phy/transceiver_base/      │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              PIPETransceiver Base Class                   │  │
-│  │                                                           │  │
-│  │  Common interface for all transceivers                   │  │
-│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)          │  │
-│  │  • Reset sequencing (PLL → PCS → CDR)                   │  │
-│  │  • Speed control (Gen1/Gen2 switching)                   │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │ TX Datapath      │  │ RX Datapath      │  │ 8b/10b       │  │
-│  │                  │  │                  │  │              │  │
-│  │ • AsyncFIFO CDC  │  │ • AsyncFIFO CDC  │  │ • Encoder    │  │
-│  │ • sys→tx domain  │  │ • rx→sys domain  │  │ • Decoder    │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
+│                    TRANSCEIVER BASE LAYER                       │
+│                    Location: litepcie/phy/transceiver_base/     │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              PIPETransceiver Base Class                  │   │
+│  │                                                          │   │
+│  │  Common interface for all transceivers                   │   │
+│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)          │     │
+│  │  • Reset sequencing (PLL → PCS → CDR)                    │   │
+│  │  • Speed control (Gen1/Gen2 switching)                   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐   │
+│  │ TX Datapath      │  │ RX Datapath      │  │ 8b/10b       │   │
+│  │                  │  │                  │  │              │   │
+│  │ • AsyncFIFO CDC  │  │ • AsyncFIFO CDC  │  │ • Encoder    │   │
+│  │ • sys→tx domain  │  │ • rx→sys domain  │  │ • Decoder    │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
                              │ 10-bit encoded symbols
 ┌────────────────────────────▼────────────────────────────────────┐
-│                    SERDES/TRANSCEIVER LAYER                      │
-│            Location: litepcie/phy/xilinx/, litepcie/phy/lattice/ │
-│                                                                  │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │  Xilinx GTX      │  │ Xilinx GTY       │  │ ECP5 SERDES  │  │
-│  │  (7-Series)      │  │ (UltraScale+)    │  │ (Lattice)    │  │
-│  │                  │  │                  │  │              │  │
-│  │ • GTXE2 wrapper  │  │ • GTYE4 wrapper  │  │ • DCUA wrap  │  │
-│  │ • CPLL/QPLL      │  │ • QPLL0/QPLL1    │  │ • SCI config │  │
-│  │ • Gen1/Gen2      │  │ • Gen1/Gen2/Gen3 │  │ • Gen1/Gen2  │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Physical Layer Functions                     │  │
-│  │                                                           │  │
-│  │  • Serialization/Deserialization (10 Gbps line rate)     │  │
-│  │  • Clock recovery (RX CDR)                               │  │
-│  │  • Equalization (DFE, CTLE)                              │  │
-│  │  • Electrical idle detection                              │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│                    SERDES/TRANSCEIVER LAYER                     │
+│            Location: litepcie/phy/xilinx/, litepcie/phy/lattice/│
+│                                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐   │
+│  │  Xilinx GTX      │  │ Xilinx GTY       │  │ ECP5 SERDES  │   │
+│  │  (7-Series)      │  │ (UltraScale+)    │  │ (Lattice)    │   │
+│  │                  │  │                  │  │              │   │
+│  │ • GTXE2 wrapper  │  │ • GTYE4 wrapper  │  │ • DCUA wrap  │   │
+│  │ • CPLL/QPLL      │  │ • QPLL0/QPLL1    │  │ • SCI config │   │
+│  │ • Gen1/Gen2      │  │ • Gen1/Gen2/Gen3 │  │ • Gen1/Gen2  │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘   │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              Physical Layer Functions                    │   │
+│  │                                                          │   │
+│  │  • Serialization/Deserialization (10 Gbps line rate)     │   │
+│  │  • Clock recovery (RX CDR)                               │   │
+│  │  • Equalization (DFE, CTLE)                              │   │
+│  │  • Electrical idle detection                             │   │
+│  └──────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────┘
                              │ Differential serial (TX+/-, RX+/-)
                              ▼
@@ -242,37 +242,37 @@ Application Layer
 ┌───────────────────────────────────────────────────────┐
 │ Transaction Layer (TLP)                               │
 │                                                       │
-│ 1. Build TLP Header:                                 │
-│    - Type: MWr32 (Memory Write 32-bit addressing)    │
-│    - Length: 1 DW                                    │
-│    - Requester ID: 00:00.0                           │
-│    - Tag: 0x42                                       │
-│    - Address: 0x1000_0000                            │
+│ 1. Build TLP Header:                                  │
+│    - Type: MWr32 (Memory Write 32-bit addressing)     │
+│    - Length: 1 DW                                     │
+│    - Requester ID: 00:00.0                            │
+│    - Tag: 0x42                                        │
+│    - Address: 0x1000_0000                             │
 │                                                       │
-│ 2. Attach payload: 0xDEADBEEF                        │
+│ 2. Attach payload: 0xDEADBEEF                         │
 │                                                       │
-│ 3. Calculate ECRC (if enabled)                       │
+│ 3. Calculate ECRC (if enabled)                        │
 │                                                       │
-│ Output: 64-bit wide packet (phy_layout)              │
-│    Header: [3 DW] + Data: [1 DW]                     │
+│ Output: 64-bit wide packet (phy_layout)               │
+│    Header: [3 DW] + Data: [1 DW]                      │
 └───────────┬───────────────────────────────────────────┘
             │ 64-bit TLP packet
             ▼
 ┌───────────────────────────────────────────────────────┐
 │ Data Link Layer (DLL)                                 │
 │                                                       │
-│ 1. Assign sequence number: 0x123                     │
+│ 1. Assign sequence number: 0x123                      │
 │                                                       │
 │ 2. Calculate LCRC:                                    │
-│    - Input: TLP header + payload                     │
-│    - Output: 32-bit LCRC                             │
+│    - Input: TLP header + payload                      │
+│    - Output: 32-bit LCRC                              │
 │                                                       │
-│ 3. Store in retry buffer (until ACK)                 │
+│ 3. Store in retry buffer (until ACK)                  │
 │                                                       │
-│ 4. Package for transmission:                         │
-│    STP | TLP Header | TLP Data | LCRC | END         │
+│ 4. Package for transmission:                          │
+│    STP | TLP Header | TLP Data | LCRC | END           │
 │                                                       │
-│ Output: 64-bit DLL packet with framing               │
+│ Output: 64-bit DLL packet with framing                │
 └───────────┬───────────────────────────────────────────┘
             │ 64-bit DLL packet
             ▼
@@ -281,47 +281,47 @@ Application Layer
 │                                                       │
 │ TX Packetizer FSM:                                    │
 │                                                       │
-│ 1. Receive 64-bit word                               │
+│ 1. Receive 64-bit word                                │
 │                                                       │
-│ 2. Break into 8-bit symbols (8 symbols per word)     │
+│ 2. Break into 8-bit symbols (8 symbols per word)      │
 │                                                       │
-│ 3. Add K-character framing:                          │
-│    - STP → K27.7 (0xFB)                              │
-│    - SDP → K28.2 (0x5C)                              │
-│    - END → K29.7 (0xFD)                              │
+│ 3. Add K-character framing:                           │
+│    - STP → K27.7 (0xFB)                               │
+│    - SDP → K28.2 (0x5C)                               │
+│    - END → K29.7 (0xFD)                               │
 │                                                       │
-│ 4. Insert SKP ordered sets (every 1180 symbols)      │
+│ 4. Insert SKP ordered sets (every 1180 symbols)       │
 │                                                       │
-│ Output: 8-bit symbols + K-char flag                  │
-│    K27.7 | D0 | D1 | ... | K29.7                     │
+│ Output: 8-bit symbols + K-char flag                   │
+│    K27.7 | D0 | D1 | ... | K29.7                      │
 └───────────┬───────────────────────────────────────────┘
             │ 8-bit PIPE symbols
             ▼
 ┌───────────────────────────────────────────────────────┐
 │ Transceiver Base Layer                                │
 │                                                       │
-│ 1. CDC: sys_clk → tx_clk (AsyncFIFO)                 │
+│ 1. CDC: sys_clk → tx_clk (AsyncFIFO)                  │
 │                                                       │
 │ 2. 8b/10b Encoding:                                   │
-│    - Data symbols → 10-bit codes                     │
-│    - K27.7 → 0x17C (comma character)                 │
-│    - Disparity tracking                              │
+│    - Data symbols → 10-bit codes                      │
+│    - K27.7 → 0x17C (comma character)                  │
+│    - Disparity tracking                               │
 │                                                       │
-│ Output: 20-bit encoded (2 symbols @ 10-bit each)     │
+│ Output: 20-bit encoded (2 symbols @ 10-bit each)      │
 └───────────┬───────────────────────────────────────────┘
             │ 20-bit encoded symbols
             ▼
 ┌───────────────────────────────────────────────────────┐
 │ SERDES Layer (GTX/GTY/ECP5)                           │
 │                                                       │
-│ 1. Parallel to Serial conversion:                    │
-│    20-bit @ 250 MHz → 1-bit @ 5.0 GHz (Gen2)         │
+│ 1. Parallel to Serial conversion:                     │
+│    20-bit @ 250 MHz → 1-bit @ 5.0 GHz (Gen2)          │
 │                                                       │
 │ 2. Differential drive:                                │
-│    - TX+ and TX- outputs                             │
-│    - Voltage swing: 0.8-1.2V                         │
+│    - TX+ and TX- outputs                              │
+│    - Voltage swing: 0.8-1.2V                          │
 │                                                       │
-│ 3. Pre-emphasis/de-emphasis for signal integrity     │
+│ 3. Pre-emphasis/de-emphasis for signal integrity      │
 │                                                       │
 │ Output: Serial differential signal                    │
 └───────────┬───────────────────────────────────────────┘
@@ -341,16 +341,16 @@ Physical PCIe Link (RX+/-)
 ┌───────────────────────────────────────────────────────┐
 │ SERDES Layer (GTX/GTY/ECP5)                           │
 │                                                       │
-│ 1. Clock and Data Recovery (CDR):                    │
-│    - Extract clock from data                         │
-│    - Align to bit boundaries                         │
+│ 1. Clock and Data Recovery (CDR):                     │
+│    - Extract clock from data                          │
+│    - Align to bit boundaries                          │
 │                                                       │
-│ 2. Serial to Parallel conversion:                    │
-│    1-bit @ 5.0 GHz → 20-bit @ 250 MHz (Gen2)         │
+│ 2. Serial to Parallel conversion:                     │
+│    1-bit @ 5.0 GHz → 20-bit @ 250 MHz (Gen2)          │
 │                                                       │
-│ 3. Equalization (DFE, CTLE) for signal integrity     │
+│ 3. Equalization (DFE, CTLE) for signal integrity      │
 │                                                       │
-│ Output: 20-bit parallel symbols                      │
+│ Output: 20-bit parallel symbols                       │
 └───────────┬───────────────────────────────────────────┘
             │ 20-bit encoded symbols
             ▼
@@ -358,14 +358,14 @@ Physical PCIe Link (RX+/-)
 │ Transceiver Base Layer                                │
 │                                                       │
 │ 1. 8b/10b Decoding:                                   │
-│    - 10-bit codes → 8-bit symbols                    │
-│    - Detect K-characters (comma, framing)            │
-│    - Check disparity errors                          │
-│    - Report decode errors                            │
+│    - 10-bit codes → 8-bit symbols                     │
+│    - Detect K-characters (comma, framing)             │
+│    - Check disparity errors                           │
+│    - Report decode errors                             │
 │                                                       │
-│ 2. CDC: rx_clk → sys_clk (AsyncFIFO)                 │
+│ 2. CDC: rx_clk → sys_clk (AsyncFIFO)                  │
 │                                                       │
-│ Output: 8-bit symbols + K-char flag                  │
+│ Output: 8-bit symbols + K-char flag                   │
 └───────────┬───────────────────────────────────────────┘
             │ 8-bit PIPE symbols
             ▼
@@ -374,20 +374,20 @@ Physical PCIe Link (RX+/-)
 │                                                       │
 │ RX Depacketizer FSM:                                  │
 │                                                       │
-│ 1. Detect framing K-characters:                      │
-│    - K27.7 (0xFB) → Start of TLP (STP)               │
-│    - K28.2 (0x5C) → Start of Data Packet (SDP)       │
-│    - K29.7 (0xFD) → End of packet (END)              │
+│ 1. Detect framing K-characters:                       │
+│    - K27.7 (0xFB) → Start of TLP (STP)                │
+│    - K28.2 (0x5C) → Start of Data Packet (SDP)        │
+│    - K29.7 (0xFD) → End of packet (END)               │
 │                                                       │
-│ 2. Filter ordered sets:                              │
-│    - Remove SKP ordered sets                         │
-│    - Pass through TS1/TS2 to LTSSM                   │
+│ 2. Filter ordered sets:                               │
+│    - Remove SKP ordered sets                          │
+│    - Pass through TS1/TS2 to LTSSM                    │
 │                                                       │
-│ 3. Accumulate 8 symbols → 64-bit word                │
+│ 3. Accumulate 8 symbols → 64-bit word                 │
 │                                                       │
-│ 4. Detect packet boundaries (STP to END)             │
+│ 4. Detect packet boundaries (STP to END)              │
 │                                                       │
-│ Output: 64-bit DLL packets                           │
+│ Output: 64-bit DLL packets                            │
 └───────────┬───────────────────────────────────────────┘
             │ 64-bit DLL packet
             ▼
@@ -396,45 +396,45 @@ Physical PCIe Link (RX+/-)
 │                                                       │
 │ DLL RX Processing:                                    │
 │                                                       │
-│ 1. Extract LCRC from packet end                      │
+│ 1. Extract LCRC from packet end                       │
 │                                                       │
 │ 2. Verify LCRC:                                       │
-│    - Calculate CRC over header + payload             │
-│    - Compare with received LCRC                      │
+│    - Calculate CRC over header + payload              │
+│    - Compare with received LCRC                       │
 │                                                       │
 │ 3. If LCRC valid:                                     │
-│    - Send ACK DLLP to remote                         │
-│    - Extract sequence number                         │
-│    - Pass TLP to upper layer                         │
+│    - Send ACK DLLP to remote                          │
+│    - Extract sequence number                          │
+│    - Pass TLP to upper layer                          │
 │                                                       │
 │ 4. If LCRC invalid:                                   │
-│    - Send NAK DLLP to remote                         │
-│    - Discard packet                                  │
-│    - Request retransmission                          │
+│    - Send NAK DLLP to remote                          │
+│    - Discard packet                                   │
+│    - Request retransmission                           │
 │                                                       │
-│ Output: 64-bit TLP packet (without LCRC)             │
+│ Output: 64-bit TLP packet (without LCRC)              │
 └───────────┬───────────────────────────────────────────┘
             │ 64-bit TLP packet
             ▼
 ┌───────────────────────────────────────────────────────┐
 │ Transaction Layer (TLP)                               │
 │                                                       │
-│ 1. Parse TLP header:                                 │
-│    - Type: CplD (Completion with Data)               │
-│    - Completer ID: 01:00.0                           │
-│    - Tag: 0x42 (matches outstanding read)            │
-│    - Byte Count: 64 bytes                            │
-│    - Lower Address: 0x00                             │
+│ 1. Parse TLP header:                                  │
+│    - Type: CplD (Completion with Data)                │
+│    - Completer ID: 01:00.0                            │
+│    - Tag: 0x42 (matches outstanding read)             │
+│    - Byte Count: 64 bytes                             │
+│    - Lower Address: 0x00                              │
 │                                                       │
-│ 2. Verify ECRC (if present)                          │
+│ 2. Verify ECRC (if present)                           │
 │                                                       │
-│ 3. Match to outstanding request (by Tag)             │
+│ 3. Match to outstanding request (by Tag)              │
 │                                                       │
-│ 4. Extract completion data                           │
+│ 4. Extract completion data                            │
 │                                                       │
-│ 5. Update flow control credits                       │
+│ 5. Update flow control credits                        │
 │                                                       │
-│ Output: Completion data to application               │
+│ Output: Completion data to application                │
 └───────────┬───────────────────────────────────────────┘
             │ Completion data
             ▼
@@ -452,27 +452,27 @@ The system operates across multiple clock domains with careful CDC (Clock Domain
 ┌──────────────────────────────────────────────────────┐
 │ Clock Domains in LitePCIe                            │
 │                                                      │
-│  ┌──────────────┐                                   │
-│  │   sys_clk    │  User logic clock (e.g., 125 MHz) │
-│  └──────┬───────┘                                   │
+│  ┌──────────────┐                                    │
+│  │   sys_clk    │  User logic clock (e.g., 125 MHz)  │
+│  └──────┬───────┘                                    │
 │         │                                            │
-│         │ Used by: TLP, DLL, PIPE (parallel path)   │
+│         │ Used by: TLP, DLL, PIPE (parallel path)    │
 │         │                                            │
-│  ┌──────▼───────┐                                   │
-│  │  AsyncFIFO   │  CDC boundary                     │
-│  └──────┬───────┘                                   │
+│  ┌──────▼───────┐                                    │
+│  │  AsyncFIFO   │  CDC boundary                      │
+│  └──────┬───────┘                                    │
 │         │                                            │
-│  ┌──────▼───────┐                                   │
-│  │   tx_clk     │  TX transceiver clock (250 MHz)   │
-│  └──────────────┘  (Gen2 - 5.0 Gbps line rate)      │
+│  ┌──────▼───────┐                                    │
+│  │   tx_clk     │  TX transceiver clock (250 MHz)    │
+│  └──────────────┘  (Gen2 - 5.0 Gbps line rate)       │
 │                                                      │
-│  ┌──────────────┐                                   │
-│  │   rx_clk     │  RX recovered clock (250 MHz)     │
-│  └──────┬───────┘  (Recovered by CDR from RX data)  │
+│  ┌──────────────┐                                    │
+│  │   rx_clk     │  RX recovered clock (250 MHz)      │
+│  └──────┬───────┘  (Recovered by CDR from RX data)   │
 │         │                                            │
-│  ┌──────▼───────┐                                   │
-│  │  AsyncFIFO   │  CDC boundary                     │
-│  └──────┬───────┘                                   │
+│  ┌──────▼───────┐                                    │
+│  │  AsyncFIFO   │  CDC boundary                      │
+│  └──────┬───────┘                                    │
 │         │                                            │
 │         ▼                                            │
 │    sys_clk domain                                    │

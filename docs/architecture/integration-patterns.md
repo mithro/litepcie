@@ -32,8 +32,8 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     APPLICATION LAYER                        │
-│                                                               │
+│                     APPLICATION LAYER                       │
+│                                                             │
 │  User logic, DMA engines, memory controllers                │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -42,16 +42,16 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
                        │ Format: Stream endpoint
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                    TRANSACTION LAYER (TLP)                   │
-│                  Location: litepcie/tlp/                     │
-│                                                               │
-│  Interface to Application:                                   │
+│                    TRANSACTION LAYER (TLP)                  │
+│                  Location: litepcie/tlp/                    │
+│                                                             │
+│  Interface to Application:                                  │
 │  • request_sink: Accepts read/write requests                │
 │  • completion_source: Provides completions                  │
-│                                                               │
-│  Interface to DLL:                                            │
+│                                                             │
+│  Interface to DLL:                                          │
 │  • phy.sink: Stream of TLP packets (phy_layout)             │
-│  • phy.source: Stream from DLL                               │
+│  • phy.source: Stream from DLL                              │
 └──────────────────────┬──────────────────────────────────────┘
                        │
                        │ phy_layout(data_width)
@@ -60,18 +60,18 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
                        │ Control: valid, ready, first, last
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                   DATA LINK LAYER (DLL)                      │
-│                  Location: litepcie/dll/                     │
-│                                                               │
-│  Interface to TLP:                                            │
+│                   DATA LINK LAYER (DLL)                     │
+│                  Location: litepcie/dll/                    │
+│                                                             │
+│  Interface to TLP:                                          │
 │  • dll_sink: Receives TLPs to transmit                      │
-│  • dll_source: Provides received TLPs                        │
-│                                                               │
-│  Interface to PIPE:                                           │
+│  • dll_source: Provides received TLPs                       │
+│                                                             │
+│  Interface to PIPE:                                         │
 │  • pipe_sink: 64-bit packets with framing                   │
 │  • pipe_source: 64-bit packets from PHY                     │
-│                                                               │
-│  Control Interface:                                           │
+│                                                             │
+│  Control Interface:                                         │
 │  • ltssm_state: Current training state                      │
 │  • link_up: Link operational status                         │
 │  • send_ts1, send_ts2: Training sequence triggers           │
@@ -82,20 +82,20 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
                        │ Protocol: Valid/ready handshaking
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                     PIPE INTERFACE LAYER                     │
-│                  Location: litepcie/dll/pipe.py              │
-│                                                               │
-│  Interface to DLL:                                            │
+│                     PIPE INTERFACE LAYER                    │
+│                  Location: litepcie/dll/pipe.py             │
+│                                                             │
+│  Interface to DLL:                                          │
 │  • dll_tx_sink: 64-bit packet input                         │
 │  • dll_rx_source: 64-bit packet output                      │
-│                                                               │
-│  Interface to PHY (PIPE signals):                            │
-│  • tx_data[7:0], tx_datak: 8-bit symbols to PHY            │
-│  • rx_data[7:0], rx_datak: 8-bit symbols from PHY          │
-│  • tx_elecidle, rx_elecidle: Electrical idle control       │
+│                                                             │
+│  Interface to PHY (PIPE signals):                           │
+│  • tx_data[7:0], tx_datak: 8-bit symbols to PHY             │
+│  • rx_data[7:0], rx_datak: 8-bit symbols from PHY           │
+│  • tx_elecidle, rx_elecidle: Electrical idle control        │
 │  • rx_valid: Symbol validity flag                           │
-│                                                               │
-│  Status:                                                      │
+│                                                             │
+│  Status:                                                    │
 │  • ts1_detected, ts2_detected: Training seq detection       │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -104,20 +104,20 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
                        │ Protocol: Intel PIPE 3.0 subset
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                    TRANSCEIVER BASE LAYER                    │
-│            Location: litepcie/phy/transceiver_base/          │
-│                                                               │
-│  Interface to PIPE:                                           │
-│  • tx_data[15:0], tx_datak[1:0]: PIPE input (2 bytes)      │
+│                    TRANSCEIVER BASE LAYER                   │
+│            Location: litepcie/phy/transceiver_base/         │
+│                                                             │
+│  Interface to PIPE:                                         │
+│  • tx_data[15:0], tx_datak[1:0]: PIPE input (2 bytes)       │
 │  • rx_data[15:0], rx_datak[1:0]: PIPE output                │
-│                                                               │
-│  Interface to SERDES:                                         │
+│                                                             │
+│  Interface to SERDES:                                       │
 │  • 20-bit encoded symbols (10 bits per byte)                │
-│  • Internal primitive ports (vendor-specific)                │
-│                                                               │
-│  Control/Status:                                              │
+│  • Internal primitive ports (vendor-specific)               │
+│                                                             │
+│  Control/Status:                                            │
 │  • tx_ready, rx_ready: Operational status                   │
-│  • reset: Reset request                                      │
+│  • reset: Reset request                                     │
 │  • speed[1:0]: Gen1/Gen2/Gen3 selection                     │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -126,11 +126,11 @@ Each layer in the PCIe stack presents a well-defined interface to adjacent layer
                        │ Clocks: tx_clk, rx_clk
                        │
 ┌──────────────────────▼──────────────────────────────────────┐
-│                    SERDES/TRANSCEIVER LAYER                  │
-│   Location: litepcie/phy/xilinx/, litepcie/phy/lattice/      │
-│                                                               │
-│  Vendor primitives: GTX, GTY, ECP5 DCUA                      │
-│  Functions: Serialization, CDR, equalization                 │
+│                    SERDES/TRANSCEIVER LAYER                 │
+│   Location: litepcie/phy/xilinx/, litepcie/phy/lattice/     │
+│                                                             │
+│  Vendor primitives: GTX, GTY, ECP5 DCUA                     │
+│  Functions: Serialization, CDR, equalization                │
 │  Output: Differential serial (TX+/-, RX+/-)                 │
 └──────────────────────┬──────────────────────────────────────┘
                        │
@@ -183,28 +183,28 @@ Format: request_layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   TLP Packetizer                             │
-│                                                               │
+│                   TLP Packetizer                            │
+│                                                             │
 │ Input: Application write request                            │
-│ Processing:                                                   │
+│ Processing:                                                 │
 │   1. Determine TLP type: MWr64 (64-bit addressing)          │
-│      fmt:type = 11:00000                                     │
-│                                                               │
+│      fmt:type = 11:00000                                    │
+│                                                             │
 │   2. Build TLP header (4DW for 64-bit addressing):          │
 │      DW0: fmt=11, type=00000, length=16                     │
 │      DW1: requester_id=00:00.0, tag=32, BE=0xF              │
 │      DW2: address[63:32] = 0x1000                           │
 │      DW3: address[31:2]  = 0x0000, reserved                 │
-│                                                               │
+│                                                             │
 │   3. Calculate ECRC (if enabled): CRC-32 over header+data   │
-│                                                               │
-│   4. Format into phy_layout stream:                          │
+│                                                             │
+│   4. Format into phy_layout stream:                         │
 │      Beat 0: {DW1, DW0} = 64 bits                           │
 │      Beat 1: {DW3, DW2} = 64 bits                           │
 │      Beat 2: {Data[1], Data[0]} = 64 bits                   │
-│      ...                                                     │
+│      ...                                                    │
 │      Beat 9: {Data[15], Data[14]} = 64 bits (last)          │
-│                                                               │
+│                                                             │
 │ Output: TLP packet on phy.sink                              │
 │   Total: 4 DW header + 16 DW data = 20 DW = 10 beats @64b   │
 └─────────────────────────────────────────────────────────────┘
@@ -214,30 +214,30 @@ Format: request_layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DLL TX Path                               │
-│                                                               │
+│                    DLL TX Path                              │
+│                                                             │
 │ Input: TLP packet (4 DW header + 16 DW data)                │
-│                                                               │
+│                                                             │
 │ Step 1: Assign Sequence Number                              │
 │   • tx_seq_counter = 0x042                                  │
 │   • Sequence number: 0x042 (12-bit)                         │
 │   • tx_seq_counter++ (now 0x043)                            │
-│                                                               │
+│                                                             │
 │ Step 2: Calculate LCRC (Link CRC)                           │
 │   • Input: TLP header + TLP data (20 DW)                    │
 │   • Algorithm: CRC-32 (polynomial 0x04C11DB7)               │
 │   • Result: LCRC = 0xABCD1234                               │
-│                                                               │
+│                                                             │
 │ Step 3: Store in Retry Buffer                               │
 │   • Buffer[0x042] = {seq=0x042, tlp_data=20DW, lcrc}        │
-│   • Status: Awaiting ACK                                     │
-│   • Timeout: 50μs (if no ACK, replay from buffer)          │
-│                                                               │
+│   • Status: Awaiting ACK                                    │
+│   • Timeout: 50μs (if no ACK, replay from buffer)           │
+│                                                             │
 │ Step 4: Frame for PIPE Layer                                │
-│   • Packet structure:                                        │
-│     STP | Seq[11:0] | TLP[0] | ... | TLP[19] | LCRC | END  │
+│   • Packet structure:                                       │
+│     STP | Seq[11:0] | TLP[0] | ... | TLP[19] | LCRC | END   │
 │   • Total: 1 + 20 + 1 + 1 = 23 QW (64-bit words)            │
-│                                                               │
+│                                                             │
 │ Output: 64-bit framed packet to PIPE layer                  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -246,37 +246,37 @@ Format: request_layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    PIPE TX Packetizer                        │
-│                                                               │
+│                    PIPE TX Packetizer                       │
+│                                                             │
 │ Input: 64-bit DLL packet (23 QW)                            │
-│                                                               │
+│                                                             │
 │ Symbol-by-Symbol Transmission:                              │
-│                                                               │
+│                                                             │
 │ Symbol 0: STP (K27.7 = 0xFB)                                │
 │   tx_data = 0xFB, tx_datak = 1                              │
-│   Marks start of TLP                                         │
-│                                                               │
+│   Marks start of TLP                                        │
+│                                                             │
 │ Symbols 1-184: Data bytes                                   │
 │   • 23 QW × 8 bytes/QW = 184 data bytes                     │
 │   • Each symbol: tx_datak = 0 (data)                        │
 │   • Byte order: Little-endian (LSB first)                   │
-│                                                               │
-│   Example symbols:                                           │
+│                                                             │
+│   Example symbols:                                          │
 │   Symbol 1: dat[7:0]   = Seq[7:0]                           │
 │   Symbol 2: dat[15:8]  = Seq[11:8]                          │
 │   Symbol 3: dat[23:16] = TLP DW0[7:0]                       │
-│   ...                                                        │
+│   ...                                                       │
 │   Symbol 184: LCRC[31:24] (last data byte)                  │
-│                                                               │
+│                                                             │
 │ Symbol 185: END (K29.7 = 0xFD)                              │
 │   tx_data = 0xFD, tx_datak = 1                              │
-│   Marks end of packet                                        │
-│                                                               │
+│   Marks end of packet                                       │
+│                                                             │
 │ SKP Insertion (every 1180 symbols):                         │
 │   • Periodically insert: COM + 3×SKP                        │
 │   • Frequency: ~Every 6 packets                             │
 │   • Purpose: Clock compensation between TX and RX           │
-│                                                               │
+│                                                             │
 │ Output: 8-bit symbol stream to transceiver                  │
 │   Total: 186 symbols (1 STP + 184 data + 1 END)             │
 └─────────────────────────────────────────────────────────────┘
@@ -286,41 +286,41 @@ Format: request_layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  TX Datapath (sys → tx)                      │
-│                                                               │
+│                  TX Datapath (sys → tx)                     │
+│                                                             │
 │ Input: 8-bit PIPE symbols from PIPE layer (sys_clk domain)  │
-│                                                               │
+│                                                             │
 │ Step 1: Clock Domain Crossing (CDC)                         │
-│   Clock: sys_clk (125 MHz) → tx_clk (250 MHz Gen2)         │
-│   Mechanism: AsyncFIFO (depth=8)                             │
-│   Latency: ~2-4 cycles                                       │
-│                                                               │
+│   Clock: sys_clk (125 MHz) → tx_clk (250 MHz Gen2)          │
+│   Mechanism: AsyncFIFO (depth=8)                            │
+│   Latency: ~2-4 cycles                                      │
+│                                                             │
 │ Step 2: 8b/10b Encoding (in tx_clk domain)                  │
-│   For each 8-bit symbol:                                     │
-│                                                               │
+│   For each 8-bit symbol:                                    │
+│                                                             │
 │   STP (K27.7 = 0xFB):                                       │
-│     Input: data=0xFB, k=1                                    │
+│     Input: data=0xFB, k=1                                   │
 │     Output: 10b code = 0b110_1101_000 (RD-)                 │
 │             or       = 0b001_0010_111 (RD+)                 │
-│     Running disparity updated                                │
-│                                                               │
+│     Running disparity updated                               │
+│                                                             │
 │   Data byte (e.g., 0x42):                                   │
-│     Input: data=0x42, k=0                                    │
+│     Input: data=0x42, k=0                                   │
 │     Split: EDCBA=00010 (D2), HGF=010 (x.2)                  │
-│     Encode: 5b/6b(D2)=100010, 3b/4b(x.2)=0101              │
+│     Encode: 5b/6b(D2)=100010, 3b/4b(x.2)=0101               │
 │     Output: 10b code = 0b010110_0010                        │
-│     Running disparity updated                                │
-│                                                               │
+│     Running disparity updated                               │
+│                                                             │
 │   END (K29.7 = 0xFD):                                       │
-│     Input: data=0xFD, k=1                                    │
+│     Input: data=0xFD, k=1                                   │
 │     Output: 10b code = 0b101_1101_000 (RD-)                 │
 │             or       = 0b010_0010_111 (RD+)                 │
-│                                                               │
+│                                                             │
 │ Step 3: Output to SERDES                                    │
 │   • Width: 20 bits (2 symbols × 10 bits each)               │
 │   • Format: {symbol[1][9:0], symbol[0][9:0]}                │
 │   • Rate: 250 MHz word clock (Gen2)                         │
-│                                                               │
+│                                                             │
 │ Output: 20-bit encoded symbols to GTX/GTY/ECP5              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -329,34 +329,34 @@ Format: request_layout
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│              Xilinx GTX/GTY or ECP5 SERDES                   │
-│                                                               │
+│              Xilinx GTX/GTY or ECP5 SERDES                  │
+│                                                             │
 │ Input: 20-bit encoded symbols @ 250 MHz (Gen2)              │
-│                                                               │
-│ TX Serializer Operation:                                     │
+│                                                             │
+│ TX Serializer Operation:                                    │
 │   Clock: 250 MHz word clock → 5.0 GHz bit clock             │
 │   Ratio: 20:1 (20 bits serialized per word clock)           │
-│                                                               │
-│   Example serialization:                                     │
+│                                                             │
+│   Example serialization:                                    │
 │   Input word: 0b01011_00010_10110_1101                      │
-│                                                               │
+│                                                             │
 │   Bit 0:  1  ──┐                                            │
 │   Bit 1:  0    │                                            │
 │   Bit 2:  1    │                                            │
 │   ...          │ Serialized at 5.0 Gb/s                     │
 │   Bit 19: 0  ──┘                                            │
-│                                                               │
-│ Output Driver:                                               │
+│                                                             │
+│ Output Driver:                                              │
 │   • Differential signaling: TX+, TX-                        │
 │   • Voltage swing: 0.8-1.2V (PCIe compliant)                │
 │   • Pre-emphasis: Configured for trace length               │
 │   • De-emphasis: -3.5 dB for Gen2                           │
-│                                                               │
-│ Physical Layer Functions:                                    │
+│                                                             │
+│ Physical Layer Functions:                                   │
 │   • DC balance maintenance (via 8b/10b)                     │
-│   • Transmit equalization                                    │
+│   • Transmit equalization                                   │
 │   • Output impedance: 50Ω differential                      │
-│                                                               │
+│                                                             │
 │ Output: Serial differential signal on PCIe lanes            │
 │   Line rate: 5.0 Gb/s (Gen2)                                │
 │   Effective data rate: 4.0 Gb/s (after 8b/10b overhead)     │
@@ -391,33 +391,33 @@ Serial bit stream arriving on RX+/RX-:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    RX Deserializer                           │
-│                                                               │
+│                    RX Deserializer                          │
+│                                                             │
 │ Input: Serial differential signal (RX+, RX-)                │
-│                                                               │
+│                                                             │
 │ Clock and Data Recovery (CDR):                              │
 │   • Extract clock from data transitions                     │
 │   • Lock to incoming bit stream                             │
 │   • Frequency: 5.0 GHz ± 300 ppm                            │
 │   • Output: rx_clk @ 250 MHz                                │
-│                                                               │
+│                                                             │
 │ Serial to Parallel Conversion:                              │
 │   1-bit @ 5.0 GHz → 20-bit @ 250 MHz                        │
-│                                                               │
-│   Bit sampling:                                              │
+│                                                             │
+│   Bit sampling:                                             │
 │   Bit 0:  1  ─┐                                             │
 │   Bit 1:  1   │                                             │
 │   Bit 2:  0   │ Accumulated into                            │
 │   ...         │ 20-bit word                                 │
 │   Bit 19: 1  ─┘                                             │
-│                                                               │
+│                                                             │
 │   Result: 20-bit word = 0b1...1                             │
-│                                                               │
-│ Equalization:                                                │
+│                                                             │
+│ Equalization:                                               │
 │   • DFE (Decision Feedback Equalization): 3-tap             │
 │   • CTLE (Continuous Time Linear Equalization)              │
 │   • Compensates for ISI (Inter-Symbol Interference)         │
-│                                                               │
+│                                                             │
 │ Output: 20-bit parallel words @ 250 MHz to transceiver base │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -426,40 +426,40 @@ Serial bit stream arriving on RX+/RX-:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                  RX Datapath (rx → sys)                      │
-│                                                               │
+│                  RX Datapath (rx → sys)                     │
+│                                                             │
 │ Input: 20-bit encoded symbols @ 250 MHz (rx_clk domain)     │
-│                                                               │
+│                                                             │
 │ Step 1: 8b/10b Decoding (in rx_clk domain)                  │
-│   For each 10-bit code:                                      │
-│                                                               │
+│   For each 10-bit code:                                     │
+│                                                             │
 │   K27.7 (STP) detection:                                    │
 │     Input: 10b = 0b001_0010_111 (RD+ variant)               │
 │     Decode: Recognize as K27.7 comma character              │
 │     Output: data=0xFB, datak=1                              │
-│     Update running disparity                                 │
-│                                                               │
-│   Data symbol decode:                                        │
+│     Update running disparity                                │
+│                                                             │
+│   Data symbol decode:                                       │
 │     Input: 10b = 0b010110_0010                              │
-│     Decode: 6b(100010)→5b(00010), 4b(0101)→3b(010)         │
+│     Decode: 6b(100010)→5b(00010), 4b(0101)→3b(010)          │
 │     Output: data=0x42 (EDCBA=00010, HGF=010), datak=0       │
-│                                                               │
-│   Disparity checking:                                        │
-│     • Running disparity tracking                             │
+│                                                             │
+│   Disparity checking:                                       │
+│     • Running disparity tracking                            │
 │     • If disparity error → rx_valid=0                       │
 │     • If valid symbol → rx_valid=1                          │
-│                                                               │
+│                                                             │
 │   K29.7 (END) detection:                                    │
 │     Input: 10b = 0b010_0010_111                             │
 │     Decode: Recognize as K29.7                              │
 │     Output: data=0xFD, datak=1                              │
-│                                                               │
+│                                                             │
 │ Step 2: Clock Domain Crossing (CDC)                         │
-│   Clock: rx_clk (recovered, 250 MHz) → sys_clk (125 MHz)   │
-│   Mechanism: AsyncFIFO (depth=8)                             │
-│   Latency: ~2-4 cycles                                       │
+│   Clock: rx_clk (recovered, 250 MHz) → sys_clk (125 MHz)    │
+│   Mechanism: AsyncFIFO (depth=8)                            │
+│   Latency: ~2-4 cycles                                      │
 │   Safety: Handles PPM drift between TX and RX clocks        │
-│                                                               │
+│                                                             │
 │ Output: 8-bit PIPE symbols to PIPE layer (sys_clk domain)   │
 │   rx_data[7:0], rx_datak, rx_valid                          │
 └─────────────────────────────────────────────────────────────┘
@@ -469,49 +469,49 @@ Serial bit stream arriving on RX+/RX-:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    PIPE RX Depacketizer                      │
-│                                                               │
+│                    PIPE RX Depacketizer                     │
+│                                                             │
 │ Input: 8-bit symbol stream from transceiver                 │
-│                                                               │
+│                                                             │
 │ Symbol-by-Symbol Reception:                                 │
-│                                                               │
+│                                                             │
 │ Symbol 0: Detect STP (0xFB, k=1)                            │
 │   • FSM: IDLE → DATA                                        │
-│   • Reset byte counter = 0                                   │
-│   • Clear data buffer                                        │
+│   • Reset byte counter = 0                                  │
+│   • Clear data buffer                                       │
 │   • is_tlp = 1 (STP indicates TLP)                          │
-│                                                               │
+│                                                             │
 │ Symbols 1-N: Accumulate data bytes                          │
-│   While rx_datak = 0:                                        │
-│     data_buffer[byte_counter] = rx_data                      │
-│     byte_counter++                                           │
-│                                                               │
-│   Example accumulation:                                      │
+│   While rx_datak = 0:                                       │
+│     data_buffer[byte_counter] = rx_data                     │
+│     byte_counter++                                          │
+│                                                             │
+│   Example accumulation:                                     │
 │   Symbol 1: buffer[0] = completion DW0[7:0]                 │
 │   Symbol 2: buffer[1] = completion DW0[15:8]                │
-│   ...                                                        │
+│   ...                                                       │
 │   Symbol 8: buffer[7] = completion DW1[31:24]               │
-│   (First 64-bit word complete)                               │
-│                                                               │
+│   (First 64-bit word complete)                              │
+│                                                             │
 │   Symbol 9-16: Second 64-bit word                           │
-│   Symbol 17-24: Third 64-bit word (data starts)            │
-│   ...                                                        │
-│                                                               │
-│ SKP Filtering:                                               │
+│   Symbol 17-24: Third 64-bit word (data starts)             │
+│   ...                                                       │
+│                                                             │
+│ SKP Filtering:                                              │
 │   If COM (0xBC) detected:                                   │
 │     Check next 3 symbols for SKP (0x1C)                     │
 │     If valid SKP ordered set: Filter out, don't forward     │
-│     Resume data accumulation                                 │
-│                                                               │
+│     Resume data accumulation                                │
+│                                                             │
 │ Symbol N: Detect END (0xFD, k=1)                            │
 │   • FSM: DATA → IDLE                                        │
 │   • Package accumulated buffer into 64-bit words            │
-│   • Output packet:                                           │
+│   • Output packet:                                          │
 │     - dll_rx_source.valid = 1                               │
 │     - dll_rx_source.first = 1                               │
 │     - dll_rx_source.last = 1                                │
 │     - dll_rx_source.dat = accumulated data                  │
-│                                                               │
+│                                                             │
 │ Output: 64-bit DLL packets                                  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -520,45 +520,45 @@ Serial bit stream arriving on RX+/RX-:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    DLL RX Path                               │
-│                                                               │
+│                    DLL RX Path                              │
+│                                                             │
 │ Input: 64-bit framed packet from PIPE layer                 │
-│                                                               │
+│                                                             │
 │ Step 1: Extract Components                                  │
-│   • Sequence number: Extract from packet header            │
+│   • Sequence number: Extract from packet header             │
 │   • TLP payload: Extract TLP data                           │
 │   • LCRC: Extract last 4 bytes                              │
-│                                                               │
+│                                                             │
 │ Step 2: Verify LCRC                                         │
 │   • Calculate CRC-32 over TLP payload                       │
-│   • Compare with received LCRC                               │
-│   • If mismatch:                                             │
+│   • Compare with received LCRC                              │
+│   • If mismatch:                                            │
 │     - Generate NAK DLLP with last good seq number           │
-│     - Discard packet                                         │
-│     - Wait for retransmission                                │
-│   • If match:                                                │
-│     - Continue to sequence check                             │
-│                                                               │
+│     - Discard packet                                        │
+│     - Wait for retransmission                               │
+│   • If match:                                               │
+│     - Continue to sequence check                            │
+│                                                             │
 │ Step 3: Check Sequence Number                               │
 │   • Expected: rx_seq_expected = 0x100                       │
 │   • Received: rx_seq_received = 0x100                       │
-│   • Comparison: MATCH                                        │
-│   • Action: Accept packet                                    │
+│   • Comparison: MATCH                                       │
+│   • Action: Accept packet                                   │
 │   • Update: rx_seq_expected = 0x101                         │
-│                                                               │
+│                                                             │
 │ Step 4: Generate ACK DLLP                                   │
-│   • ACK DLLP format:                                         │
-│     Type: 0x0 (ACK)                                          │
+│   • ACK DLLP format:                                        │
+│     Type: 0x0 (ACK)                                         │
 │     Seq: 0x100 (acknowledging this sequence)                │
 │     CRC-16: Calculate over DLLP                             │
 │   • Send ACK to remote transmitter                          │
-│                                                               │
+│                                                             │
 │ Step 5: Forward TLP to TLP Layer                            │
-│   • Remove DLL framing                                       │
+│   • Remove DLL framing                                      │
 │   • Extract pure TLP (header + data)                        │
 │   • Present on dll_source endpoint                          │
-│                                                               │
-│ Output: Clean TLP to TLP layer (no LCRC, no seq number)    │
+│                                                             │
+│ Output: Clean TLP to TLP layer (no LCRC, no seq number)     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -566,52 +566,52 @@ Serial bit stream arriving on RX+/RX-:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   TLP Depacketizer                           │
-│                                                               │
+│                   TLP Depacketizer                          │
+│                                                             │
 │ Input: TLP packet from DLL (phy.source)                     │
-│                                                               │
+│                                                             │
 │ Step 1: Parse TLP Header                                    │
-│   Extract DW0:                                               │
+│   Extract DW0:                                              │
 │     fmt = 10 (3DW header with data)                         │
 │     type = 01010 (Completion with Data - CplD)              │
 │     length = 16 DW (64 bytes)                               │
-│                                                               │
-│   Extract DW1:                                               │
+│                                                             │
+│   Extract DW1:                                              │
 │     completer_id = 01:00.0                                  │
 │     status = 000 (Successful Completion)                    │
 │     byte_count = 64 (total bytes in completion)             │
-│                                                               │
-│   Extract DW2:                                               │
+│                                                             │
+│   Extract DW2:                                              │
 │     requester_id = 00:00.0 (us)                             │
-│     tag = 0x05                                               │
-│     lower_addr = 0x00                                        │
-│                                                               │
+│     tag = 0x05                                              │
+│     lower_addr = 0x00                                       │
+│                                                             │
 │ Step 2: Route by Tag                                        │
 │   • Tag 0x05 identifies the original request                │
-│   • TLP Controller lookup:                                   │
+│   • TLP Controller lookup:                                  │
 │     req_queue[0x05] = {channel=2, user_id=0x42}             │
 │   • Route completion to buffer[0x05]                        │
-│                                                               │
+│                                                             │
 │ Step 3: Extract Completion Data                             │
 │   • Data payload: 16 DW (64 bytes)                          │
-│   • Store in completion buffer                               │
-│                                                               │
+│   • Store in completion buffer                              │
+│                                                             │
 │ Step 4: Check Completion Status                             │
 │   • Is this the last completion for tag 0x05?               │
-│   • Check byte_count: 64 bytes total, 64 bytes this packet │
+│   • Check byte_count: 64 bytes total, 64 bytes this packet  │
 │   • Result: Yes, this is the final completion               │
-│                                                               │
+│                                                             │
 │ Step 5: Forward to Application                              │
 │   • completion_source.valid = 1                             │
 │   • completion_source.tag = 0x05                            │
 │   • completion_source.end = 1 (last completion)             │
 │   • completion_source.dat = [64 bytes]                      │
-│                                                               │
+│                                                             │
 │ Step 6: Return Tag to Pool                                  │
 │   • Mark tag 0x05 as available                              │
 │   • Can be reused for next read request                     │
 │   • Pop req_queue entry for tag 0x05                        │
-│                                                               │
+│                                                             │
 │ Output: Completion data to application                      │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -639,76 +639,76 @@ LitePCIe operates across multiple clock domains with carefully managed CDC (Cloc
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     Clock Domain Map                         │
-│                                                               │
+│                     Clock Domain Map                        │
+│                                                             │
 │  ┌────────────────────────────────────────────────────┐     │
-│  │  sys_clk Domain (User-defined, e.g., 125 MHz)     │     │
-│  │  ══════════════════════════════════════════════     │     │
-│  │                                                     │     │
-│  │  Components:                                        │     │
-│  │  • Application logic                                │     │
+│  │  sys_clk Domain (User-defined, e.g., 125 MHz)      │     │
+│  │  ══════════════════════════════════════════════    │     │
+│  │                                                    │     │
+│  │  Components:                                       │     │
+│  │  • Application logic                               │     │
 │  │  • TLP layer (packetizer, depacketizer)            │     │
-│  │  • Endpoint logic                                   │     │
-│  │  • DMA engines                                      │     │
+│  │  • Endpoint logic                                  │     │
+│  │  • DMA engines                                     │     │
 │  │  • PHYTXDatapath write side                        │     │
 │  │  • PHYRXDatapath read side                         │     │
-│  │                                                     │     │
+│  │                                                    │     │
 │  │  Source: Platform PLL (user-configured)            │     │
-│  └─────────────────────────┬───────────────────────────┘     │
-│                            │                                  │
-│                            │ AsyncFIFO CDC                    │
-│                            │ (PHYTXDatapath / PHYRXDatapath)  │
-│                            │                                  │
-│  ┌─────────────────────────▼───────────────────────────┐     │
-│  │  pcie_clk Domain (125 MHz Gen1, 250 MHz Gen2)      │     │
-│  │  ═══════════════════════════════════════════════     │     │
-│  │                                                     │     │
-│  │  Components:                                        │     │
-│  │  • DLL TX (LCRC, sequencing, retry buffer)         │     │
-│  │  • DLL RX (LCRC check, ACK/NAK)                    │     │
-│  │  • DLLP processing                                  │     │
-│  │  • LTSSM (link training state machine)             │     │
-│  │  • PIPE interface (packetizer, depacketizer)       │     │
-│  │  • Layout converters                                │     │
-│  │  • PHYTXDatapath read side                         │     │
-│  │  • PHYRXDatapath write side                        │     │
-│  │  • Transceiver TX datapath write side              │     │
-│  │  • Transceiver RX datapath read side               │     │
-│  │                                                     │     │
-│  │  Source (Phase 3-8): External PHY PCLK output      │     │
-│  │  Source (Phase 9): Derived from tx_clk (TXOUTCLK)  │     │
-│  └─────────────────────────┬───────────────────────────┘     │
-│                            │                                  │
-│                            │ AsyncFIFO CDC                    │
-│                            │ (TransceiverTXDatapath /         │
-│                            │  TransceiverRXDatapath)          │
-│                            │ [Phase 9 only]                   │
-│                            │                                  │
-│  ┌─────────────────────────▼───────────────────────────┐     │
-│  │  tx_clk Domain (125 MHz Gen1, 250 MHz Gen2)        │     │
-│  │  ═══════════════════════════════════════════        │     │
-│  │  [Phase 9 only - Internal transceivers]            │     │
-│  │                                                     │     │
-│  │  Components:                                        │     │
-│  │  • 8b/10b encoder (software)                       │     │
-│  │  • Transceiver TX datapath read side               │     │
-│  │  • GTX/GTY/ECP5 TX primitive                       │     │
-│  │                                                     │     │
-│  │  Source: Transceiver TXOUTCLK                      │     │
-│  └─────────────────────────────────────────────────────┘     │
-│                                                               │
-│  ┌─────────────────────────────────────────────────────┐     │
-│  │  rx_clk Domain (Recovered, 125/250 MHz ± PPM)      │     │
-│  │  ═════════════════════════════════════════════       │     │
-│  │  [Phase 9 only - Internal transceivers]            │     │
-│  │                                                     │     │
-│  │  Components:                                        │     │
-│  │  • GTX/GTY/ECP5 RX primitive                       │     │
-│  │  • 8b/10b decoder (software)                       │     │
-│  │  • Transceiver RX datapath write side              │     │
-│  │                                                     │     │
-│  │  Source: Transceiver RXOUTCLK (CDR recovered)      │     │
-│  └─────────────────────────────────────────────────────┘     │
+│  └─────────────────────────┬───────────────────────────┘    │
+│                            │                                │
+│                            │ AsyncFIFO CDC                  │
+│                            │ (PHYTXDatapath / PHYRXDatapath)│
+│                            │                                │
+│  ┌─────────────────────────▼───────────────────────────┐    │
+│  │  pcie_clk Domain (125 MHz Gen1, 250 MHz Gen2)       │    │
+│  │  ═══════════════════════════════════════════════    │    │
+│  │                                                     │    │
+│  │  Components:                                        │    │
+│  │  • DLL TX (LCRC, sequencing, retry buffer)          │    │
+│  │  • DLL RX (LCRC check, ACK/NAK)                     │    │
+│  │  • DLLP processing                                  │    │
+│  │  • LTSSM (link training state machine)              │    │
+│  │  • PIPE interface (packetizer, depacketizer)        │    │
+│  │  • Layout converters                                │    │
+│  │  • PHYTXDatapath read side                          │    │
+│  │  • PHYRXDatapath write side                         │    │
+│  │  • Transceiver TX datapath write side               │    │
+│  │  • Transceiver RX datapath read side                │    │
+│  │                                                     │    │
+│  │  Source (Phase 3-8): External PHY PCLK output       │    │
+│  │  Source (Phase 9): Derived from tx_clk (TXOUTCLK)   │    │
+│  └─────────────────────────┬───────────────────────────┘    │
+│                            │                                │
+│                            │ AsyncFIFO CDC                  │
+│                            │ (TransceiverTXDatapath /       │
+│                            │  TransceiverRXDatapath)        │
+│                            │ [Phase 9 only]                 │
+│                            │                                │
+│  ┌─────────────────────────▼───────────────────────────┐    │
+│  │  tx_clk Domain (125 MHz Gen1, 250 MHz Gen2)         │    │
+│  │  ═══════════════════════════════════════════        │    │
+│  │  [Phase 9 only - Internal transceivers]             │    │
+│  │                                                     │    │
+│  │  Components:                                        │    │
+│  │  • 8b/10b encoder (software)                        │    │
+│  │  • Transceiver TX datapath read side                │    │
+│  │  • GTX/GTY/ECP5 TX primitive                        │    │
+│  │                                                     │    │
+│  │  Source: Transceiver TXOUTCLK                       │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  rx_clk Domain (Recovered, 125/250 MHz ± PPM)       │    │
+│  │  ═════════════════════════════════════════════      │    │
+│  │  [Phase 9 only - Internal transceivers]             │    │
+│  │                                                     │    │
+│  │  Components:                                        │    │
+│  │  • GTX/GTY/ECP5 RX primitive                        │    │
+│  │  • 8b/10b decoder (software)                        │    │
+│  │  • Transceiver RX datapath write side               │    │
+│  │                                                     │    │
+│  │  Source: Transceiver RXOUTCLK (CDR recovered)       │    │
+│  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -730,58 +730,58 @@ Location: PHYTXDatapath / PHYRXDatapath
 Files: litepcie/phy/common.py
 
 ┌─────────────────────────────────────────────────────────────┐
-│                     PHYTXDatapath                            │
-│                                                               │
+│                     PHYTXDatapath                           │
+│                                                             │
 │  sys_clk Domain              pcie_clk Domain                │
-│  ┌──────────────┐            ┌──────────────┐              │
-│  │  TLP Layer   │            │  DLL Layer   │              │
-│  │  Output      │            │  Input       │              │
-│  └──────┬───────┘            └──────▲───────┘              │
+│  ┌──────────────┐            ┌──────────────┐               │
+│  │  TLP Layer   │            │  DLL Layer   │               │
+│  │  Output      │            │  Input       │               │
+│  └──────┬───────┘            └──────▲───────┘               │
 │         │                           │                       │
 │         │ Write                     │ Read                  │
 │         │                           │                       │
-│  ┌──────▼───────────────────────────┴───────┐              │
-│  │          AsyncFIFO (depth=8)              │              │
-│  │                                            │              │
-│  │  • Layout: phy_layout(data_width)         │              │
-│  │  • Buffered: True                         │              │
-│  │  • Gray code pointers                     │              │
-│  │  • Safe for arbitrary clock relationship  │              │
-│  └────────────────────────────────────────────┘              │
-│                                                               │
-│  Implementation:                                             │
+│  ┌──────▼───────────────────────────┴───────┐               │
+│  │          AsyncFIFO (depth=8)             │               │
+│  │                                          │               │
+│  │  • Layout: phy_layout(data_width)        │               │
+│  │  • Buffered: True                        │               │
+│  │  • Gray code pointers                    │               │
+│  │  • Safe for arbitrary clock relationship │               │
+│  └────────────────────────────────────────────┘             │
+│                                                             │
+│  Implementation:                                            │
 │    self.cdc = stream.AsyncFIFO(...)                         │
 │    self.cdc = ClockDomainsRenamer({                         │
-│        "write": "sys",                                       │
+│        "write": "sys",                                      │
 │        "read":  clock_domain  # "pcie"                      │
-│    })(self.cdc)                                              │
+│    })(self.cdc)                                             │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                     PHYRXDatapath                            │
-│                                                               │
+│                     PHYRXDatapath                           │
+│                                                             │
 │  pcie_clk Domain             sys_clk Domain                 │
-│  ┌──────────────┐            ┌──────────────┐              │
-│  │  DLL Layer   │            │  TLP Layer   │              │
-│  │  Output      │            │  Input       │              │
-│  └──────┬───────┘            └──────▲───────┘              │
+│  ┌──────────────┐            ┌──────────────┐               │
+│  │  DLL Layer   │            │  TLP Layer   │               │
+│  │  Output      │            │  Input       │               │
+│  └──────┬───────┘            └──────▲───────┘               │
 │         │                           │                       │
 │         │ Write                     │ Read                  │
 │         │                           │                       │
-│  ┌──────▼───────────────────────────┴───────┐              │
-│  │          AsyncFIFO (depth=8)              │              │
-│  │                                            │              │
-│  │  • Layout: phy_layout(data_width)         │              │
-│  │  • Buffered: True                         │              │
-│  │  • Gray code pointers                     │              │
-│  └────────────────────────────────────────────┘              │
-│                                                               │
-│  Implementation:                                             │
+│  ┌──────▼───────────────────────────┴───────┐               │
+│  │          AsyncFIFO (depth=8)             │               │
+│  │                                          │               │
+│  │  • Layout: phy_layout(data_width)        │               │
+│  │  • Buffered: True                        │               │
+│  │  • Gray code pointers                    │               │
+│  └────────────────────────────────────────────┘             │
+│                                                             │
+│  Implementation:                                            │
 │    self.cdc = stream.AsyncFIFO(...)                         │
 │    self.cdc = ClockDomainsRenamer({                         │
 │        "write": clock_domain,  # "pcie"                     │
-│        "read":  "sys"                                        │
-│    })(self.cdc)                                              │
+│        "read":  "sys"                                       │
+│    })(self.cdc)                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -792,51 +792,51 @@ Location: TransceiverTXDatapath / TransceiverRXDatapath
 Files: litepcie/phy/transceiver_base/
 
 ┌─────────────────────────────────────────────────────────────┐
-│                TransceiverTXDatapath                         │
-│                                                               │
+│                TransceiverTXDatapath                        │
+│                                                             │
 │  pcie_clk Domain             tx_clk Domain                  │
-│  ┌──────────────┐            ┌──────────────┐              │
-│  │  PIPE Layer  │            │  8b/10b      │              │
-│  │  8-bit syms  │            │  Encoder     │              │
-│  └──────┬───────┘            └──────▲───────┘              │
+│  ┌──────────────┐            ┌──────────────┐               │
+│  │  PIPE Layer  │            │  8b/10b      │               │
+│  │  8-bit syms  │            │  Encoder     │               │
+│  └──────┬───────┘            └──────▲───────┘               │
 │         │                           │                       │
 │         │ Write                     │ Read                  │
 │         │                           │                       │
-│  ┌──────▼───────────────────────────┴───────┐              │
-│  │          AsyncFIFO (depth=8)              │              │
-│  │                                            │              │
-│  │  • Layout: [("data", 8), ("datak", 1)]    │              │
-│  │  • Buffered: True                         │              │
-│  │  • Handles TX clock domain                │              │
-│  └────────────────────────────────────────────┘              │
-│                                                               │
-│  Why needed:                                                 │
+│  ┌──────▼───────────────────────────┴───────┐               │
+│  │          AsyncFIFO (depth=8)             │               │
+│  │                                          │               │
+│  │  • Layout: [("data", 8), ("datak", 1)]   │               │
+│  │  • Buffered: True                        │               │
+│  │  • Handles TX clock domain               │               │
+│  └────────────────────────────────────────────┘             │
+│                                                             │
+│  Why needed:                                                │
 │    • tx_clk is transceiver TXOUTCLK (reference)             │
 │    • pcie_clk derived from tx_clk but may differ in phase   │
 │    • AsyncFIFO provides clean separation                    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
-│                TransceiverRXDatapath                         │
-│                                                               │
+│                TransceiverRXDatapath                        │
+│                                                             │
 │  rx_clk Domain               pcie_clk Domain                │
-│  ┌──────────────┐            ┌──────────────┐              │
-│  │  8b/10b      │            │  PIPE Layer  │              │
-│  │  Decoder     │            │  8-bit syms  │              │
-│  └──────┬───────┘            └──────▲───────┘              │
+│  ┌──────────────┐            ┌──────────────┐               │
+│  │  8b/10b      │            │  PIPE Layer  │               │
+│  │  Decoder     │            │  8-bit syms  │               │
+│  └──────┬───────┘            └──────▲───────┘               │
 │         │                           │                       │
 │         │ Write                     │ Read                  │
 │         │                           │                       │
-│  ┌──────▼───────────────────────────┴───────┐              │
-│  │          AsyncFIFO (depth=8)              │              │
-│  │                                            │              │
-│  │  • Layout: [("data", 8), ("datak", 1),    │              │
-│  │            ("valid", 1)]                   │              │
-│  │  • Buffered: True                         │              │
-│  │  • Critical: Handles PPM drift            │              │
-│  └────────────────────────────────────────────┘              │
-│                                                               │
-│  Why needed:                                                 │
+│  ┌──────▼───────────────────────────┴───────┐               │
+│  │          AsyncFIFO (depth=8)             │               │
+│  │                                          │               │
+│  │  • Layout: [("data", 8), ("datak", 1),   │               │
+│  │            ("valid", 1)]                 │               │
+│  │  • Buffered: True                        │               │
+│  │  • Critical: Handles PPM drift           │               │
+│  └────────────────────────────────────────────┘             │
+│                                                             │
+│  Why needed:                                                │
 │    • rx_clk is CDR recovered from remote transmitter        │
 │    • May have ±300 PPM frequency offset from tx_clk         │
 │    • AsyncFIFO absorbs frequency mismatch                   │
@@ -1141,7 +1141,7 @@ Errors can occur at any layer and must be properly propagated and handled.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   Error Types by Layer                       │
+│                   Error Types by Layer                      │
 └─────────────────────────────────────────────────────────────┘
 
 SERDES Layer Errors:

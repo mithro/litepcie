@@ -186,31 +186,31 @@ The TX packetizer converts 64-bit DLL packets into 8-bit PIPE symbols with K-cha
 ┌──────────────────────┐
 │  PIPETXPacketizer    │
 │  ┌────────────────┐  │
-│  │ IDLE State     │──┐ No packet: output idle
+│  │ IDLE State        │──┐ No packet: output idle
 │  └────────────────┘  │
-│           │           │
+│           │          │
 │  ┌────────▼────────┐ │
 │  │ Detect Packet   │ │ valid & first
 │  │ Type (TLP/DLLP) │ │
 │  └────────┬────────┘ │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ START State    │  │ Send STP (0xFB, K=1) or
 │  │                │  │      SDP (0x5C, K=1)
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ DATA State     │  │ Send 8 bytes:
 │  │  (8 cycles)    │  │  EF CD AB 89 67 45 23 01
 │  │                │  │  (K=0 for all)
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ END State      │  │ Send END (0xFD, K=1)
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
-│  │ IDLE State     │◄─┘
+│  │ IDLE State        │◄─┘
 │  └────────────────┘  │
 └──────────────────────┘
            │
@@ -238,14 +238,14 @@ PIPE Symbol Stream
 ┌──────────────────────┐
 │  PIPERXDepacketizer  │
 │  ┌────────────────┐  │
-│  │ IDLE State     │──┐ Wait for START K-char
+│  │ IDLE State        │──┐ Wait for START K-char
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ Detect START   │  │ STP (0xFB) or SDP (0x5C)
 │  │ (STP or SDP)   │  │ with K=1
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ DATA State     │  │ Accumulate 8 bytes:
 │  │                │  │   [7:0]   ← EF (byte 0)
@@ -253,14 +253,14 @@ PIPE Symbol Stream
 │  │  64-bit buffer │  │   ...
 │  │                │  │   [63:56] ← 01 (byte 7)
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
 │  │ Detect END     │  │ END (0xFD, K=1)
 │  │ Output Packet  │  │
 │  └────────┬───────┘  │
-│           ▼           │
+│           ▼          │
 │  ┌────────────────┐  │
-│  │ IDLE State     │◄─┘
+│  │ IDLE State        │◄─┘
 │  └────────────────┘  │
 └──────────────────────┘
            │

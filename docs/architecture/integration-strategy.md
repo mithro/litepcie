@@ -214,14 +214,14 @@ Our custom PHY wrappers will contain:
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    PIPEPCIePHY (or ECP5PIPEPCIePHY)           │
-│                                                               │
-│  ┌──────────────┐    ┌──────────────┐    ┌───────────────┐  │
-│  │   TX Path    │    │   RX Path    │    │  MSI Handler  │  │
-│  │              │    │              │    │               │  │
-│  │ PHYTXDatapath│    │ PHYRXDatapath│    │   MSI CDC     │  │
-│  │  (CDC+Conv)  │    │  (CDC+Conv)  │    │               │  │
-│  └──────┬───────┘    └──────▲───────┘    └───────────────┘  │
+│                    PIPEPCIePHY (or ECP5PIPEPCIePHY)          │
+│                                                              │
+│  ┌──────────────┐    ┌──────────────┐    ┌───────────────┐   │
+│  │   TX Path    │    │   RX Path    │    │  MSI Handler  │   │
+│  │              │    │              │    │               │   │
+│  │ PHYTXDatapath│    │ PHYRXDatapath│    │   MSI CDC     │   │
+│  │  (CDC+Conv)  │    │  (CDC+Conv)  │    │               │   │
+│  └──────┬───────┘    └──────▲───────┘    └───────────────┘   │
 │         │                   │                                │
 │  ┌──────▼───────────────────┴───────┐                        │
 │  │           DLL Layer              │                        │

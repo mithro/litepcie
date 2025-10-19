@@ -370,7 +370,7 @@ class TestBoxAligner(unittest.TestCase):
         input_text = """\
 ┌─────────┐
 │ Content │
-│ More   │
+│ More    │
 └─────────┘
 """
         expected = """\
@@ -536,10 +536,10 @@ python3 test_fix_ascii_boxes.py
         """Test that nested boxes align independently"""
         input_text = """\
 ┌────────────────┐
-│ Outer Box     │
-│  ┌──────┐     │
-│  │ Inner│     │
-│  └──────┘     │
+│ Outer Box      │
+│  ┌──────┐      │
+│  │ Inner│      │
+│  └──────┘      │
 └────────────────┘
 """
         expected = """\
@@ -577,12 +577,12 @@ python3 test_fix_ascii_boxes.py
         input_text = """\
 First box:
 ┌─────────┐
-│ Box 1  │
+│ Box 1   │
 └─────────┘
 
 Second box:
 ┌───────────────┐
-│ Box 2        │
+│ Box 2         │
 └───────────────┘
 """
         expected = """\
@@ -622,9 +622,9 @@ python3 test_fix_ascii_boxes.py
         """Test complex multi-level nesting"""
         input_text = """\
 ┌──────────────────┐
-│  TLP Layer      │
+│  TLP Layer       │
 │  ┌────────┐  ┌────────┐  │
-│  │ TX     │  │ RX    │  │
+│  │ TX     │      │ RX     │  │
 │  └────────┘  └────────┘  │
 └──────────────────┘
 """
@@ -632,7 +632,7 @@ python3 test_fix_ascii_boxes.py
 ┌──────────────────┐
 │  TLP Layer       │
 │  ┌────────┐  ┌────────┐   │
-│  │ TX     │  │ RX     │   │
+│  │ TX     │      │ RX     │   │
 │  └────────┘  └────────┘   │
 └──────────────────┘
 """
@@ -755,7 +755,7 @@ class TestFileProcessor(unittest.TestCase):
         test_file = os.path.join(self.temp_dir, 'test.md')
         input_text = """\
 ┌─────────┐
-│ Content│
+│ Content │
 └─────────┘
 """
         expected = """\
@@ -1288,7 +1288,7 @@ ASCII box diagrams often have misaligned right borders:
 \`\`\`
 ┌─────────┐
 │ Content │  <- correct
-│ More   │   <- misaligned
+│ More    │   <- misaligned
 └─────────┘
 \`\`\`
 
@@ -1357,7 +1357,7 @@ python3 fix_ascii_boxes.py --help
 ## Box Drawing Characters Supported
 
 - `┌` `┐` `└` `┘` - Corners
-- `│` `─` - Straight lines
+- `    │` `─` - Straight lines
 - `┬` `┴` `├` `┤` `┼` - Junctions (detected but not modified)
 
 ## Examples
@@ -1367,8 +1367,8 @@ python3 fix_ascii_boxes.py --help
 Before:
 \`\`\`
 ┌─────────┐
-│ Content│
-│ More   │
+│ Content │
+│ More │
 └─────────┘
 \`\`\`
 
@@ -1376,7 +1376,7 @@ After:
 \`\`\`
 ┌─────────┐
 │ Content │
-│ More    │
+│ More │
 └─────────┘
 \`\`\`
 
@@ -1385,10 +1385,10 @@ After:
 Before:
 \`\`\`
 ┌────────────────┐
-│ Outer         │
-│  ┌──────┐     │
-│  │ Inner│     │
-│  └──────┘     │
+│ Outer          │
+│  ┌──────┐      │
+│  │ Inner│      │
+│  └──────┘      │
 └────────────────┘
 \`\`\`
 
@@ -1450,18 +1450,18 @@ ls -la ascii-box-fixer/README.md
 ## Simple Box
 
 ┌─────────────┐
-│ Title      │
-│ Content    │
+│ Title       │
+│ Content     │
 └─────────────┘
 
 ## Nested Box
 
 ┌──────────────────────┐
-│ Outer Container     │
+│ Outer Container      │
 │                      │
 │  ┌──────────┐        │
-│  │ Inner   │        │
-│  │ Box     │        │
+│  │ Inner    │        │
+│  │ Box      │        │
 │  └──────────┘        │
 │                      │
 └──────────────────────┘
@@ -1469,11 +1469,11 @@ ls -la ascii-box-fixer/README.md
 ## Multiple Sub-boxes
 
 ┌────────────────────────────┐
-│        Parent Box         │
+│        Parent Box          │
 │                            │
-│  ┌────────┐  ┌────────┐   │
-│  │ Left  │  │ Right │   │
-│  └────────┘  └────────┘   │
+│  ┌────────┐  ┌────────┐    │
+│  │ Left   │  │ Right │     │
+│  └────────┘  └────────┘    │
 └────────────────────────────┘
 \`\`\`
 

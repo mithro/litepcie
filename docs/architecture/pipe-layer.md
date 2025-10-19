@@ -29,7 +29,7 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 ┌────────────────────────────────────────────────────────────┐
 │                 Data Link Layer (DLL)                      │
 │                                                            │
-│  • LCRC generation/checking                               │
+│  • LCRC generation/checking                                │
 │  • ACK/NAK protocol                                        │
 │  • Retry buffer                                            │
 │  • DLLP processing                                         │
@@ -40,12 +40,12 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 ┌────────────────────────────────────────────────────────────┐
 │              PIPE INTERFACE LAYER (THIS LAYER)             │
 │                                                            │
-│  ┌──────────────────┐         ┌──────────────────┐       │
-│  │ TX Packetizer    │         │ RX Depacketizer  │       │
-│  │ 64→8 bit convert │         │ 8→64 bit convert │       │
-│  └──────────────────┘         └──────────────────┘       │
+│  ┌──────────────────┐         ┌──────────────────┐         │
+│  │ TX Packetizer    │         │ RX Depacketizer  │         │
+│  │ 64→8 bit convert │         │ 8→64 bit convert │         │
+│  └──────────────────┘         └──────────────────┘         │
 │                                                            │
-│  Ordered Sets: SKP, TS1, TS2 generation/detection         │
+│  Ordered Sets: SKP, TS1, TS2 generation/detection          │
 └────────────────────┬───────────────────────────────────────┘
                      │ 8-bit PIPE symbols + control
                      │ tx_data[7:0], tx_datak, tx_elecidle
@@ -54,8 +54,8 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 ┌────────────────────────────────────────────────────────────┐
 │                    Physical Layer (PHY)                    │
 │                                                            │
-│  • 8b/10b encoding/decoding                               │
-│  • Serializer/Deserializer                                │
+│  • 8b/10b encoding/decoding                                │
+│  • Serializer/Deserializer                                 │
 │  • Clock recovery (CDR)                                    │
 └────────────────────────────────────────────────────────────┘
 ```
@@ -68,22 +68,22 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                       PIPEInterface                              │
-│                  Location: litepcie/dll/pipe.py                  │
-│                                                                  │
+│                       PIPEInterface                             │
+│                  Location: litepcie/dll/pipe.py                 │
+│                                                                 │
 │  DLL-facing Interface (packet-based, 64-bit)                    │
 │  ════════════════════════════════════════════                   │
-│                                                                  │
+│                                                                 │
 │  dll_tx_sink (input)                dll_rx_source (output)      │
 │    • valid, first, last               • valid, first, last      │
 │    • dat[63:0]                        • dat[63:0]               │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    TX PATH                                  │ │
-│  │                                                             │ │
-│  │   dll_tx_sink                                               │ │
-│  │        │                                                    │ │
-│  │        ▼                                                    │ │
+│  │                    TX PATH                                 │ │
+│  │                                                            │ │
+│  │   dll_tx_sink                                              │ │
+│  │        │                                                   │ │
+│  │        ▼                                                   │ │
 │  │   ┌────────────────────────────────┐                       │ │
 │  │   │   PIPETXPacketizer             │                       │ │
 │  │   │                                │                       │ │
@@ -100,21 +100,21 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  • Generate SKP (1180 symbols) │                       │ │
 │  │   │  • Generate TS1/TS2 on demand  │                       │ │
 │  │   └────────────┬───────────────────┘                       │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   pipe_tx_data[7:0] ──────────────────────►                │ │
-│  │   pipe_tx_datak ───────────────────────────►                │ │
-│  │   pipe_tx_elecidle ────────────────────────►                │ │
+│  │   pipe_tx_datak ───────────────────────────►               │ │
+│  │   pipe_tx_elecidle ────────────────────────►               │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    RX PATH                                  │ │
-│  │                                                             │ │
+│  │                    RX PATH                                 │ │
+│  │                                                            │ │
 │  │   pipe_rx_data[7:0] ◄──────────────────────                │ │
-│  │   pipe_rx_datak ◄───────────────────────────                │ │
-│  │   pipe_rx_valid ◄───────────────────────────                │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │   pipe_rx_datak ◄───────────────────────────               │ │
+│  │   pipe_rx_valid ◄───────────────────────────               │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   ┌────────────────────────────────┐                       │ │
 │  │   │   PIPERXDepacketizer           │                       │ │
 │  │   │                                │                       │ │
@@ -130,23 +130,23 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  • Filter SKP ordered sets     │                       │ │
 │  │   │  • Detect TS1/TS2 patterns     │                       │ │
 │  │   └────────────┬───────────────────┘                       │ │
-│  │                │                                            │ │
-│  │                ▼                                            │ │
+│  │                │                                           │ │
+│  │                ▼                                           │ │
 │  │   dll_rx_source                                            │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  PIPE-facing Interface (8-bit symbols)                          │
 │  ══════════════════════════════════════                         │
-│                                                                  │
+│                                                                 │
 │  TX Signals (MAC → PHY):          RX Signals (PHY → MAC):       │
-│    • tx_data[7:0]                   • rx_data[7:0]             │
-│    • tx_datak                       • rx_datak                 │
-│    • tx_elecidle                    • rx_valid                 │
-│                                     • rx_status[2:0]           │
-│                                     • rx_elecidle              │
-│                                                                  │
+│    • tx_data[7:0]                   • rx_data[7:0]              │
+│    • tx_datak                       • rx_datak                  │
+│    • tx_elecidle                    • rx_valid                  │
+│                                     • rx_status[2:0]            │
+│                                     • rx_elecidle               │
+│                                                                 │
 │  Control Signals (MAC → PHY):                                   │
-│    • powerdown[1:0]  (P0/P0s/P1/P2 states)                     │
+│    • powerdown[1:0]  (P0/P0s/P1/P2 states)                      │
 │    • rate            (Gen1/Gen2 speed)                          │
 │    • rx_polarity     (RX polarity inversion)                    │
 └─────────────────────────────────────────────────────────────────┘
@@ -160,24 +160,24 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     PIPETXPacketizer                             │
-│                                                                  │
+│                     PIPETXPacketizer                            │
+│                                                                 │
 │  INPUT: sink (64-bit DLL packets)                               │
 │    • sink.valid, sink.first, sink.last                          │
 │    • sink.dat[63:0]                                             │
-│                                                                  │
+│                                                                 │
 │  OUTPUT: PIPE TX symbols (8-bit)                                │
 │    • pipe_tx_data[7:0]                                          │
 │    • pipe_tx_datak (K-character indicator)                      │
-│                                                                  │
+│                                                                 │
 │  CONTROL: Ordered set generation                                │
 │    • enable_skp (SKP insertion)                                 │
 │    • enable_training_sequences (TS1/TS2)                        │
 │    • send_ts1, send_ts2 (manual triggers)                       │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                       FSM FLOW                              │ │
-│  │                                                             │ │
+│  │                       FSM FLOW                             │ │
+│  │                                                            │ │
 │  │        ┌──────────────────┐                                │ │
 │  │   ┌───►│   IDLE State     │◄───┐                           │ │
 │  │   │    │                  │    │                           │ │
@@ -206,28 +206,28 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │    │  TS1: D10.2 ID    │   │                           │ │
 │  │   │    │  TS2: D5.2 ID     │   │                           │ │
 │  │   │    └───────────────────┘   │                           │ │
-│  │   │             │               │                           │ │
+│  │   │             │              │                           │ │
 │  │   │    After 16 symbols        │                           │ │
-│  │   │             │               │                           │ │
-│  │   └─────────────┘               │                           │ │
-│  │                                 │                           │ │
-│  │         SKP                     │                           │ │
-│  │          │                      │                           │ │
-│  │     ┌────▼─────────┐            │                           │ │
-│  │     │  SKP State   │            │                           │ │
-│  │     │              │            │                           │ │
-│  │     │  Send 4 sym: │            │                           │ │
-│  │     │  COM, SKP,   │            │                           │ │
-│  │     │  SKP, SKP    │            │                           │ │
-│  │     │  (all K=1)   │            │                           │ │
-│  │     └──────────────┘            │                           │ │
-│  │          │                      │                           │ │
-│  │     After 4 symbols             │                           │ │
-│  │          │                      │                           │ │
-│  │          └──────────────────────┘                           │ │
-│  │                                                             │ │
-│  │                Packet                                       │ │
-│  │                  │                                          │ │
+│  │   │             │              │                           │ │
+│  │   └─────────────┘               │                          │ │
+│  │                                 │                          │ │
+│  │         SKP                     │                          │ │
+│  │          │                      │                          │ │
+│  │     ┌────▼─────────┐            │                          │ │
+│  │     │  SKP State   │            │                          │ │
+│  │     │              │            │                          │ │
+│  │     │  Send 4 sym: │            │                          │ │
+│  │     │  COM, SKP,   │            │                          │ │
+│  │     │  SKP, SKP    │            │                          │ │
+│  │     │  (all K=1)   │            │                          │ │
+│  │     └──────────────┘            │                          │ │
+│  │          │                      │                          │ │
+│  │     After 4 symbols             │                          │ │
+│  │          │                      │                          │ │
+│  │          └──────────────────────┘                          │ │
+│  │                                                            │ │
+│  │                Packet                                      │ │
+│  │                  │                                         │ │
 │  │        ┌─────────▼─────────┐                               │ │
 │  │        │  Packet Type      │                               │ │
 │  │        │  Detection        │                               │ │
@@ -239,23 +239,23 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │        │  (first_byte &    │                               │ │
 │  │        │   0xC0) == 0x00   │                               │ │
 │  │        └─────┬───────┬─────┘                               │ │
-│  │              │       │                                      │ │
+│  │              │       │                                     │ │
 │  │         DLLP │       │ TLP                                 │ │
-│  │              │       │                                      │ │
+│  │              │       │                                     │ │
 │  │        ┌─────▼───────▼─────┐                               │ │
 │  │        │   Send START      │                               │ │
 │  │        │                   │                               │ │
 │  │        │  If is_dllp:      │                               │ │
-│  │        │    tx_data = SDP  │  SDP = 0x5C                  │ │
+│  │        │    tx_data = SDP  │  SDP = 0x5C                   │ │
 │  │        │           (0x5C)  │  K=1                          │ │
 │  │        │  Else:            │                               │ │
-│  │        │    tx_data = STP  │  STP = 0xFB                  │ │
+│  │        │    tx_data = STP  │  STP = 0xFB                   │ │
 │  │        │           (0xFB)  │  K=1                          │ │
 │  │        │  tx_datak = 1     │                               │ │
 │  │        │  byte_counter=0   │                               │ │
 │  │        └─────────┬─────────┘                               │ │
-│  │                  │                                          │ │
-│  │                  ▼                                          │ │
+│  │                  │                                         │ │
+│  │                  ▼                                         │ │
 │  │        ┌──────────────────┐                                │ │
 │  │   ┌───►│   DATA State     │                                │ │
 │  │   │    │                  │                                │ │
@@ -265,29 +265,29 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │    │  tx_data =       │                                │ │
 │  │   │    │   byte_array[    │                                │ │
 │  │   │    │   byte_counter]  │                                │ │
-│  │   │    │  tx_datak = 0    │  Data byte (not K-char)       │ │
+│  │   │    │  tx_datak = 0    │  Data byte (not K-char)        │ │
 │  │   │    │                  │                                │ │
 │  │   │    │  byte_counter++  │                                │ │
 │  │   │    └────────┬─────────┘                                │ │
-│  │   │             │                                           │ │
+│  │   │             │                                          │ │
 │  │   │ Loop 8x     │ After 8 bytes                            │ │
 │  │   │ (0-7)       │ (counter == 7)                           │ │
-│  │   │             │                                           │ │
-│  │   └─────────────┘                                           │ │
-│  │                 │                                           │ │
-│  │                 ▼                                           │ │
+│  │   │             │                                          │ │
+│  │   └─────────────┘                                          │ │
+│  │                 │                                          │ │
+│  │                 ▼                                          │ │
 │  │        ┌──────────────────┐                                │ │
 │  │        │   END State      │                                │ │
 │  │        │                  │                                │ │
 │  │        │  Send END:       │                                │ │
-│  │        │  tx_data = END   │  END = 0xFD                   │ │
+│  │        │  tx_data = END   │  END = 0xFD                    │ │
 │  │        │         (0xFD)   │  K=1                           │ │
 │  │        │  tx_datak = 1    │                                │ │
 │  │        └────────┬─────────┘                                │ │
-│  │                 │                                           │ │
-│  │                 │ Return to IDLE                            │ │
-│  │                 │                                           │ │
-│  │                 └──────────────────────────────────────►    │ │
+│  │                 │                                          │ │
+│  │                 │ Return to IDLE                           │ │
+│  │                 │                                          │ │
+│  │                 └──────────────────────────────────────►   │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -298,18 +298,18 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 ┌────────────────────────────────────────────────────────────┐
 │              BYTE ARRAY MAPPING (Little-Endian)            │
 │                                                            │
-│   Input: sink.dat[63:0]  (64-bit DLL packet word)         │
+│   Input: sink.dat[63:0]  (64-bit DLL packet word)          │
 │                                                            │
 │   Transmission Order (LSB first):                          │
 │                                                            │
-│   Cycle 1: dat[7:0]   = Byte 0 (LSB) ──► Sent first       │
-│   Cycle 2: dat[15:8]  = Byte 1       ──► Sent second      │
-│   Cycle 3: dat[23:16] = Byte 2       ──► Sent third       │
-│   Cycle 4: dat[31:24] = Byte 3       ──► Sent fourth      │
-│   Cycle 5: dat[39:32] = Byte 4       ──► Sent fifth       │
-│   Cycle 6: dat[47:40] = Byte 5       ──► Sent sixth       │
-│   Cycle 7: dat[55:48] = Byte 6       ──► Sent seventh     │
-│   Cycle 8: dat[63:56] = Byte 7 (MSB) ──► Sent last        │
+│   Cycle 1: dat[7:0]   = Byte 0 (LSB) ──► Sent first        │
+│   Cycle 2: dat[15:8]  = Byte 1       ──► Sent second       │
+│   Cycle 3: dat[23:16] = Byte 2       ──► Sent third        │
+│   Cycle 4: dat[31:24] = Byte 3       ──► Sent fourth       │
+│   Cycle 5: dat[39:32] = Byte 4       ──► Sent fifth        │
+│   Cycle 6: dat[47:40] = Byte 5       ──► Sent sixth        │
+│   Cycle 7: dat[55:48] = Byte 6       ──► Sent seventh      │
+│   Cycle 8: dat[63:56] = Byte 7 (MSB) ──► Sent last         │
 │                                                            │
 │   Total: 8 data symbols per 64-bit word                    │
 └────────────────────────────────────────────────────────────┘
@@ -323,23 +323,23 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    PIPERXDepacketizer                            │
-│                                                                  │
+│                    PIPERXDepacketizer                           │
+│                                                                 │
 │  INPUT: PIPE RX symbols (8-bit)                                 │
 │    • pipe_rx_data[7:0]                                          │
 │    • pipe_rx_datak (K-character indicator)                      │
-│                                                                  │
+│                                                                 │
 │  OUTPUT: source (64-bit DLL packets)                            │
 │    • source.valid, source.first, source.last                    │
 │    • source.dat[63:0]                                           │
-│                                                                  │
+│                                                                 │
 │  STATUS: Ordered set detection                                  │
 │    • ts1_detected (TS1 ordered set detected)                    │
 │    • ts2_detected (TS2 ordered set detected)                    │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                       FSM FLOW                              │ │
-│  │                                                             │ │
+│  │                       FSM FLOW                             │ │
+│  │                                                            │ │
 │  │        ┌──────────────────┐                                │ │
 │  │   ┌───►│   IDLE State     │◄─────────┐                     │ │
 │  │   │    │                  │          │                     │ │
@@ -367,82 +367,82 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │       │  │       │  valid SKP │  │                     │ │
 │  │   │       │  │       └────────────┘  │                     │ │
 │  │   │       │  │            │          │                     │ │
-│  │   │       │  │     After 3 SKP      │                     │ │
+│  │   │       │  │     After 3 SKP       │                     │ │
 │  │   │       │  │            │          │                     │ │
 │  │   │       │  │            └──────────┘                     │ │
-│  │   │       │  │                                             │ │
+│  │   │       │  │                       │                       │
 │  │   │       │  │  (enable_training_sequences)                │ │
-│  │   │       │  │                                             │ │
-│  │   │       │  └────────────┐                               │ │
-│  │   │       │               │                               │ │
-│  │   │       │          ┌────▼────────┐                      │ │
-│  │   │       │          │  TS_CHECK   │                      │ │
-│  │   │       │          │             │                      │ │
-│  │   │       │          │  Buffer 16  │                      │ │
-│  │   │       │          │  symbols    │                      │ │
-│  │   │       │          │             │                      │ │
-│  │   │       │          │  Check for: │                      │ │
-│  │   │       │          │  • TS1 ID   │                      │ │
-│  │   │       │          │    (D10.2)  │                      │ │
-│  │   │       │          │  • TS2 ID   │                      │ │
-│  │   │       │          │    (D5.2)   │                      │ │
-│  │   │       │          │             │                      │ │
-│  │   │       │          │  Set flags: │                      │ │
-│  │   │       │          │  ts1/ts2    │                      │ │
-│  │   │       │          │  _detected  │                      │ │
-│  │   │       │          └─────────────┘                      │ │
-│  │   │       │               │                               │ │
-│  │   │       │        After 16 symbols                       │ │
-│  │   │       │               │                               │ │
-│  │   │       │               └───────────────────────────────┘ │
-│  │   │       │                                                 │ │
-│  │   │       │ STP/SDP                                         │ │
-│  │   │       │                                                 │ │
-│  │   │  ┌────▼────────────┐                                   │ │
-│  │   │  │  START Detected │                                   │ │
-│  │   │  │                 │                                   │ │
-│  │   │  │  is_tlp = 1 if  │                                   │ │
-│  │   │  │    rx_data==STP │                                   │ │
-│  │   │  │  else is_tlp=0  │                                   │ │
-│  │   │  │                 │                                   │ │
-│  │   │  │  byte_counter=0 │                                   │ │
-│  │   │  │  data_buffer=0  │                                   │ │
-│  │   │  └────────┬────────┘                                   │ │
-│  │   │           │                                            │ │
-│  │   │           ▼                                            │ │
-│  │   │  ┌──────────────────┐                                 │ │
-│  │   │  │   DATA State     │                                 │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │  If rx_datak=0:  │  Data byte received            │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │   Store byte in  │                                 │ │
-│  │   │  │   data_buffer:   │                                 │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │   [7:0] ← byte0  │                                 │ │
-│  │   │  │   [15:8]← byte1  │                                 │ │
-│  │   │  │   ...            │                                 │ │
-│  │   │  │   [63:56]←byte7  │                                 │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │   byte_counter++ │                                 │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │  If rx_datak=1:  │  K-character received          │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │   If rx_data=END:│                                 │ │
-│  │   │  │                  │                                 │ │
-│  │   │  │   • Output pkt   │                                 │ │
-│  │   │  │   • source.valid │                                 │ │
-│  │   │  │     = 1          │                                 │ │
-│  │   │  │   • source.first │                                 │ │
-│  │   │  │     = 1          │                                 │ │
-│  │   │  │   • source.last  │                                 │ │
-│  │   │  │     = 1          │                                 │ │
-│  │   │  │   • source.dat = │                                 │ │
-│  │   │  │     data_buffer  │                                 │ │
-│  │   │  │   • Go to IDLE   │                                 │ │
-│  │   │  └──────────────────┘                                 │ │
-│  │   │           │                                            │ │
-│  │   │    END detected                                       │ │
-│  │   │           │                                            │ │
+│  │   │       │  │                       │                       │
+│  │   │       │  └────────────┐          │                       │
+│  │   │       │                          │                     │ │
+│  │   │       │          ┌────▼────────┐ │                       │
+│  │   │       │          │  TS_CHECK     │                     │ │
+│  │   │       │          │               │                     │ │
+│  │   │       │          │  Buffer 16    │                     │ │
+│  │   │       │          │  symbols      │                     │ │
+│  │   │       │          │               │                     │ │
+│  │   │       │          │  Check for:   │                     │ │
+│  │   │       │          │  • TS1 ID     │                     │ │
+│  │   │       │          │    (D10.2)    │                     │ │
+│  │   │       │          │  • TS2 ID     │                     │ │
+│  │   │       │          │    (D5.2)     │                     │ │
+│  │   │       │          │               │                     │ │
+│  │   │       │          │  Set flags:   │                     │ │
+│  │   │       │          │  ts1/ts2      │                     │ │
+│  │   │       │          │  _detected    │                     │ │
+│  │   │       │          └─────────────┘ │                       │
+│  │   │       │                          │                     │ │
+│  │   │       │        After 16 symbols  │                       │
+│  │   │       │                          │                     │ │
+│  │   │       │               └───────────────────────────────┘  │
+│  │   │       │                          │                       │
+│  │   │       │ STP/SDP                  │                       │
+│  │   │       │                          │                       │
+│  │   │  ┌────▼────────────┐             │                       │
+│  │   │  │  START Detected               │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │  is_tlp = 1 if                │                     │ │
+│  │   │  │    rx_data==STP               │                     │ │
+│  │   │  │  else is_tlp=0                │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │  byte_counter=0               │                     │ │
+│  │   │  │  data_buffer=0                │                     │ │
+│  │   │  └────────┬────────┘             │                       │
+│  │   │           │                      │                       │
+│  │   │           ▼                      │                       │
+│  │   │  ┌──────────────────┐            │                       │
+│  │   │  │   DATA State                  │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │  If rx_datak=0:               │  Data byte received │ │
+│  │   │  │                               │                     │ │
+│  │   │  │   Store byte in               │                     │ │
+│  │   │  │   data_buffer:                │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │   [7:0] ← byte0               │                     │ │
+│  │   │  │   [15:8]← byte1               │                     │ │
+│  │   │  │   ...                         │                     │ │
+│  │   │  │   [63:56]←byte7               │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │   byte_counter++              │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │  If rx_datak=1:               │  K-character received │ │
+│  │   │  │                               │                     │ │
+│  │   │  │   If rx_data=END:             │                     │ │
+│  │   │  │                               │                     │ │
+│  │   │  │   • Output pkt                │                     │ │
+│  │   │  │   • source.valid              │                     │ │
+│  │   │  │     = 1                       │                     │ │
+│  │   │  │   • source.first              │                     │ │
+│  │   │  │     = 1                       │                     │ │
+│  │   │  │   • source.last               │                     │ │
+│  │   │  │     = 1                       │                     │ │
+│  │   │  │   • source.dat =              │                     │ │
+│  │   │  │     data_buffer               │                     │ │
+│  │   │  │   • Go to IDLE                │                     │ │
+│  │   │  └──────────────────┘            │                       │
+│  │   │           │                      │                       │
+│  │   │    END detected                  │                       │
+│  │   │           │                      │                       │
 │  │   └───────────┘                                            │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -454,18 +454,18 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 ┌────────────────────────────────────────────────────────────┐
 │         DATA BUFFER ACCUMULATION (Little-Endian)           │
 │                                                            │
-│   Output: data_buffer[63:0]  (64-bit accumulation)        │
+│   Output: data_buffer[63:0]  (64-bit accumulation)         │
 │                                                            │
 │   Reception Order (LSB first):                             │
 │                                                            │
-│   Cycle 1: rx_data → buffer[7:0]   = Byte 0 (LSB)         │
-│   Cycle 2: rx_data → buffer[15:8]  = Byte 1               │
-│   Cycle 3: rx_data → buffer[23:16] = Byte 2               │
-│   Cycle 4: rx_data → buffer[31:24] = Byte 3               │
-│   Cycle 5: rx_data → buffer[39:32] = Byte 4               │
-│   Cycle 6: rx_data → buffer[47:40] = Byte 5               │
-│   Cycle 7: rx_data → buffer[55:48] = Byte 6               │
-│   Cycle 8: rx_data → buffer[63:56] = Byte 7 (MSB)         │
+│   Cycle 1: rx_data → buffer[7:0]   = Byte 0 (LSB)          │
+│   Cycle 2: rx_data → buffer[15:8]  = Byte 1                │
+│   Cycle 3: rx_data → buffer[23:16] = Byte 2                │
+│   Cycle 4: rx_data → buffer[31:24] = Byte 3                │
+│   Cycle 5: rx_data → buffer[39:32] = Byte 4                │
+│   Cycle 6: rx_data → buffer[47:40] = Byte 5                │
+│   Cycle 7: rx_data → buffer[55:48] = Byte 6                │
+│   Cycle 8: rx_data → buffer[63:56] = Byte 7 (MSB)          │
 │                                                            │
 │   On END detection: source.dat ← data_buffer               │
 └────────────────────────────────────────────────────────────┘
@@ -481,30 +481,30 @@ PCIe uses specific K-characters from the 8b/10b encoding table for framing and o
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                  PCIe K-Character Encoding Table                │
+│                  PCIe K-Character Encoding Table               │
 ├──────────┬─────────┬──────────┬─────────────────────────────────┤
-│ Symbol   │ 8b Value│ K-Code   │ Purpose                         │
+│ Symbol   │ 8b Value│ K-Code   │ Purpose                        │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ COM      │ 0xBC    │ K28.5    │ Comma - Lane alignment          │
-│          │         │          │ Used in: SKP, TS1, TS2          │
+│ COM      │ 0xBC    │ K28.5    │ Comma - Lane alignment         │
+│          │         │          │ Used in: SKP, TS1, TS2         │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ SKP      │ 0x1C    │ K28.0    │ Skip - Clock compensation       │
-│          │         │          │ Used in: SKP ordered set        │
+│ SKP      │ 0x1C    │ K28.0    │ Skip - Clock compensation      │
+│          │         │          │ Used in: SKP ordered set       │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ STP      │ 0xFB    │ K27.7    │ Start TLP - Begins TLP packet   │
-│          │         │          │ Framing: Start of TLP           │
+│ STP      │ 0xFB    │ K27.7    │ Start TLP - Begins TLP packet  │
+│          │         │          │ Framing: Start of TLP          │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ SDP      │ 0x5C    │ K28.2    │ Start DLLP - Begins DLLP packet │
-│          │         │          │ Framing: Start of DLLP          │
+│ SDP      │ 0x5C    │ K28.2    │ Start DLLP - Begins DLLP packet│
+│          │         │          │ Framing: Start of DLLP         │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ END      │ 0xFD    │ K29.7    │ End - Packet termination        │
-│          │         │          │ Framing: End of TLP/DLLP        │
+│ END      │ 0xFD    │ K29.7    │ End - Packet termination       │
+│          │         │          │ Framing: End of TLP/DLLP       │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ EDB      │ 0xFE    │ K30.7    │ End Bad - Bad packet marker     │
-│          │         │          │ (Not yet implemented)           │
+│ EDB      │ 0xFE    │ K30.7    │ End Bad - Bad packet marker    │
+│          │         │          │ (Not yet implemented)          │
 ├──────────┼─────────┼──────────┼─────────────────────────────────┤
-│ PAD      │ 0xF7    │ K23.7    │ Pad - Link idle fill            │
-│          │         │          │ (Future use)                    │
+│ PAD      │ 0xF7    │ K23.7    │ Pad - Link idle fill           │
+│          │         │          │ (Future use)                   │
 └──────────┴─────────┴──────────┴─────────────────────────────────┘
 ```
 
@@ -514,39 +514,39 @@ PCIe uses specific K-characters from the 8b/10b encoding table for framing and o
 ┌────────────────────────────────────────────────────────────┐
 │                  TLP Packet Framing                        │
 │                                                            │
-│   Symbol  │ Data   │ K │ Description                      │
-│   ────────┼────────┼───┼──────────────────────────────    │
-│   0       │ 0xFB   │ 1 │ STP (Start TLP)                  │
-│   1       │ 0xXX   │ 0 │ TLP Byte 0 (Header/Data)         │
-│   2       │ 0xXX   │ 0 │ TLP Byte 1                       │
-│   3       │ 0xXX   │ 0 │ TLP Byte 2                       │
-│   4       │ 0xXX   │ 0 │ TLP Byte 3                       │
-│   5       │ 0xXX   │ 0 │ TLP Byte 4                       │
-│   6       │ 0xXX   │ 0 │ TLP Byte 5                       │
-│   7       │ 0xXX   │ 0 │ TLP Byte 6                       │
-│   8       │ 0xXX   │ 0 │ TLP Byte 7                       │
-│   9       │ 0xFD   │ 1 │ END (End packet)                 │
+│   Symbol  │ Data   │ K │ Description                       │
+│   ────────┼────────┼───┼──────────────────────────────     │
+│   0       │ 0xFB   │ 1 │ STP (Start TLP)                   │
+│   1       │ 0xXX   │ 0 │ TLP Byte 0 (Header/Data)          │
+│   2       │ 0xXX   │ 0 │ TLP Byte 1                        │
+│   3       │ 0xXX   │ 0 │ TLP Byte 2                        │
+│   4       │ 0xXX   │ 0 │ TLP Byte 3                        │
+│   5       │ 0xXX   │ 0 │ TLP Byte 4                        │
+│   6       │ 0xXX   │ 0 │ TLP Byte 5                        │
+│   7       │ 0xXX   │ 0 │ TLP Byte 6                        │
+│   8       │ 0xXX   │ 0 │ TLP Byte 7                        │
+│   9       │ 0xFD   │ 1 │ END (End packet)                  │
 │                                                            │
-│   Total: 10 symbols for 8-byte TLP                        │
+│   Total: 10 symbols for 8-byte TLP                         │
 └────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────┐
 │                 DLLP Packet Framing                        │
 │                                                            │
-│   Symbol  │ Data   │ K │ Description                      │
-│   ────────┼────────┼───┼──────────────────────────────    │
-│   0       │ 0x5C   │ 1 │ SDP (Start DLLP)                 │
-│   1       │ 0xXX   │ 0 │ DLLP Byte 0 (Type)               │
-│   2       │ 0xXX   │ 0 │ DLLP Byte 1                      │
-│   3       │ 0xXX   │ 0 │ DLLP Byte 2                      │
-│   4       │ 0xXX   │ 0 │ DLLP Byte 3                      │
-│   5       │ 0xXX   │ 0 │ DLLP Byte 4                      │
-│   6       │ 0xXX   │ 0 │ DLLP Byte 5                      │
-│   7       │ 0xXX   │ 0 │ DLLP Byte 6                      │
-│   8       │ 0xXX   │ 0 │ DLLP Byte 7 (CRC)                │
-│   9       │ 0xFD   │ 1 │ END (End packet)                 │
+│   Symbol  │ Data   │ K │ Description                       │
+│   ────────┼────────┼───┼──────────────────────────────     │
+│   0       │ 0x5C   │ 1 │ SDP (Start DLLP)                  │
+│   1       │ 0xXX   │ 0 │ DLLP Byte 0 (Type)                │
+│   2       │ 0xXX   │ 0 │ DLLP Byte 1                       │
+│   3       │ 0xXX   │ 0 │ DLLP Byte 2                       │
+│   4       │ 0xXX   │ 0 │ DLLP Byte 3                       │
+│   5       │ 0xXX   │ 0 │ DLLP Byte 4                       │
+│   6       │ 0xXX   │ 0 │ DLLP Byte 5                       │
+│   7       │ 0xXX   │ 0 │ DLLP Byte 6                       │
+│   8       │ 0xXX   │ 0 │ DLLP Byte 7 (CRC)                 │
+│   9       │ 0xFD   │ 1 │ END (End packet)                  │
 │                                                            │
-│   Total: 10 symbols for 8-byte DLLP                       │
+│   Total: 10 symbols for 8-byte DLLP                        │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -556,12 +556,12 @@ PCIe uses specific K-characters from the 8b/10b encoding table for framing and o
 ┌────────────────────────────────────────────────────────────┐
 │              SKP Ordered Set (Clock Compensation)          │
 │                                                            │
-│   Symbol  │ Data   │ K │ Description                      │
-│   ────────┼────────┼───┼──────────────────────────────    │
-│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment          │
-│   1       │ 0x1C   │ 1 │ SKP (K28.0)                      │
-│   2       │ 0x1C   │ 1 │ SKP (K28.0)                      │
-│   3       │ 0x1C   │ 1 │ SKP (K28.0)                      │
+│   Symbol  │ Data   │ K │ Description                       │
+│   ────────┼────────┼───┼──────────────────────────────     │
+│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment           │
+│   1       │ 0x1C   │ 1 │ SKP (K28.0)                       │
+│   2       │ 0x1C   │ 1 │ SKP (K28.0)                       │
+│   3       │ 0x1C   │ 1 │ SKP (K28.0)                       │
 │                                                            │
 │   Total: 4 symbols                                         │
 │   Insertion: Every 1180-1538 symbols (configurable)        │
@@ -571,24 +571,24 @@ PCIe uses specific K-characters from the 8b/10b encoding table for framing and o
 ┌────────────────────────────────────────────────────────────┐
 │           TS1 Ordered Set (Training Sequence 1)            │
 │                                                            │
-│   Symbol  │ Data   │ K │ Description                      │
-│   ────────┼────────┼───┼──────────────────────────────    │
-│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment          │
-│   1       │ 0xXX   │ 0 │ Link Number                      │
-│   2       │ 0xXX   │ 0 │ Lane Number                      │
-│   3       │ 0xXX   │ 0 │ N_FTS (Fast Training Seq count)  │
-│   4       │ 0xXX   │ 0 │ Rate ID (1=Gen1, 2=Gen2)         │
-│   5       │ 0x00   │ 0 │ Training Control 0               │
-│   6       │ 0x00   │ 0 │ Training Control 1               │
-│   7       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   8       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   9       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   10      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   11      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   12      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   13      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   14      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
-│   15      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)           │
+│   Symbol  │ Data   │ K │ Description                       │
+│   ────────┼────────┼───┼──────────────────────────────     │
+│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment           │
+│   1       │ 0xXX   │ 0 │ Link Number                       │
+│   2       │ 0xXX   │ 0 │ Lane Number                       │
+│   3       │ 0xXX   │ 0 │ N_FTS (Fast Training Seq count)   │
+│   4       │ 0xXX   │ 0 │ Rate ID (1=Gen1, 2=Gen2)          │
+│   5       │ 0x00   │ 0 │ Training Control 0                │
+│   6       │ 0x00   │ 0 │ Training Control 1                │
+│   7       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   8       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   9       │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   10      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   11      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   12      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   13      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   14      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
+│   15      │ 0x4A   │ 0 │ TS1 Identifier (D10.2)            │
 │                                                            │
 │   Total: 16 symbols                                        │
 │   Purpose: Link training, speed negotiation                │
@@ -597,24 +597,24 @@ PCIe uses specific K-characters from the 8b/10b encoding table for framing and o
 ┌────────────────────────────────────────────────────────────┐
 │           TS2 Ordered Set (Training Sequence 2)            │
 │                                                            │
-│   Symbol  │ Data   │ K │ Description                      │
-│   ────────┼────────┼───┼──────────────────────────────    │
-│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment          │
-│   1       │ 0xXX   │ 0 │ Link Number                      │
-│   2       │ 0xXX   │ 0 │ Lane Number                      │
-│   3       │ 0xXX   │ 0 │ N_FTS (Fast Training Seq count)  │
-│   4       │ 0xXX   │ 0 │ Rate ID (1=Gen1, 2=Gen2)         │
-│   5       │ 0x00   │ 0 │ Training Control 0               │
-│   6       │ 0x00   │ 0 │ Training Control 1               │
-│   7       │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   8       │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   9       │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   10      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   11      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   12      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   13      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   14      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
-│   15      │ 0x45   │ 0 │ TS2 Identifier (D5.2)            │
+│   Symbol  │ Data   │ K │ Description                       │
+│   ────────┼────────┼───┼──────────────────────────────     │
+│   0       │ 0xBC   │ 1 │ COM (K28.5) - Alignment           │
+│   1       │ 0xXX   │ 0 │ Link Number                       │
+│   2       │ 0xXX   │ 0 │ Lane Number                       │
+│   3       │ 0xXX   │ 0 │ N_FTS (Fast Training Seq count)   │
+│   4       │ 0xXX   │ 0 │ Rate ID (1=Gen1, 2=Gen2)          │
+│   5       │ 0x00   │ 0 │ Training Control 0                │
+│   6       │ 0x00   │ 0 │ Training Control 1                │
+│   7       │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   8       │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   9       │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   10      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   11      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   12      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   13      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   14      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
+│   15      │ 0x45   │ 0 │ TS2 Identifier (D5.2)             │
 │                                                            │
 │   Total: 16 symbols                                        │
 │   Purpose: Configuration lock, final training              │
@@ -842,13 +842,13 @@ Notes:
 │                   Data Link Layer (DLL)                     │
 │                                                             │
 │  Components:                                                │
-│  • DLL TX: Adds LCRC, sequence numbers                     │
-│  • DLL RX: Checks LCRC, sends ACK/NAK                      │
-│  • LTSSM: Link training state machine                      │
+│  • DLL TX: Adds LCRC, sequence numbers                      │
+│  • DLL RX: Checks LCRC, sends ACK/NAK                       │
+│  • LTSSM: Link training state machine                       │
 │                                                             │
 │  Interface to PIPE:                                         │
-│  • phy.sink (TX): Stream endpoint, 64-bit packets          │
-│  • phy.source (RX): Stream endpoint, 64-bit packets        │
+│  • phy.sink (TX): Stream endpoint, 64-bit packets           │
+│  • phy.source (RX): Stream endpoint, 64-bit packets         │
 └──────────────────────┬──────────────────────────────────────┘
                        │
                        │ phy_layout(64)
@@ -859,13 +859,13 @@ Notes:
 │                    PIPE Interface                           │
 │                                                             │
 │  Interface to DLL:                                          │
-│  • dll_tx_sink ← phy.sink                                  │
-│  • dll_rx_source → phy.source                              │
+│  • dll_tx_sink ← phy.sink                                   │
+│  • dll_rx_source → phy.source                               │
 │                                                             │
 │  Processing:                                                │
-│  • TX: 64-bit → 8-bit conversion + framing                 │
-│  • RX: 8-bit → 64-bit conversion + framing removal         │
-│  • Ordered sets: SKP, TS1, TS2                             │
+│  • TX: 64-bit → 8-bit conversion + framing                  │
+│  • RX: 8-bit → 64-bit conversion + framing removal          │
+│  • Ordered sets: SKP, TS1, TS2                              │
 └──────────────────────┬─────────────────────────────────────┘
                        │
                        │ PIPE signals (8-bit)
@@ -880,18 +880,18 @@ Notes:
 │                    PIPE Interface                           │
 │                                                             │
 │  PIPE TX Signals:                                           │
-│  • pipe_tx_data[7:0]                                       │
-│  • pipe_tx_datak                                           │
-│  • pipe_tx_elecidle                                        │
+│  • pipe_tx_data[7:0]                                        │
+│  • pipe_tx_datak                                            │
+│  • pipe_tx_elecidle                                         │
 │                                                             │
 │  PIPE RX Signals:                                           │
-│  • pipe_rx_data[7:0]                                       │
-│  • pipe_rx_datak                                           │
-│  • pipe_rx_valid                                           │
+│  • pipe_rx_data[7:0]                                        │
+│  • pipe_rx_datak                                            │
+│  • pipe_rx_valid                                            │
 │                                                             │
 │  Control/Status:                                            │
-│  • pipe_powerdown[1:0]                                     │
-│  • pipe_rate (Gen1/Gen2)                                   │
+│  • pipe_powerdown[1:0]                                      │
+│  • pipe_rate (Gen1/Gen2)                                    │
 └──────────────────────┬─────────────────────────────────────┘
                        │
                        │ PIPE protocol (8-bit symbols + ctrl)
@@ -899,13 +899,13 @@ Notes:
 ┌─────────────────────────────────────────────────────────────┐
 │              Transceiver Base / PHY Layer                   │
 │                                                             │
-│  • 8b/10b encoding/decoding                                │
-│  • TX/RX datapaths with CDC                                │
+│  • 8b/10b encoding/decoding                                 │
+│  • TX/RX datapaths with CDC                                 │
 │  • Reset sequencing                                         │
 │  • Vendor-specific primitives:                              │
-│    - Xilinx GTX (7-Series)                                 │
-│    - Xilinx GTY (UltraScale+)                              │
-│    - Lattice ECP5 SERDES                                   │
+│    - Xilinx GTX (7-Series)                                  │
+│    - Xilinx GTY (UltraScale+)                               │
+│    - Lattice ECP5 SERDES                                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -918,7 +918,7 @@ Notes:
 │                                                        │
 │  DLL Layer ──► PIPE Interface (TX/RX logic)            │
 │                                                        │
-│  • dll_tx_sink, dll_rx_source                         │
+│  • dll_tx_sink, dll_rx_source                          │
 │  • FSM states                                          │
 │  • Byte counters                                       │
 │  • Data buffers                                        │
@@ -931,24 +931,24 @@ Notes:
 │  tx_clk Domain (PHY TX)                                │
 │  ═══════════════════════                               │
 │                                                        │
-│  • pipe_tx_data[7:0]                                  │
-│  • pipe_tx_datak                                      │
-│  • AsyncFIFO: sys_clk → tx_clk                        │
-│  • 8b/10b encoder                                     │
+│  • pipe_tx_data[7:0]                                   │
+│  • pipe_tx_datak                                       │
+│  • AsyncFIFO: sys_clk → tx_clk                         │
+│  • 8b/10b encoder                                      │
 │                                                        │
-│  Clock: 125 MHz (Gen1) or 250 MHz (Gen2)              │
+│  Clock: 125 MHz (Gen1) or 250 MHz (Gen2)               │
 └────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────┐
 │  rx_clk Domain (PHY RX)                                │
 │  ═══════════════════════                               │
 │                                                        │
-│  • pipe_rx_data[7:0]                                  │
-│  • pipe_rx_datak                                      │
-│  • 8b/10b decoder                                     │
-│  • AsyncFIFO: rx_clk → sys_clk                        │
+│  • pipe_rx_data[7:0]                                   │
+│  • pipe_rx_datak                                       │
+│  • 8b/10b decoder                                      │
+│  • AsyncFIFO: rx_clk → sys_clk                         │
 │                                                        │
-│  Clock: Recovered from RX data (CDR)                  │
+│  Clock: Recovered from RX data (CDR)                   │
 └────────────────────────────────────────────────────────┘
 ```
 

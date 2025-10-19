@@ -48,17 +48,17 @@ Modules are designed for independent testing:
 ```
 ┌─────────────────────────────────────────────┐
 │         Transaction Layer (TLP)             │
-│  - litepcie/tlp/packetizer.py              │
-│  - litepcie/tlp/depacketizer.py            │
-│  - litepcie/tlp/controller.py              │
+│  - litepcie/tlp/packetizer.py               │
+│  - litepcie/tlp/depacketizer.py             │
+│  - litepcie/tlp/controller.py               │
 └────────────────┬────────────────────────────┘
                  │
                  │ Direct connection (no DLL!)
                  │
 ┌────────────────▼────────────────────────────┐
 │           PHY Layer                         │
-│  - litepcie/phy/s7pciephy.py               │
-│  - litepcie/phy/uspciephy.py               │
+│  - litepcie/phy/s7pciephy.py                │
+│  - litepcie/phy/uspciephy.py                │
 │  - Uses vendor IP blocks (PCIE2_7, PCIE3_4) │
 └─────────────────────────────────────────────┘
 ```
@@ -1174,23 +1174,23 @@ The plan needs:
 ┌─────────────────────────────────────────────────────────────────┐
 │                      LitePCIe Core                              │
 │  ┌───────────────────────────────────────────────────────────┐  │
-│  │              Transaction Layer (TLP)                       │  │
+│  │              Transaction Layer (TLP)                      │  │
 │  │  - TLP Packetizer/Depacketizer                            │  │
-│  │  - Request/Completion Handling                             │  │
-│  │  - Tag Management                                          │  │
+│  │  - Request/Completion Handling                            │  │
+│  │  - Tag Management                                         │  │
 │  └────────────────────┬──────────────────────────────────────┘  │
-│                       │                                          │
-│                       │ TLP Stream Interface                     │
-│                       │ (with_dll parameter controls routing)    │
-│                       │                                          │
+│                       │                                         │
+│                       │ TLP Stream Interface                    │
+│                       │ (with_dll parameter controls routing)   │
+│                       │                                         │
 │  ┌────────────────────▼──────────────────────────────────────┐  │
 │  │    NEW: Data Link Layer (DLL) - OPTIONAL                  │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐ │  │
-│  │  │ TX Engine    │  │ Retry Buffer │  │  RX Engine      │ │  │
-│  │  │ - Seq assign │  │ - Store TLPs │  │  - Seq check    │ │  │
-│  │  │ - LCRC gen   │  │ - ACK release│  │  - LCRC verify  │ │  │
-│  │  │ - DLLP send  │  │ - NAK replay │  │  - DLLP receive │ │  │
-│  │  └──────┬───────┘  └──────┬───────┘  └────────┬────────┘ │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │  │
+│  │  │ TX Engine    │  │ Retry Buffer │  │  RX Engine      │  │  │
+│  │  │ - Seq assign │  │ - Store TLPs │  │  - Seq check    │  │  │
+│  │  │ - LCRC gen   │  │ - ACK release│  │  - LCRC verify  │  │  │
+│  │  │ - DLLP send  │  │ - NAK replay │  │  - DLLP receive │  │  │
+│  │  └──────┬───────┘  └──────┬───────┘  └────────┬────────┘  │  │
 │  │         │                 │                    │          │  │
 │  │         └─────────────────┴────────────────────┘          │  │
 │  │                           │                               │  │
@@ -1204,23 +1204,23 @@ The plan needs:
 │  │  - Elastic Buffer                                         │  │
 │  │  - Datapath Conversion                                    │  │
 │  └────────────────────┬──────────────────────────────────────┘  │
-│                       │                                          │
-│                       │ PIPE Signals                             │
+│                       │                                         │
+│                       │ PIPE Signals                            │
 │                       │ (TxData, RxData, PCLK, etc.)            │
-│                       │                                          │
+│                       │                                         │
 └───────────────────────┼──────────────────────────────────────────┘
                         │
         ┌───────────────┴────────────────┐
         │                                │
 ┌───────▼──────────┐          ┌──────────▼────────────┐
 │  External PHY    │          │  Internal Transceiver │
-│  (TI XIO2001,    │          │  (Xilinx GT*,        │
-│   PLX chip, etc) │          │   Intel Trans PHY,   │
-│                  │          │   Lattice SERDES)    │
-│  - Physical Layer│          │                      │
-│  - PIPE interface│          │  + PIPE Wrapper      │
-└────────┬─────────┘          │  + PCS (8b/10b)      │
-         │                    │  + PMA (SerDes)      │
+│  (TI XIO2001,    │          │  (Xilinx GT*,         │
+│   PLX chip, etc) │          │   Intel Trans PHY,    │
+│                  │          │   Lattice SERDES)     │
+│  - Physical Layer│          │                       │
+│  - PIPE interface│          │  + PIPE Wrapper       │
+└────────┬─────────┘          │  + PCS (8b/10b)       │
+         │                    │  + PMA (SerDes)       │
          │                    └──────────┬───────────┘
          │                               │
          └───────────────┬───────────────┘

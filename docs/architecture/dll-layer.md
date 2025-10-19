@@ -30,85 +30,85 @@ The DLL is the reliability layer that transforms the unreliable physical link in
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        TRANSACTION LAYER                             │
-│                                                                       │
+│                        TRANSACTION LAYER                            │
+│                                                                     │
 │  TLP Source (Read/Write/Config requests)                            │
 └────────────────────────────┬────────────────────────────────────────┘
                              │ 64-bit TLP packets
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                          DLL TX PATH                                 │
-│                      Location: dll/tx.py                             │
-│                                                                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────┐ │
-│  │  Sequence    │  │  LCRC-32     │  │    Retry     │  │  Frame  │ │
-│  │  Number      │─→│  Generator   │─→│    Buffer    │─→│  to PHY │ │
-│  │  Manager     │  │              │  │   (4KB)      │  │         │ │
-│  └──────────────┘  └──────────────┘  └──────┬───────┘  └─────────┘ │
-│        ↓ Seq                              ↑  │ Store               │ │
-│     Allocate                            ACK  │ Forward             │ │
-│                                              ↓ NAK = Replay        │ │
+│                          DLL TX PATH                                │
+│                      Location: dll/tx.py                            │
+│                                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌─────────┐  │
+│  │  Sequence    │  │  LCRC-32     │  │    Retry     │  │  Frame  │  │
+│  │  Number      │─→│  Generator   │─→│    Buffer    │─→│  to PHY │  │
+│  │  Manager     │  │              │  │   (4KB)      │  │         │  │
+│  └──────────────┘  └──────────────┘  └──────┬───────┘  └─────────┘  │
+│        ↓ Seq                              ↑  │ Store                │ │
+│     Allocate                            ACK  │ Forward              │ │
+│                                              ↓ NAK = Replay         │ │
 └──────────────────────────────────────────────┼──────────────────────┘
                                                │ TLP + LCRC
                                                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                            DLLP LAYER                                │
-│                      Location: dll/dllp.py                           │
-│                                                                       │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │
-│  │   ACK DLLP       │  │   NAK DLLP       │  │  UpdateFC DLLP   │  │
-│  │   Generator      │  │   Generator      │  │  Generator       │  │
-│  │                  │  │                  │  │                  │  │
-│  │ • Type: 0x0      │  │ • Type: 0x1      │  │ • Type: 0x5/0x6  │  │
-│  │ • Seq Number     │  │ • Seq Number     │  │ • Credit count   │  │
-│  │ • CRC-16         │  │ • CRC-16         │  │ • CRC-16         │  │
-│  └──────────────────┘  └──────────────────┘  └──────────────────┘  │
-│                                                                       │
+│                            DLLP LAYER                               │
+│                      Location: dll/dllp.py                          │
+│                                                                     │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │   ACK DLLP       │  │   NAK DLLP       │  │  UpdateFC DLLP   │   │
+│  │   Generator      │  │   Generator      │  │  Generator       │   │
+│  │                  │  │                  │  │                  │   │
+│  │ • Type: 0x0      │  │ • Type: 0x1      │  │ • Type: 0x5/0x6  │   │
+│  │ • Seq Number     │  │ • Seq Number     │  │ • Credit count   │   │
+│  │ • CRC-16         │  │ • CRC-16         │  │ • CRC-16         │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+│                                                                     │
 └──────────────────────────────────┬───────────────────────────────────┘
                                    │ 8-byte DLLPs
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                            LTSSM                                     │
-│                     Location: dll/ltssm.py                           │
-│                                                                       │
+│                            LTSSM                                    │
+│                     Location: dll/ltssm.py                          │
+│                                                                     │
 │  ┌────────────────────────────────────────────────────────────────┐ │
 │  │        Link Training and Status State Machine                  │ │
-│  │                                                                 │ │
-│  │  States: DETECT → POLLING → CONFIGURATION → L0 → RECOVERY     │ │
-│  │                                                                 │ │
+│  │                                                                │ │
+│  │  States: DETECT → POLLING → CONFIGURATION → L0 → RECOVERY      │ │
+│  │                                                                │ │
 │  │  Controls:                          Monitors:                  │ │
-│  │  • send_ts1 / send_ts2              • ts1_detected            │ │
-│  │  • tx_elecidle                      • ts2_detected            │ │
-│  │  • powerdown                        • rx_elecidle             │ │
-│  │                                                                 │ │
+│  │  • send_ts1 / send_ts2              • ts1_detected             │ │
+│  │  • tx_elecidle                      • ts2_detected             │ │
+│  │  • powerdown                        • rx_elecidle              │ │
+│  │                                                                │ │
 │  │  Status:                                                       │ │
 │  │  • link_up (L0 operational)                                    │ │
 │  │  • link_speed (Gen1/Gen2)                                      │ │
 │  │  • link_width (x1/x4/x8/x16)                                   │ │
 │  └────────────────────────────────────────────────────────────────┘ │
-│                                                                       │
+│                                                                     │
 └──────────────────────────────────┬───────────────────────────────────┘
                                    │ PIPE control signals
                                    ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                          DLL RX PATH                                 │
-│                      Location: dll/rx.py                             │
-│                                                                       │
-│  ┌─────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │  Frame  │  │  LCRC-32     │  │  Sequence    │  │  Forward     │ │
-│  │ from PHY│─→│  Checker     │─→│  Checker     │─→│  to TLP      │ │
-│  │         │  │              │  │              │  │  Layer       │ │
-│  └─────────┘  └──────┬───────┘  └──────┬───────┘  └──────────────┘ │
-│                      │                  │                            │
-│                   LCRC OK?          Seq OK?                          │
-│                   │   │             │   │                            │
-│                   Y   N             Y   N                            │
-│                   │   │             │   │                            │
-│                   ▼   ▼             ▼   ▼                            │
+│                          DLL RX PATH                                │
+│                      Location: dll/rx.py                            │
+│                                                                     │
+│  ┌─────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │  Frame  │  │  LCRC-32     │  │  Sequence    │  │  Forward     │  │
+│  │ from PHY│─→│  Checker     │─→│  Checker     │─→│  to TLP      │  │
+│  │         │  │              │  │              │  │  Layer       │  │
+│  └─────────┘  └──────┬───────┘  └──────┬───────┘  └──────────────┘  │
+│                      │                  │                           │
+│                   LCRC OK?          Seq OK?                         │
+│                   │   │             │   │                           │
+│                   Y   N             Y   N                           │
+│                   │   │             │   │                           │
+│                   ▼   ▼             ▼   ▼                           │
 │              ┌──────────┐      ┌──────────┐                         │
 │              │ Send ACK │      │ Send NAK │                         │
 │              └──────────┘      └──────────┘                         │
-│                                                                       │
+│                                                                     │
 └────────────────────────────┬──────────────────────────────────────┬─┘
                              │ Valid TLPs                           │
                              ▼                                      │
@@ -297,33 +297,33 @@ Sequence numbers are 12-bit values (0-4095) that wrap around:
 ```
 TX Sequence Allocation:
 ┌─────────────────────────────────────────────────────────────┐
-│  TLP arrives from Transaction Layer                          │
-│           │                                                  │
-│           ▼                                                  │
+│  TLP arrives from Transaction Layer                         │
+│           │                                                 │
+│           ▼                                                 │
 │  ┌─────────────────┐                                        │
-│  │ Allocate next   │  tx_counter = (tx_counter + 1) % 4096 │
-│  │ sequence number │                                         │
+│  │ Allocate next   │  tx_counter = (tx_counter + 1) % 4096  │
+│  │ sequence number │                                        │
 │  └────────┬────────┘                                        │
-│           │                                                  │
-│           ▼                                                  │
-│  Sequence Number: 0, 1, 2, ... 4094, 4095, 0, 1, ...      │
-│                                                              │
+│           │                                                 │
+│           ▼                                                 │
+│  Sequence Number: 0, 1, 2, ... 4094, 4095, 0, 1, ...        │
+│                                                             │
 │  Stored with TLP in retry buffer until ACKed                │
 └─────────────────────────────────────────────────────────────┘
 
 RX Sequence Checking:
 ┌─────────────────────────────────────────────────────────────┐
 │  TLP arrives from PIPE layer with sequence number           │
-│           │                                                  │
-│           ▼                                                  │
+│           │                                                 │
+│           ▼                                                 │
 │  ┌─────────────────┐                                        │
-│  │ Compare received│  if (rx_seq == expected_seq)          │
+│  │ Compare received│  if (rx_seq == expected_seq)           │
 │  │ seq to expected │     → Valid, forward TLP               │
 │  └────────┬────────┘  else                                  │
-│           │              → Out of order, send NAK          │
-│           ▼                                                  │
-│  Expected Sequence: 0, 1, 2, ... 4094, 4095, 0, 1, ...    │
-│                                                              │
+│           │              → Out of order, send NAK           │
+│           ▼                                                 │
+│  Expected Sequence: 0, 1, 2, ... 4094, 4095, 0, 1, ...      │
+│                                                             │
 │  Increments on each valid TLP received                      │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -557,45 +557,45 @@ The retry buffer stores transmitted TLPs until acknowledged, enabling automatic 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                       RETRY BUFFER                               │
-│                   (Circular FIFO - 4KB)                          │
-│                                                                   │
-│  Write Path (TX TLPs)           Storage              Read Path   │
-│  ═════════════════════          ═══════              ══════════  │
-│                                                                   │
+│                       RETRY BUFFER                              │
+│                   (Circular FIFO - 4KB)                         │
+│                                                                 │
+│  Write Path (TX TLPs)           Storage              Read Path  │
+│  ═════════════════════          ═══════              ══════════ │
+│                                                                 │
 │  ┌────────────┐              ┌──────────┐         ┌──────────┐  │
 │  │ TLP + LCRC │              │ Entry 0  │         │ Replay   │  │
 │  │ Seq = N    │──Write──────►│ Seq: N   │         │ Logic    │  │
 │  └────────────┘     │        │ Data: XX │         └────┬─────┘  │
-│         │           │        └──────────┘              │         │
-│    Store until      │        ┌──────────┐              │         │
-│    ACKed            │        │ Entry 1  │              │         │
+│         │           │        └──────────┘              │        │
+│    Store until      │        ┌──────────┐              │        │
+│    ACKed            │        │ Entry 1  │              │        │
 │                     │        │ Seq: N+1 │         Triggered by  │
-│  ┌────────────┐     │        │ Data: YY │         NAK DLLP     │
-│  │ Write Ptr  │─────┘        └──────────┘              │         │
-│  │ (Newest)   │                   ...                  │         │
-│  └────────────┘              ┌──────────┐              │         │
-│                              │ Entry 63 │              │         │
-│  ┌────────────┐              │ Seq: M   │              │         │
-│  │ ACK Ptr    │              │ Data: ZZ │              │         │
-│  │ (Release)  │              └──────────┘              │         │
-│  └──────┬─────┘                                        │         │
-│         │                                              │         │
+│  ┌────────────┐     │        │ Data: YY │         NAK DLLP      │
+│  │ Write Ptr  │─────┘        └──────────┘              │        │
+│  │ (Newest)   │                   ...                  │        │
+│  └────────────┘              ┌──────────┐              │        │
+│                              │ Entry 63 │              │        │
+│  ┌────────────┐              │ Seq: M   │              │        │
+│  │ ACK Ptr    │              │ Data: ZZ │              │        │
+│  │ (Release)  │              └──────────┘              │        │
+│  └──────┬─────┘                                        │        │
+│         │                                              │        │
 │    Advances on                                    ┌───▼──────┐  │
 │    ACK DLLP                                       │ Replay   │  │
 │                                                   │ TLP Data │  │
-│  ┌────────────┐                                  └──────────┘  │
-│  │ Read Ptr   │◄─────────────NAK triggers replay              │  │
-│  │ (Replay)   │              read_ptr = ack_ptr               │  │
-│  └────────────┘                                                │  │
-│                                                                   │
-│  Circular Buffer Logic:                                          │
-│  • write_ptr advances on each TLP write                          │
+│  ┌────────────┐                                  └──────────┘   │
+│  │ Read Ptr   │◄─────────────NAK triggers replay              │ │
+│  │ (Replay)   │              read_ptr = ack_ptr               │ │
+│  └────────────┘                                                 │  │
+│                                                                 │
+│  Circular Buffer Logic:                                         │
+│  • write_ptr advances on each TLP write                         │
 │  • ack_ptr advances on each ACK DLLP                            │
 │  • read_ptr = ack_ptr on NAK, advances during replay            │
 │  • Full when: (write_ptr + 1) % depth == ack_ptr                │
 │  • Empty when: write_ptr == ack_ptr                             │
-│                                                                   │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -670,30 +670,30 @@ Residue:      0x497C2DBF (good packet residue)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    LCRC GENERATION                           │
-│                                                               │
+│                    LCRC GENERATION                          │
+│                                                             │
 │  TLP Data Stream (byte-by-byte)                             │
-│  ════════════════════════════════                            │
-│                                                               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│  │ Header   │  │ Header   │  │ Payload  │  │ Payload  │    │
-│  │ Byte 0   │─►│ Byte 1   │─►│ Byte 0   │─►│ ...      │    │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    │
-│       │             │              │              │          │
-│       ▼             ▼              ▼              ▼          │
+│  ════════════════════════════════                           │
+│                                                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ Header   │  │ Header   │  │ Payload  │  │ Payload  │     │
+│  │ Byte 0   │─►│ Byte 1   │─►│ Byte 0   │─►│ ...      │     │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘     │
+│       │             │              │              │         │
+│       ▼             ▼              ▼              ▼         │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │         CRC-32 Parallel LFSR Engine                  │   │
-│  │                                                       │   │
-│  │   ┌─────────────────────────────────────────┐       │   │
-│  │   │  Current CRC: 0xFFFFFFFF (initial)      │       │   │
-│  │   │                    ↓                     │       │   │
-│  │   │  + Byte 0    → CRC: 0xXXXXXXXX         │       │   │
-│  │   │  + Byte 1    → CRC: 0xYYYYYYYY         │       │   │
-│  │   │  + Byte N    → CRC: 0xZZZZZZZZ         │       │   │
-│  │   └─────────────────────────────────────────┘       │   │
-│  │                                                       │   │
-│  │  Algorithm: Parallel LFSR (processes 8 bits/cycle)  │   │
-│  │  XOR equations optimized (duplicate terms removed)  │   │
+│  │                                                      │   │
+│  │   ┌─────────────────────────────────────────┐        │   │
+│  │   │  Current CRC: 0xFFFFFFFF (initial)      │        │   │
+│  │   │                    ↓                    │        │   │
+│  │   │  + Byte 0    → CRC: 0xXXXXXXXX          │        │   │
+│  │   │  + Byte 1    → CRC: 0xYYYYYYYY          │        │   │
+│  │   │  + Byte N    → CRC: 0xZZZZZZZZ          │        │   │
+│  │   └─────────────────────────────────────────┘        │   │
+│  │                                                      │   │
+│  │  Algorithm: Parallel LFSR (processes 8 bits/cycle)   │   │
+│  │  XOR equations optimized (duplicate terms removed)   │   │
 │  └──────────────────────────────────────┬───────────────┘   │
 │                                         │                   │
 │                                         ▼                   │
@@ -702,12 +702,12 @@ Residue:      0x497C2DBF (good packet residue)
 │                                  │ 32 bits    │             │
 │                                  └──────┬─────┘             │
 │                                         │                   │
-│  TLP with LCRC (transmitted):          │                   │
-│  ┌─────────┬─────────┬──────────┬──────▼─────┐            │
-│  │ Header  │ Header  │ Payload  │ LCRC       │            │
-│  │ (3-4DW) │ ...     │ (0-1024B)│ (4 bytes)  │            │
-│  └─────────┴─────────┴──────────┴────────────┘            │
-│                                                               │
+│  TLP with LCRC (transmitted):          │                    │
+│  ┌─────────┬─────────┬──────────┬──────▼─────┐              │
+│  │ Header  │ Header  │ Payload  │ LCRC       │              │
+│  │ (3-4DW) │ ...     │ (0-1024B)│ (4 bytes)  │              │
+│  └─────────┴─────────┴──────────┴────────────┘              │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -715,31 +715,31 @@ Residue:      0x497C2DBF (good packet residue)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    LCRC CHECKING                             │
-│                                                               │
+│                    LCRC CHECKING                            │
+│                                                             │
 │  Received TLP (with appended LCRC)                          │
-│  ══════════════════════════════════                          │
-│                                                               │
-│  ┌─────────┬─────────┬──────────┬────────────┐             │
-│  │ Header  │ Header  │ Payload  │ LCRC       │             │
-│  │ (3-4DW) │ ...     │ (0-1024B)│ (4 bytes)  │             │
-│  └────┬────┴────┬────┴────┬─────┴──────┬─────┘             │
+│  ══════════════════════════════════                         │
+│                                                             │
+│  ┌─────────┬─────────┬──────────┬────────────┐              │
+│  │ Header  │ Header  │ Payload  │ LCRC       │              │
+│  │ (3-4DW) │ ...     │ (0-1024B)│ (4 bytes)  │              │
+│  └────┬────┴────┬────┴────┬─────┴──────┬─────┘              │
 │       │          │         │            │                   │
 │       ▼          ▼         ▼            ▼                   │
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │         CRC-32 Parallel LFSR Engine                  │   │
-│  │                                                       │   │
-│  │   Process entire TLP including LCRC                 │   │
-│  │   ┌─────────────────────────────────────────┐       │   │
-│  │   │  CRC: 0xFFFFFFFF (initial)              │       │   │
-│  │   │    ↓                                     │       │   │
-│  │   │  + Header bytes → CRC: 0xXXXXXXXX      │       │   │
-│  │   │  + Payload bytes → CRC: 0xYYYYYYYY     │       │   │
-│  │   │  + LCRC bytes    → CRC: 0x497C2DBF (?) │       │   │
-│  │   └─────────────────────────────────────────┘       │   │
-│  │                                                       │   │
-│  │  Good packet: CRC = 0x497C2DBF (magic residue)      │   │
-│  │  Bad packet:  CRC ≠ 0x497C2DBF                      │   │
+│  │                                                      │   │
+│  │   Process entire TLP including LCRC                  │   │
+│  │   ┌─────────────────────────────────────────┐        │   │
+│  │   │  CRC: 0xFFFFFFFF (initial)              │        │   │
+│  │   │    ↓                                    │        │   │
+│  │   │  + Header bytes → CRC: 0xXXXXXXXX       │        │   │
+│  │   │  + Payload bytes → CRC: 0xYYYYYYYY      │        │   │
+│  │   │  + LCRC bytes    → CRC: 0x497C2DBF (?)  │        │   │
+│  │   └─────────────────────────────────────────┘        │   │
+│  │                                                      │   │
+│  │  Good packet: CRC = 0x497C2DBF (magic residue)       │   │
+│  │  Bad packet:  CRC ≠ 0x497C2DBF                       │   │
 │  └──────────────────────────────────────┬───────────────┘   │
 │                                         │                   │
 │                                         ▼                   │
@@ -747,17 +747,17 @@ Residue:      0x497C2DBF (good packet residue)
 │                    ┌─────────────┤ Compare to │             │
 │                    │             │ Residue    │             │
 │                    │             └────────────┘             │
-│                    │                                         │
+│                    │                                        │
 │              CRC = Residue?                                 │
-│              │           │                                   │
-│              Yes         No                                  │
-│              │           │                                   │
-│         ┌────▼────┐ ┌───▼─────┐                            │
-│         │ Send    │ │ Send    │                            │
-│         │ ACK     │ │ NAK     │                            │
-│         │ DLLP    │ │ DLLP    │                            │
-│         └─────────┘ └─────────┘                            │
-│                                                               │
+│              │           │                                  │
+│              Yes         No                                 │
+│              │           │                                  │
+│         ┌────▼────┐ ┌───▼─────┐                             │
+│         │ Send    │ │ Send    │                             │
+│         │ ACK     │ │ NAK     │                             │
+│         │ DLLP    │ │ DLLP    │                             │
+│         └─────────┘ └─────────┘                             │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -767,32 +767,32 @@ The LCRC uses an optimized parallel LFSR that processes 8 bits per cycle:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│            CRC-32 Parallel LFSR Architecture                 │
-│                                                               │
+│            CRC-32 Parallel LFSR Architecture                │
+│                                                             │
 │  Input: data_in[7:0] (one byte per cycle)                   │
 │  State: crc[31:0] (current CRC value)                       │
-│                                                               │
+│                                                             │
 │  ┌────────────────────────────────────────────────┐         │
 │  │  For each output bit crc_next[i]:              │         │
-│  │                                                 │         │
+│  │                                                │         │
 │  │  crc_next[i] = XOR of:                         │         │
-│  │    - Selected bits from crc[31:0]             │         │
-│  │    - Selected bits from data_in[7:0]          │         │
+│  │    - Selected bits from crc[31:0]              │         │
+│  │    - Selected bits from data_in[7:0]           │         │
 │  │    - Based on polynomial taps                  │         │
-│  │                                                 │         │
+│  │                                                │         │
 │  │  Example for bit 0:                            │         │
-│  │  crc_next[0] = crc[24] ^ crc[30] ^ data[0] ^  │         │
+│  │  crc_next[0] = crc[24] ^ crc[30] ^ data[0] ^   │         │
 │  │                data[6] ^ ...                   │         │
-│  │                                                 │         │
-│  │  (32 XOR equations, one per output bit)       │         │
+│  │                                                │         │
+│  │  (32 XOR equations, one per output bit)        │         │
 │  └────────────────────────────────────────────────┘         │
-│                                                               │
-│  Optimization: Remove duplicate terms                        │
+│                                                             │
+│  Optimization: Remove duplicate terms                       │
 │    - XOR properties: A ^ A = 0                              │
-│    - Only keep terms appearing odd number of times         │
-│                                                               │
-│  Result: Combinatorial logic computes CRC in 1 cycle       │
-│                                                               │
+│    - Only keep terms appearing odd number of times          │
+│                                                             │
+│  Result: Combinatorial logic computes CRC in 1 cycle        │
+│                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 

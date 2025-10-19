@@ -53,32 +53,32 @@ The `PIPETransceiver` base class provides a unified PIPE (PHY Interface for PCI 
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      PIPETransceiver                             │
-│                 (Base class for all transceivers)                │
-│              Location: litepcie/phy/transceiver_base/            │
-│                                                                  │
+│                      PIPETransceiver                            │
+│                 (Base class for all transceivers)               │
+│              Location: litepcie/phy/transceiver_base/           │
+│                                                                 │
 │  PIPE Interface (sys_clk domain)                                │
 │  ════════════════════════════════════════════════════════════   │
-│                                                                  │
+│                                                                 │
 │  TX Signals:                    RX Signals:                     │
 │  • tx_data[15:0]                • rx_data[15:0]                 │
 │  • tx_datak[1:0]                • rx_datak[1:0]                 │
 │  • tx_elecidle                  • rx_elecidle                   │
 │                                 • rx_valid                      │
-│                                                                  │
+│                                                                 │
 │  Control:                       Status:                         │
 │  • reset                        • tx_ready                      │
 │  • speed[1:0]                   • rx_ready                      │
 │                                 • tx_clk, rx_clk                │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                    TX Datapath                              │ │
-│  │              (TransceiverTXDatapath)                        │ │
-│  │                                                             │ │
+│  │                    TX Datapath                             │ │
+│  │              (TransceiverTXDatapath)                       │ │
+│  │                                                            │ │
 │  │   sys_clk domain          tx_clk domain                    │ │
 │  │   ┌─────────┐           ┌──────────┐                       │ │
 │  │   │ PIPE TX │  AsyncFIFO│ 8b/10b   │                       │ │
-│  │   │ Input   │───────────►│ Encoder  │                       │ │
+│  │   │ Input   │───────────►│ Encoder │                       │ │
 │  │   │ 16-bit  │  (Depth=8)│ (SW)     │                       │ │
 │  │   │ 2 bytes │           │ 2 bytes  │                       │ │
 │  │   └─────────┘           └────┬─────┘                       │ │
@@ -87,59 +87,59 @@ The `PIPETransceiver` base class provides a unified PIPE (PHY Interface for PCI 
 │  └──────────────────────────────┼─────────────────────────────┘ │
 │                                 │                               │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Vendor-Specific Primitive                      │ │
+│  │              Vendor-Specific Primitive                     │ │
 │  │              (GTXE2, GTYE4, or DCUA)                       │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │   ┌───────────────────────────────────────────────┐        │ │
 │  │   │         TX Serializer (SERDES)                │        │ │
 │  │   │                                               │        │ │
-│  │   │  20-bit @ 250MHz → 1-bit @ 5GHz (Gen2)      │        │ │
-│  │   │  20-bit @ 125MHz → 1-bit @ 2.5GHz (Gen1)    │        │ │
+│  │   │  20-bit @ 250MHz → 1-bit @ 5GHz (Gen2)        │        │ │
+│  │   │  20-bit @ 125MHz → 1-bit @ 2.5GHz (Gen1)      │        │ │
 │  │   │                                               │        │ │
-│  │   │  Parallel → Serial conversion                │        │ │
-│  │   │  Internal PLL: CPLL (GTX) or QPLL (GTY)     │        │ │
+│  │   │  Parallel → Serial conversion                 │        │ │
+│  │   │  Internal PLL: CPLL (GTX) or QPLL (GTY)       │        │ │
 │  │   └────────────────────┬──────────────────────────┘        │ │
 │  │                        │ Differential serial               │ │
-│  │                        ▼                                    │ │
-│  │                    TX+/TX- (PCIe lanes)                     │ │
-│  │                                                             │ │
-│  │                    RX+/RX- (PCIe lanes)                     │ │
-│  │                        │                                    │ │
-│  │                        ▼                                    │ │
+│  │                        ▼                                   │ │
+│  │                    TX+/TX- (PCIe lanes)                    │ │
+│  │                                                            │ │
+│  │                    RX+/RX- (PCIe lanes)                    │ │
+│  │                        │                                   │ │
+│  │                        ▼                                   │ │
 │  │   ┌───────────────────────────────────────────────┐        │ │
-│  │   │         RX Deserializer (SERDES)             │        │ │
+│  │   │         RX Deserializer (SERDES)              │        │ │
 │  │   │                                               │        │ │
-│  │   │  1-bit @ 5GHz → 20-bit @ 250MHz (Gen2)      │        │ │
-│  │   │  Serial → Parallel conversion                │        │ │
+│  │   │  1-bit @ 5GHz → 20-bit @ 250MHz (Gen2)        │        │ │
+│  │   │  Serial → Parallel conversion                 │        │ │
 │  │   │  Includes:                                    │        │ │
-│  │   │  • CDR (Clock/Data Recovery)                 │        │ │
-│  │   │  • DFE (Decision Feedback Equalization)      │        │ │
-│  │   │  • CTLE (Continuous Time Linear Equalizer)  │        │ │
+│  │   │  • CDR (Clock/Data Recovery)                  │        │ │
+│  │   │  • DFE (Decision Feedback Equalization)       │        │ │
+│  │   │  • CTLE (Continuous Time Linear Equalizer)    │        │ │
 │  │   └────────────────────┬──────────────────────────┘        │ │
 │  │                        │ 20-bit recovered                  │ │
 │  └────────────────────────┼───────────────────────────────────┘ │
 │                           │                                     │
-│  ┌────────────────────────▼─────────────────────────────────┐  │
-│  │                    RX Datapath                            │  │
-│  │              (TransceiverRXDatapath)                      │  │
-│  │                                                           │  │
-│  │   rx_clk domain           sys_clk domain                 │  │
-│  │   ┌──────────┐          ┌─────────┐                      │  │
-│  │   │ 8b/10b   │ AsyncFIFO│ PIPE RX │                      │  │
-│  │   │ Decoder  │──────────►│ Output  │                      │  │
-│  │   │ (SW)     │ (Depth=8)│ 16-bit  │                      │  │
-│  │   │ 2 bytes  │          │ 2 bytes │                      │  │
-│  │   └──────────┘          └─────────┘                      │  │
-│  │                                                           │  │
-│  │   • Detects 8b/10b errors (disparity, invalid codes)     │  │
-│  │   • Decodes K-characters (K28.5, K27.7, etc.)           │  │
-│  │   • Generates rx_valid flag                              │  │
+│  ┌────────────────────────▼─────────────────────────────────┐   │
+│  │                    RX Datapath                           │   │
+│  │              (TransceiverRXDatapath)                     │   │
+│  │                                                          │   │
+│  │   rx_clk domain           sys_clk domain                 │   │
+│  │   ┌──────────┐          ┌─────────┐                      │   │
+│  │   │ 8b/10b   │ AsyncFIFO│ PIPE RX │                      │   │
+│  │   │ Decoder  │──────────►│ Output │                      │   │
+│  │   │ (SW)     │ (Depth=8)│ 16-bit  │                      │   │
+│  │   │ 2 bytes  │          │ 2 bytes │                      │   │
+│  │   └──────────┘          └─────────┘                      │   │
+│  │                                                          │   │
+│  │   • Detects 8b/10b errors (disparity, invalid codes)     │   │
+│  │   • Decodes K-characters (K28.5, K27.7, etc.)            │   │
+│  │   • Generates rx_valid flag                              │   │
 │  └───────────────────────────────────────────────────────────┘  │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Reset Sequencer                                │ │
-│  │        (TransceiverResetSequencer)                          │ │
-│  │                                                             │ │
+│  │              Reset Sequencer                               │ │
+│  │        (TransceiverResetSequencer)                         │ │
+│  │                                                            │ │
 │  │  FSM States (vendor-specific timing):                      │ │
 │  │  1. INIT        - Assert all resets                        │ │
 │  │  2. PLL_LOCK    - Wait for PLL to lock                     │ │
@@ -148,7 +148,7 @@ The `PIPETransceiver` base class provides a unified PIPE (PHY Interface for PCI 
 │  │  5. CDR_LOCK    - Wait for CDR to lock                     │ │
 │  │  6. RX_READY    - Release RX reset                         │ │
 │  │  7. OPERATIONAL - Normal operation                         │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  Timing requirements vary by vendor (see below)            │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
@@ -302,12 +302,12 @@ Why Not Width Conversion?
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    S7GTXTransceiver                              │
-│                Location: litepcie/phy/xilinx/s7_gtx.py           │
-│                                                                  │
+│                    S7GTXTransceiver                             │
+│                Location: litepcie/phy/xilinx/s7_gtx.py          │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Reference Clock Input                          │ │
-│  │                                                             │ │
+│  │              Reference Clock Input                         │ │
+│  │                                                            │ │
 │  │   External: 100 MHz differential (typical for PCIe)        │ │
 │  │   ┌──────────┐                                             │ │
 │  │   │ IBUFDS   │                                             │ │
@@ -316,68 +316,68 @@ Why Not Width Conversion?
 │  └──────────────────────────┬─────────────────────────────────┘ │
 │                             │                                   │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Channel PLL (GTXChannelPLL)                    │ │
-│  │                                                             │ │
-│  │  CPLL Configuration:                                        │ │
+│  │              Channel PLL (GTXChannelPLL)                   │ │
+│  │                                                            │ │
+│  │  CPLL Configuration:                                       │ │
 │  │  • VCO range: 1.6 - 3.3 GHz                                │ │
 │  │  • Equation: VCO = refclk × (N1 × N2) / M                  │ │
 │  │  • Line rate = VCO × 2 / D                                 │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  Gen1 (2.5 GT/s) Example:                                  │ │
 │  │    refclk = 100 MHz                                        │ │
-│  │    N1=5, N2=2, M=1 → VCO = 1.0 GHz                        │ │
-│  │    D=8 → linerate = 2.5 GT/s                              │ │
-│  │    word_clk = 250 MHz (÷10 for 8b/10b)                    │ │
-│  │                                                             │ │
+│  │    N1=5, N2=2, M=1 → VCO = 1.0 GHz                         │ │
+│  │    D=8 → linerate = 2.5 GT/s                               │ │
+│  │    word_clk = 250 MHz (÷10 for 8b/10b)                     │ │
+│  │                                                            │ │
 │  │  Gen2 (5.0 GT/s) Example:                                  │ │
 │  │    refclk = 100 MHz                                        │ │
-│  │    N1=5, N2=2, M=1 → VCO = 1.0 GHz                        │ │
-│  │    D=4 → linerate = 5.0 GT/s                              │ │
-│  │    word_clk = 500 MHz (÷10 for 8b/10b)                    │ │
+│  │    N1=5, N2=2, M=1 → VCO = 1.0 GHz                         │ │
+│  │    D=4 → linerate = 5.0 GT/s                               │ │
+│  │    word_clk = 500 MHz (÷10 for 8b/10b)                     │ │
 │  └──────────────────────────┬─────────────────────────────────┘ │
 │                             │ CPLL lock signal                  │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │            Reset Sequencer (GTXResetSequencer)              │ │
-│  │                                                             │ │
+│  │            Reset Sequencer (GTXResetSequencer)             │ │
+│  │                                                            │ │
 │  │  Implements Xilinx AR43482 reset sequence:                 │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  1. DEFER (50ms) ───────► Xilinx requirement after config  │ │
 │  │  2. INIT_RESET ──────────► Assert all resets               │ │
 │  │  3. WAIT_PLL_LOCK ───────► Release PLL reset, wait lock    │ │
 │  │  4. RELEASE_TX ──────────► Release TX reset                │ │
 │  │  5. RELEASE_RX ──────────► Release RX reset                │ │
 │  │  6. READY ───────────────► Normal operation                │ │
-│  │                                                             │ │
-│  │  Timing:                                                    │ │
-│  │  • Defer: 50ms (6.25M cycles @ 125 MHz)                   │ │
+│  │                                                            │ │
+│  │  Timing:                                                   │ │
+│  │  • Defer: 50ms (6.25M cycles @ 125 MHz)                    │ │
 │  │  • PLL lock timeout: 1ms                                   │ │
 │  │  • Automatic retry on PLL lock failure                     │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │                  GTXE2_CHANNEL Primitive                    │ │
-│  │                                                             │ │
+│  │                  GTXE2_CHANNEL Primitive                   │ │
+│  │                                                            │ │
 │  │  Key Parameters (~100 total):                              │ │
-│  │  • TX_DATA_WIDTH = 20 (for 8b/10b encoding)               │ │
+│  │  • TX_DATA_WIDTH = 20 (for 8b/10b encoding)                │ │
 │  │  • RX_DATA_WIDTH = 20                                      │ │
-│  │  • CPLL_FBDIV = Calculated from PLL config                │ │
-│  │  • CPLL_REFCLK_DIV = Calculated from PLL config           │ │
-│  │  • RXOUT_DIV = D value (4 or 8)                           │ │
-│  │  • TXOUT_DIV = D value (4 or 8)                           │ │
-│  │  • RX_INT_DATAWIDTH = 0 (20-bit mode)                     │ │
-│  │  • TX_INT_DATAWIDTH = 0 (20-bit mode)                     │ │
-│  │                                                             │ │
-│  │  Signals:                                                   │ │
-│  │  • TXDATA[19:0] ← from 8b/10b encoder                     │ │
-│  │  • RXDATA[19:0] → to 8b/10b decoder                       │ │
-│  │  • TXOUTCLK → tx_clk (125/250 MHz)                        │ │
-│  │  • RXOUTCLK → rx_clk (recovered clock)                    │ │
-│  │  • CPLLLOCK → PLL lock status                             │ │
-│  │                                                             │ │
-│  │  Notes:                                                     │ │
-│  │  • Hardware 8b/10b DISABLED (use software instead)        │ │
-│  │  • Comma detection DISABLED (handled in PIPE layer)       │ │
-│  │  • Channel bonding DISABLED (single-lane only)            │ │
+│  │  • CPLL_FBDIV = Calculated from PLL config                 │ │
+│  │  • CPLL_REFCLK_DIV = Calculated from PLL config            │ │
+│  │  • RXOUT_DIV = D value (4 or 8)                            │ │
+│  │  • TXOUT_DIV = D value (4 or 8)                            │ │
+│  │  • RX_INT_DATAWIDTH = 0 (20-bit mode)                      │ │
+│  │  • TX_INT_DATAWIDTH = 0 (20-bit mode)                      │ │
+│  │                                                            │ │
+│  │  Signals:                                                  │ │
+│  │  • TXDATA[19:0] ← from 8b/10b encoder                      │ │
+│  │  • RXDATA[19:0] → to 8b/10b decoder                        │ │
+│  │  • TXOUTCLK → tx_clk (125/250 MHz)                         │ │
+│  │  • RXOUTCLK → rx_clk (recovered clock)                     │ │
+│  │  • CPLLLOCK → PLL lock status                              │ │
+│  │                                                            │ │
+│  │  Notes:                                                    │ │
+│  │  • Hardware 8b/10b DISABLED (use software instead)         │ │
+│  │  • Comma detection DISABLED (handled in PIPE layer)        │ │
+│  │  • Channel bonding DISABLED (single-lane only)             │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -400,58 +400,58 @@ Why Not Width Conversion?
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    USPGTYTransceiver                             │
-│                Location: litepcie/phy/xilinx/usp_gty.py          │
-│                                                                  │
-│  Key Differences from GTX:                                       │
-│                                                                  │
+│                    USPGTYTransceiver                            │
+│                Location: litepcie/phy/xilinx/usp_gty.py         │
+│                                                                 │
+│  Key Differences from GTX:                                      │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              QPLL vs CPLL                                   │ │
-│  │                                                             │ │
+│  │              QPLL vs CPLL                                  │ │
+│  │                                                            │ │
 │  │  GTY uses Quad PLL (QPLL) instead of Channel PLL:          │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  QPLL0 Range: 9.8 - 16.375 GHz                             │ │
 │  │  QPLL1 Range: 8.0 - 13.0 GHz                               │ │
-│  │                                                             │ │
-│  │  Selection Algorithm:                                       │ │
+│  │                                                            │ │
+│  │  Selection Algorithm:                                      │ │
 │  │  1. Try QPLL0 (higher frequency)                           │ │
 │  │  2. If out of range, try QPLL1                             │ │
 │  │  3. Automatically selects best configuration               │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  Gen2 (5.0 GT/s) typically uses QPLL0                      │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Clock Buffering                                │ │
-│  │                                                             │ │
+│  │              Clock Buffering                               │ │
+│  │                                                            │ │
 │  │  BUFG_GT instead of BUFG:                                  │ │
 │  │  • Lower jitter clock buffering                            │ │
 │  │  • Required for GTY TXOUTCLK/RXOUTCLK                      │ │
 │  │  • Automatic clock enable control                          │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              Advanced Equalization                          │ │
-│  │                                                             │ │
-│  │  GTY has enhanced RX equalization:                          │ │
+│  │              Advanced Equalization                         │ │
+│  │                                                            │ │
+│  │  GTY has enhanced RX equalization:                         │ │
 │  │  • 3-tap DFE (vs 5-tap in GTHE4)                           │ │
-│  │  • Adaptive CTLE                                            │ │
+│  │  • Adaptive CTLE                                           │ │
 │  │  • Better long-reach support                               │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              GTYE4_CHANNEL Primitive                        │ │
-│  │                                                             │ │
+│  │              GTYE4_CHANNEL Primitive                       │ │
+│  │                                                            │ │
 │  │  Similar to GTXE2_CHANNEL but with:                        │ │
 │  │  • Different parameter names (UltraScale+ conventions)     │ │
 │  │  • QPLL support instead of CPLL                            │ │
 │  │  • Gen3 capable (with 128b/130b encoding)                  │ │
 │  │  • More advanced equalization options                      │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
-│  Reset Sequence: Similar to GTX (GTYResetSequencer)            │
+│                                                                 │
+│  Reset Sequence: Similar to GTX (GTYResetSequencer)             │
 │  8b/10b Encoding: Software (same as GTX)                        │
-│  Data Width: 16-bit PIPE interface (same as GTX)               │
+│  Data Width: 16-bit PIPE interface (same as GTX)                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -473,43 +473,43 @@ Why Not Width Conversion?
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                  ECP5SerDesTransceiver                           │
-│              Location: litepcie/phy/lattice/ecp5_serdes.py       │
-│                                                                  │
+│                  ECP5SerDesTransceiver                          │
+│              Location: litepcie/phy/lattice/ecp5_serdes.py      │
+│                                                                 │
 │  ██ KEY DIFFERENCE: Open-source toolchain support (nextpnr) ██  │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              DCUA (Dual Channel Unit)                       │ │
-│  │                                                             │ │
-│  │  ECP5 uses DCUA primitive (2 channels per DCU):             │ │
-│  │                                                             │ │
-│  │  DCU0 (channels 0, 1)                                       │ │
-│  │  DCU1 (channels 0, 1)                                       │ │
-│  │                                                             │ │
-│  │  Configuration:                                             │ │
+│  │              DCUA (Dual Channel Unit)                      │ │
+│  │                                                            │ │
+│  │  ECP5 uses DCUA primitive (2 channels per DCU):            │ │
+│  │                                                            │ │
+│  │  DCU0 (channels 0, 1)                                      │ │
+│  │  DCU1 (channels 0, 1)                                      │ │
+│  │                                                            │ │
+│  │  Configuration:                                            │ │
 │  │  • dcu: Which DCU to use (0 or 1)                          │ │
 │  │  • channel: Which channel (0 or 1)                         │ │
-│  │  • gearing: 1:1 (8-bit) or 1:2 (16-bit)                   │ │
+│  │  • gearing: 1:1 (8-bit) or 1:2 (16-bit)                    │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │          Software 8b/10b (REQUIRED for ECP5)                │ │
-│  │                                                             │ │
+│  │          Software 8b/10b (REQUIRED for ECP5)               │ │
+│  │                                                            │ │
 │  │  ECP5 has NO hardware 8b/10b encoder/decoder               │ │
 │  │  ──────────────────────────────────────────                │ │
-│  │                                                             │ │
-│  │  MUST use software 8b/10b from LiteX                        │ │
+│  │                                                            │ │
+│  │  MUST use software 8b/10b from LiteX                       │ │
 │  │  • Same encoder as GTX/GTY for consistency                 │ │
 │  │  • Proven to work at 2.5 GT/s (Gen1)                       │ │
 │  │  • Gen2 (5.0 GT/s) experimental on ECP5                    │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │          SCI (SerDes Client Interface)                      │ │
-│  │                                                             │ │
-│  │  Runtime configuration via SCI bus:                         │ │
-│  │                                                             │ │
-│  │  Signals:                                                   │ │
+│  │          SCI (SerDes Client Interface)                     │ │
+│  │                                                            │ │
+│  │  Runtime configuration via SCI bus:                        │ │
+│  │                                                            │ │
+│  │  Signals:                                                  │ │
 │  │  • sci_addr[5:0]    - Register address                     │ │
 │  │  • sci_wdata[7:0]   - Write data                           │ │
 │  │  • sci_rdata[7:0]   - Read data                            │ │
@@ -517,19 +517,19 @@ Why Not Width Conversion?
 │  │  • sci_wrn          - Write strobe (active low)            │ │
 │  │  • dual_sel         - DCU selection                        │ │
 │  │  • chan_sel         - Channel selection                    │ │
-│  │                                                             │ │
-│  │  Used for:                                                  │ │
+│  │                                                            │ │
+│  │  Used for:                                                 │ │
 │  │  • TX/RX polarity inversion                                │ │
-│  │  • Termination settings                                     │ │
-│  │  • Loopback modes                                           │ │
-│  │  • Runtime diagnostics                                      │ │
+│  │  • Termination settings                                    │ │
+│  │  • Loopback modes                                          │ │
+│  │  • Runtime diagnostics                                     │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │          8-State Reset Sequencer (ECP5ResetSequencer)       │ │
-│  │                                                             │ │
+│  │          8-State Reset Sequencer (ECP5ResetSequencer)      │ │
+│  │                                                            │ │
 │  │  ECP5 requires MORE complex reset than Xilinx:             │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  1. INITIAL_RESET ──────► Assert all resets                │ │
 │  │  2. WAIT_FOR_TXPLL_LOCK ► Release PLL, wait for lock       │ │
 │  │  3. APPLY_TXPCS_RESET ──► Assert TX PCS reset              │ │
@@ -538,41 +538,41 @@ Why Not Width Conversion?
 │  │  6. APPLY_RXPCS_RESET ──► Assert RX PCS reset              │ │
 │  │  7. RELEASE_RXPCS_RESET ► Release RX PCS reset             │ │
 │  │  8. IDLE ───────────────► Normal operation                 │ │
-│  │                                                             │ │
-│  │  Why 8 states vs Xilinx 6?                                  │ │
+│  │                                                            │ │
+│  │  Why 8 states vs Xilinx 6?                                 │ │
 │  │  • ECP5 requires explicit PCS reset assertion/release      │ │
 │  │  • TX and RX paths must be reset separately                │ │
 │  │  • Based on ECP5-PCIe reference implementation             │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │              DCU PLL Configuration                          │ │
-│  │                                                             │ │
+│  │              DCU PLL Configuration                         │ │
+│  │                                                            │ │
 │  │  Reference Clock: 100 MHz or 200 MHz                       │ │
-│  │                                                             │ │
-│  │  Key Parameters:                                            │ │
+│  │                                                            │ │
+│  │  Key Parameters:                                           │ │
 │  │  • D_MACROPDB = "0b1" (power up)                           │ │
 │  │  • D_TXPLL_PWDNB = "0b1" (PLL power up)                    │ │
 │  │  • D_REFCK_MODE = "0b100" (100 MHz) or "0b000" (200 MHz)   │ │
 │  │  • D_TX_MAX_RATE = "2.5" (Gen1) or "5.0" (Gen2)            │ │
-│  │                                                             │ │
-│  │  Channel Parameters (60+ per channel):                      │ │
+│  │                                                            │ │
+│  │  Channel Parameters (60+ per channel):                     │ │
 │  │  • CHx_PROTOCOL = "PCIE"                                   │ │
 │  │  • CHx_PCIE_MODE = "1X" (single lane)                      │ │
 │  │  • CHx_CDR_MAX_RATE = "2.5" or "5.0"                       │ │
 │  └────────────────────────────────────────────────────────────┘ │
-│                                                                  │
+│                                                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │          Open-Source Toolchain Support                      │ │
-│  │                                                             │ │
+│  │          Open-Source Toolchain Support                     │ │
+│  │                                                            │ │
 │  │  ██ MAJOR BENEFIT: Works with nextpnr! ██                  │ │
-│  │                                                             │ │
+│  │                                                            │ │
 │  │  • No vendor tools required (Diamond optional)             │ │
 │  │  • Full open-source PCIe implementation possible           │ │
 │  │  • Community-driven development                            │ │
 │  │  • Educational and research friendly                       │ │
-│  │                                                             │ │
-│  │  Toolchain: Yosys → nextpnr-ecp5 → ecppack                │ │
+│  │                                                            │ │
+│  │  Toolchain: Yosys → nextpnr-ecp5 → ecppack                 │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -765,39 +765,39 @@ PCIe uses several K-characters:
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│                      Clock Domains                              │
-│                                                                  │
-│  sys_clk Domain (125 MHz)                                       │
-│  ═══════════════════════                                        │
-│  • Main system clock                                            │
+│                      Clock Domains                             │
+│                                                                │
+│  sys_clk Domain (125 MHz)                                      │
+│  ═══════════════════════                                       │
+│  • Main system clock                                           │
 │  • PIPE interface operates here                                │
-│  • DLL and LTSSM logic                                          │
+│  • DLL and LTSSM logic                                         │
 │  • AsyncFIFO write (TX) and read (RX) side                     │
-│                                                                  │
-│  Source: Platform clock (PLL from reference)                    │
-│                                                                  │
+│                                                                │
+│  Source: Platform clock (PLL from reference)                   │
+│                                                                │
 ├────────────────────────────────────────────────────────────────┤
 │  tx_clk Domain (125 MHz Gen1, 250 MHz Gen2)                    │
-│  ════════════════════════════════════════════                   │
+│  ════════════════════════════════════════════                  │
 │  • TX word clock from GTX/GTY/DCUA                             │
-│  • 8b/10b encoder runs here                                     │
-│  • AsyncFIFO read side                                          │
-│                                                                  │
+│  • 8b/10b encoder runs here                                    │
+│  • AsyncFIFO read side                                         │
+│                                                                │
 │  Source: TXOUTCLK from transceiver                             │
-│  Frequency: line_rate / 10                                      │
+│  Frequency: line_rate / 10                                     │
 │    Gen1: 2.5 GT/s / 10 = 250 MHz                               │
 │    Gen2: 5.0 GT/s / 10 = 500 MHz                               │
-│                                                                  │
+│                                                                │
 ├────────────────────────────────────────────────────────────────┤
 │  rx_clk Domain (125 MHz Gen1, 250 MHz Gen2, recovered)         │
 │  ═══════════════════════════════════════════════════════       │
 │  • RX recovered clock from CDR                                 │
-│  • 8b/10b decoder runs here                                     │
-│  • AsyncFIFO write side                                         │
-│                                                                  │
+│  • 8b/10b decoder runs here                                    │
+│  • AsyncFIFO write side                                        │
+│                                                                │
 │  Source: RXOUTCLK from transceiver (CDR recovered)             │
-│  Frequency: Matches remote TX clock (with PPM tolerance)        │
-│                                                                  │
+│  Frequency: Matches remote TX clock (with PPM tolerance)       │
+│                                                                │
 └────────────────────────────────────────────────────────────────┘
 
 CDC Points:
@@ -829,31 +829,31 @@ The transceiver integrates with the LTSSM (Link Training and Status State Machin
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│              LTSSM ↔ Transceiver Integration                      │
-│                                                                    │
-│  LTSSM (Phase 6)              Transceiver (Phase 9)               │
-│  ════════════════              ═══════════════════                │
-│                                                                    │
+│              LTSSM ↔ Transceiver Integration                     │
+│                                                                  │
+│  LTSSM (Phase 6)              Transceiver (Phase 9)              │
+│  ════════════════              ═══════════════════               │
+│                                                                  │
 │  link_speed[1:0] ────────────► speed[1:0]                        │
-│    1 = Gen1 (2.5 GT/s)           Changes PLL configuration        │
-│    2 = Gen2 (5.0 GT/s)           Updates TXRATE/RXRATE            │
-│                                                                    │
-│  tx_elecidle ─────────────────► tx_elecidle                       │
-│    LTSSM requests electrical     Controls transmitter output      │
-│    idle for speed change         Disables TX during training      │
-│                                                                    │
-│  rx_elecidle ◄─────────────────  rx_elecidle                      │
-│    Indicates remote end           Detected by transceiver         │
-│    has entered electrical idle    Used by LTSSM for state trans.  │
-│                                                                    │
-│  phy_ready ◄───────────────────  tx_ready & rx_ready              │
-│    Indicates PHY is operational   Both paths must be ready        │
-│    LTSSM waits for ready          Before link training starts     │
-│                                                                    │
-│  phy_reset ───────────────────►  reset                            │
-│    LTSSM can reset PHY if         Triggers reset sequencer        │
-│    link training fails            Restarts PLL/CDR lock           │
-│                                                                    │
+│    1 = Gen1 (2.5 GT/s)           Changes PLL configuration       │
+│    2 = Gen2 (5.0 GT/s)           Updates TXRATE/RXRATE           │
+│                                                                  │
+│  tx_elecidle ─────────────────► tx_elecidle                      │
+│    LTSSM requests electrical     Controls transmitter output     │
+│    idle for speed change         Disables TX during training     │
+│                                                                  │
+│  rx_elecidle ◄─────────────────  rx_elecidle                     │
+│    Indicates remote end           Detected by transceiver        │
+│    has entered electrical idle    Used by LTSSM for state trans. │
+│                                                                  │
+│  phy_ready ◄───────────────────  tx_ready & rx_ready             │
+│    Indicates PHY is operational   Both paths must be ready       │
+│    LTSSM waits for ready          Before link training starts    │
+│                                                                  │
+│  phy_reset ───────────────────►  reset                           │
+│    LTSSM can reset PHY if         Triggers reset sequencer       │
+│    link training fails            Restarts PLL/CDR lock          │
+│                                                                  │
 └──────────────────────────────────────────────────────────────────┘
 
 Integration Function (from integrated_phy.py):

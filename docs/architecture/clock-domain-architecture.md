@@ -23,40 +23,40 @@ This document defines the clock domain architecture for LitePCIe, covering:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     System Clock Domain                      │
-│                         ("sys")                              │
+│                     System Clock Domain                     │
+│                         ("sys")                             │
 │  ┌────────────────────────────────────────────────────┐     │
 │  │  TLP Layer                                         │     │
 │  │  - Endpoint logic                                  │     │
 │  │  - Packet assembly/disassembly                     │     │
 │  └────────────────────────────────────────────────────┘     │
-│                          ↓ ↑                                 │
-│                   PHYTXDatapath / PHYRXDatapath              │
-│                   (CDC: sys ↔ pcie via AsyncFIFO)            │
-│                          ↓ ↑                                 │
+│                          ↓ ↑                                │
+│                   PHYTXDatapath / PHYRXDatapath             │
+│                   (CDC: sys ↔ pcie via AsyncFIFO)           │
+│                          ↓ ↑                                │
 └──────────────────────────┼─┼─────────────────────────────────┘
                            │ │
 ┌──────────────────────────┼─┼─────────────────────────────────┐
-│                PCIe Clock Domain ("pcie")                     │
+│                PCIe Clock Domain ("pcie")                    │
 │                 125 MHz (Gen1) / 250 MHz (Gen2)              │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  Layout Converters                                 │     │
-│  │  - PHYToDLLConverter / DLLToPHYConverter           │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  Layout Converters                                 │      │
+│  │  - PHYToDLLConverter / DLLToPHYConverter           │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  DLL Layer                                         │     │
-│  │  - DLLTX (ACK/NAK, retry, sequence, LCRC)         │     │
-│  │  - DLLRX (validation, reordering)                  │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  DLL Layer                                         │      │
+│  │  - DLLTX (ACK/NAK, retry, sequence, LCRC)          │      │
+│  │  - DLLRX (validation, reordering)                  │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  PIPE Interface                                    │     │
-│  │  - K-character framing (STP/SDP/END/EDB)           │     │
-│  │  - SKP ordered sets (clock compensation)           │     │
-│  │  - TS1/TS2 (training sequences)                    │     │
-│  │  - LTSSM (link training state machine)             │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  PIPE Interface                                    │      │
+│  │  - K-character framing (STP/SDP/END/EDB)           │      │
+│  │  - SKP ordered sets (clock compensation)           │      │
+│  │  - TS1/TS2 (training sequences)                    │      │
+│  │  - LTSSM (link training state machine)             │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
 │                    8-bit PIPE symbols                        │
 │                    (pipe_tx_data/datak,                      │
@@ -115,65 +115,65 @@ class PHYTXDatapath(Module):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     System Clock Domain                      │
-│                         ("sys")                              │
+│                     System Clock Domain                     │
+│                         ("sys")                             │
 │  ┌────────────────────────────────────────────────────┐     │
 │  │  TLP Layer (unchanged)                             │     │
 │  └────────────────────────────────────────────────────┘     │
-│                          ↓ ↑                                 │
-│                   PHYTXDatapath / PHYRXDatapath              │
-│                   (CDC: sys ↔ pcie via AsyncFIFO)            │
-│                          ↓ ↑                                 │
+│                          ↓ ↑                                │
+│                   PHYTXDatapath / PHYRXDatapath             │
+│                   (CDC: sys ↔ pcie via AsyncFIFO)           │
+│                          ↓ ↑                                │
 └──────────────────────────┼─┼─────────────────────────────────┘
                            │ │
 ┌──────────────────────────┼─┼─────────────────────────────────┐
-│                PCIe Clock Domain ("pcie")                     │
+│                PCIe Clock Domain ("pcie")                    │
 │                 125 MHz (Gen1) / 250 MHz (Gen2)              │
 │                 Derived from TX clock (see below)            │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  Layout Converters (unchanged)                     │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  Layout Converters (unchanged)                     │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  DLL Layer (unchanged)                             │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  DLL Layer (unchanged)                             │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
-│  ┌────────────────────────────────────────────────────┐     │
-│  │  PIPE Interface (unchanged)                        │     │
-│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐      │
+│  │  PIPE Interface (unchanged)                        │      │
+│  └────────────────────────────────────────────────────┘      │
 │                          ↓ ↑                                 │
 └──────────────────────────┼─┼─────────────────────────────────┘
                            │ │
 ┌──────────────────────────┼─┼─────────────────────────────────┐
 │                  Transceiver Wrapper                         │
 │                      (NEW - Phase 9)                         │
-│  ┌────────────────────┐          ┌────────────────────┐     │
-│  │   TX Path          │          │   RX Path          │     │
-│  │                    │          │                    │     │
-│  │  ┌──────────────┐  │          │  ┌──────────────┐  │     │
-│  │  │ TX CDC       │  │          │  │ RX CDC       │  │     │
-│  │  │ AsyncFIFO    │  │          │  │ AsyncFIFO    │  │     │
-│  │  │ pcie → tx    │  │          │  │ rx → pcie    │  │     │
-│  │  └──────────────┘  │          │  └──────────────┘  │     │
-│  │         ↓          │          │         ↑          │     │
-│  │  ┌──────────────┐  │          │  ┌──────────────┐  │     │
-│  │  │ 8b/10b       │  │          │  │ 8b/10b       │  │     │
-│  │  │ Encoder      │  │          │  │ Decoder      │  │     │
-│  │  └──────────────┘  │          │  └──────────────┘  │     │
-│  │         ↓          │          │         ↑          │     │
-│  └─────────┼──────────┘          └─────────┼──────────┘     │
+│  ┌────────────────────┐          ┌────────────────────┐      │
+│  │   TX Path          │          │   RX Path          │      │
+│  │                    │          │                    │      │
+│  │  ┌──────────────┐  │          │  ┌──────────────┐  │      │
+│  │  │ TX CDC       │  │          │  │ RX CDC       │  │      │
+│  │  │ AsyncFIFO    │  │          │  │ AsyncFIFO    │  │      │
+│  │  │ pcie → tx    │  │          │  │ rx → pcie    │  │      │
+│  │  └──────────────┘  │          │  └──────────────┘  │      │
+│  │         ↓          │          │         ↑          │      │
+│  │  ┌──────────────┐  │          │  ┌──────────────┐  │      │
+│  │  │ 8b/10b       │  │          │  │ 8b/10b       │  │      │
+│  │  │ Encoder      │  │          │  │ Decoder      │  │      │
+│  │  └──────────────┘  │          │  └──────────────┘  │      │
+│  │         ↓          │          │         ↑          │      │
+│  └─────────┼──────────┘          └─────────┼──────────┘      │
 │            │                               │                 │
 │            │   "tx" domain                 │  "rx" domain    │
 │            │   (txoutclk)                  │  (rxoutclk)     │
 │            ↓                               ↑                 │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │  GTX/GTY/ECP5 Transceiver Primitive             │       │
-│  │  - 10-bit TX data (8b + 2b disparity)            │       │
-│  │  - 10-bit RX data (8b + 2b disparity)            │       │
-│  │  - Separate TX and RX clocks                     │       │
-│  │  - TXOUTCLK: Recovered TX clock                  │       │
-│  │  - RXOUTCLK: Recovered RX clock                  │       │
-│  └──────────────────────────────────────────────────┘       │
+│  ┌──────────────────────────────────────────────────┐        │
+│  │  GTX/GTY/ECP5 Transceiver Primitive              │        │
+│  │  - 10-bit TX data (8b + 2b disparity)            │        │
+│  │  - 10-bit RX data (8b + 2b disparity)            │        │
+│  │  - Separate TX and RX clocks                     │        │
+│  │  - TXOUTCLK: Recovered TX clock                  │        │
+│  │  - RXOUTCLK: Recovered RX clock                  │        │
+│  └──────────────────────────────────────────────────┘        │
 └──────────────────────────┼─┼───────────────────────────────┘
                            │ │
                            ↓ ↑
