@@ -369,13 +369,13 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │       │  │            │          │                     │ │
 │  │   │       │  │     After 3 SKP       │                     │ │
 │  │   │       │  │            │          │                     │ │
-│  │   │       │  │            └──────────┘                     │ │
-│  │   │       │  │                       │                       │
-│  │   │       │  │  (enable_training_sequences)                │ │
-│  │   │       │  │                       │                       │
-│  │   │       │  └────────────┐          │                       │
+│  │   │       │                                                  │            └──────────┘                     │ │
+│  │   │       │  │                                               │                       │
+│  │   │       │                                                  │  (enable_training_sequences)                │ │
+│  │   │       │  │                                               │                       │
+│  │   │       │  └────────────┐                                  │                       │
 │  │   │       │                          │                     │ │
-│  │   │       │          ┌────▼────────┐ │                       │
+│  │   │       │          ┌────▼────────┐                         │                       │
 │  │   │       │          │  TS_CHECK     │                     │ │
 │  │   │       │          │               │                     │ │
 │  │   │       │          │  Buffer 16    │                     │ │
@@ -390,15 +390,15 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │       │          │  Set flags:   │                     │ │
 │  │   │       │          │  ts1/ts2      │                     │ │
 │  │   │       │          │  _detected    │                     │ │
-│  │   │       │          └─────────────┘ │                       │
+│  │   │       │          └─────────────┘                         │                       │
 │  │   │       │                          │                     │ │
-│  │   │       │        After 16 symbols  │                       │
+│  │   │       │        After 16 symbols                          │                       │
 │  │   │       │                          │                     │ │
-│  │   │       │               └───────────────────────────────┘  │
-│  │   │       │                          │                       │
-│  │   │       │ STP/SDP                  │                       │
-│  │   │       │                          │                       │
-│  │   │  ┌────▼────────────┐             │                       │
+│  │   │                                                          │               └───────────────────────────────┘  │
+│  │   │       │                                                  │                       │
+│  │   │       │ STP/SDP                                          │                       │
+│  │   │       │                                                  │                       │
+│  │   │  ┌────▼────────────┐                                     │                       │
 │  │   │  │  START Detected               │                     │ │
 │  │   │  │                               │                     │ │
 │  │   │  │  is_tlp = 1 if                │                     │ │
@@ -407,10 +407,10 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  │                               │                     │ │
 │  │   │  │  byte_counter=0               │                     │ │
 │  │   │  │  data_buffer=0                │                     │ │
-│  │   │  └────────┬────────┘             │                       │
-│  │   │           │                      │                       │
-│  │   │           ▼                      │                       │
-│  │   │  ┌──────────────────┐            │                       │
+│  │   │  └────────┬────────┘                                     │                       │
+│  │   │           │                                              │                       │
+│  │   │           ▼                                              │                       │
+│  │   │  ┌──────────────────┐                                    │                       │
 │  │   │  │   DATA State                  │                     │ │
 │  │   │  │                               │                     │ │
 │  │   │  │  If rx_datak=0:               │  Data byte received │ │
@@ -425,7 +425,7 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  │                               │                     │ │
 │  │   │  │   byte_counter++              │                     │ │
 │  │   │  │                               │                     │ │
-│  │   │  │  If rx_datak=1:               │  K-character received │ │
+│  │   │  │  If rx_datak=1:                                       │  K-character received │ │
 │  │   │  │                               │                     │ │
 │  │   │  │   If rx_data=END:             │                     │ │
 │  │   │  │                               │                     │ │
@@ -439,10 +439,10 @@ Based on Intel PIPE 3.0 Specification for Gen1/Gen2 operation:
 │  │   │  │   • source.dat =              │                     │ │
 │  │   │  │     data_buffer               │                     │ │
 │  │   │  │   • Go to IDLE                │                     │ │
-│  │   │  └──────────────────┘            │                       │
-│  │   │           │                      │                       │
-│  │   │    END detected                  │                       │
-│  │   │           │                      │                       │
+│  │   │  └──────────────────┘                                    │                       │
+│  │   │           │                                              │                       │
+│  │   │    END detected                                          │                       │
+│  │   │           │                                              │                       │
 │  │   └───────────┘                                            │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘

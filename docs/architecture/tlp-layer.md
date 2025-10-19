@@ -417,13 +417,13 @@ PCIe uses **credit-based flow control** to prevent buffer overflow. The TLP laye
 │                                                   │
 │  Posted (P)           Non-Posted (NP)      Completion(Cpl)│
 │  ┌──────────┐         ┌──────────┐         ┌──────────┐ │
-│  │ Header   │         │ Header   │         │ Header   │ │
-│  │ Credits  │         │ Credits  │         │ Credits  │ │
-│  │ (PHC)    │         │ (NPHC)   │         │ (CPLHC)  │ │
+│  │ Header   │         │ Header   │                │ Header   │ │
+│  │ Credits  │         │ Credits  │                │ Credits  │ │
+│  │ (PHC)    │         │ (NPHC)   │                │ (CPLHC)  │ │
 │  ├──────────┤         ├──────────┤         ├──────────┤ │
-│  │ Data     │         │ Data     │         │ Data │ │
-│  │ Credits  │         │ Credits  │         │ Credits  │ │
-│  │ (PDC)    │         │ (NPDC)   │         │ (CPLD)   │ │
+│  │ Data     │         │ Data     │         │ Data │     │
+│  │ Credits  │         │ Credits  │                │ Credits  │ │
+│  │ (PDC)    │         │ (NPDC)   │                │ (CPLD)   │ │
 │  └──────────┘         └──────────┘         └──────────┘ │
 │                                                   │
 │  Memory Writes       Memory Reads        Completions    │
@@ -579,8 +579,8 @@ Routing Decision:
                               │
          ▼
     ┌────────────┐
-                 │ Endpoint                │  Bus=1, Dev=0, Func=0
-                 │ (Requester)             │  ← Completion delivered
+                              │ Endpoint                │  Bus=1, Dev=0, Func=0
+                              │ (Requester)             │  ← Completion delivered
     └────────────┘
 
 Routing Decision:
