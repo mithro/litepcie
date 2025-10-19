@@ -271,22 +271,32 @@ class BoxAligner:
         # For nested boxes, we want the bar closest to target_pos that's between
         # left_pos and target_pos (prioritize bars at/before target over bars after)
 
-        # Split candidates into two groups: at/before target vs after target
+        # Split candidates into groups based on proximity to target
+        # Prefer bars close to the target, even if after it, over bars far before it
         candidates_at_or_before = [pos for pos in positions
                                     if pos > left_pos and pos <= target_pos]
         candidates_after = [pos for pos in positions
-                           if pos > target_pos and pos <= target_pos + 3]
+                           if pos > target_pos and pos <= target_pos + 10]
 
         right_pos = None
 
-        if candidates_at_or_before:
-            # Prefer bars at or before target (belong to this box)
-            right_pos = min(candidates_at_or_before,
+        # Filter candidates_at_or_before to only include bars close to target
+        # (within 10 positions). This prevents selecting inner box borders
+        # when processing outer boxes.
+        close_candidates_before = [pos for pos in candidates_at_or_before
+                                   if target_pos - pos <= 10]
+
+        if close_candidates_before:
+            # Prefer bars close to and at/before target
+            right_pos = min(close_candidates_before,
                            key=lambda p: abs(p - target_pos))
         elif candidates_after:
-            # Only use bars after target if no valid bars before
-            # (this handles slightly malformed boxes)
+            # Use bars after target if no close bars before
             right_pos = min(candidates_after,
+                           key=lambda p: abs(p - target_pos))
+        elif candidates_at_or_before:
+            # Fall back to any bar before target (even if far away)
+            right_pos = min(candidates_at_or_before,
                            key=lambda p: abs(p - target_pos))
         else:
             # If no suitable bar found (shouldn't happen), fall back to rightmost
