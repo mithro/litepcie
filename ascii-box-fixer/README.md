@@ -176,10 +176,13 @@ See the [examples/](examples/) directory for before/after examples:
 Run the comprehensive test suite:
 
 ```bash
-# Using unittest (no dependencies)
+# Option 1: Using unittest (no dependencies, quickest)
 python3 test_fix_ascii_boxes.py
 
-# Using pytest (if installed)
+# Option 2: Using pytest with uv
+uv run --extra dev pytest -v
+
+# Option 3: Using pytest (if installed)
 pytest test_fix_ascii_boxes.py -v
 
 # Run with coverage (if installed)
