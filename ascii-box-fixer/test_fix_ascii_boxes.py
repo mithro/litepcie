@@ -419,6 +419,55 @@ class TestEdgeCases(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_complex_nested_box_with_malformed_inner_box2(self):
+        """Test malformed nested box from real docs - inner box has inconsistent borders"""
+        input_text = """\
+┌────────────────────────────▼────────────────────────────────────┐
+│                    TRANSCEIVER BASE LAYER                        │
+│                    Location: litepcie/phy/transceiver_base/      │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │              PIPETransceiver Base Class                   │  │
+│  │                                                           │  │
+│  │  Common interface for all transceivers                   │  │
+│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)          │  │
+│  │  • Reset sequencing (PLL → PCS → CDR)                   │  │
+│  │  • Speed control (Gen1/Gen2 switching)                   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
+│  │ TX Datapath      │  │ RX Datapath      │  │ 8b/10b       │  │
+│  │                  │  │                  │  │              │  │
+│  │ • AsyncFIFO CDC  │  │ • AsyncFIFO CDC  │  │ • Encoder    │  │
+│  │ • sys→tx domain  │  │ • rx→sys domain  │  │ • Decoder    │  │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘  │
+└────────────────────────────┬────────────────────────────────────┘"""
+        expected = """\
+┌────────────────────────────▼────────────────────────────────────┐
+│                    TRANSCEIVER BASE LAYER                       │
+│                    Location: litepcie/phy/transceiver_base/     │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │              PIPETransceiver Base Class                  │   │
+│  │                                                          │   │
+│  │  Common interface for all transceivers                   │   │
+│  │  • TX/RX datapaths (CDC: sys_clk ↔ tx/rx_clk)            │   │
+│  │  • Reset sequencing (PLL → PCS → CDR)                    │   │
+│  │  • Speed control (Gen1/Gen2 switching)                   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐   │
+│  │ TX Datapath      │  │ RX Datapath      │  │ 8b/10b       │   │
+│  │                  │  │                  │  │              │   │
+│  │ • AsyncFIFO CDC  │  │ • AsyncFIFO CDC  │  │ • Encoder    │   │
+│  │ • sys→tx domain  │  │ • rx→sys domain  │  │ • Decoder    │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────┘   │
+└────────────────────────────┬────────────────────────────────────┘"""
+
+        aligner = BoxAligner()
+        result = aligner.fix(input_text)
+        self.assertEqual(result, expected)
+
 
 class TestCommandLineIntegration(unittest.TestCase):
     """Integration tests for command-line interface"""

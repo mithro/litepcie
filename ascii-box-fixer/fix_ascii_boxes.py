@@ -268,19 +268,28 @@ class BoxAligner:
 
         # Find the vertical bar that belongs to THIS box
         # It should be at or near target_pos, within the box's horizontal range
-        # For nested boxes, we want the bar closest to target_pos that's >= left_pos
+        # For nested boxes, we want the bar closest to target_pos that's between
+        # left_pos and target_pos (prioritize bars at/before target over bars after)
+
+        # Split candidates into two groups: at/before target vs after target
+        candidates_at_or_before = [pos for pos in positions
+                                    if pos > left_pos and pos <= target_pos]
+        candidates_after = [pos for pos in positions
+                           if pos > target_pos and pos <= target_pos + 3]
+
         right_pos = None
-        min_distance = float('inf')
 
-        for pos in positions:
-            if pos >= left_pos:  # Must be at or after the box's left border
-                distance = abs(pos - target_pos)
-                if distance < min_distance:
-                    min_distance = distance
-                    right_pos = pos
-
-        # If no suitable bar found (shouldn't happen), fall back to rightmost
-        if right_pos is None:
+        if candidates_at_or_before:
+            # Prefer bars at or before target (belong to this box)
+            right_pos = min(candidates_at_or_before,
+                           key=lambda p: abs(p - target_pos))
+        elif candidates_after:
+            # Only use bars after target if no valid bars before
+            # (this handles slightly malformed boxes)
+            right_pos = min(candidates_after,
+                           key=lambda p: abs(p - target_pos))
+        else:
+            # If no suitable bar found (shouldn't happen), fall back to rightmost
             right_pos = positions[-1]
 
         if right_pos == target_pos:
@@ -292,13 +301,18 @@ class BoxAligner:
 
         if adjustment > 0:
             # Need to add spaces before right border
-            return line[:right_pos] + ' ' * adjustment + line[right_pos:]
+            # Important: Only shift this bar, not everything after it
+            return line[:right_pos] + ' ' * adjustment + VERTICAL + line[right_pos+1:]
         elif adjustment < 0:
             # Need to remove spaces before right border
             content_end = right_pos
-            # Search backwards from right_pos to find last non-space character
+            # Search backwards from right_pos to find last non-space, non-vertical-bar character
             for i in range(right_pos - 1, -1, -1):
-                if line[i] != ' ':
+                if line[i] == VERTICAL:
+                    # Stop at the previous vertical bar (likely left border or another box)
+                    content_end = i + 1
+                    break
+                elif line[i] != ' ':
                     content_end = i + 1
                     break
 
