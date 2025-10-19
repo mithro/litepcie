@@ -267,40 +267,24 @@ class BoxAligner:
             return line
 
         # Find the vertical bar that belongs to THIS box
-        # It should be at or near target_pos, within the box's horizontal range
-        # For nested boxes, we want the bar closest to target_pos that's between
-        # left_pos and target_pos (prioritize bars at/before target over bars after)
+        # Work left to right: find all bars after left_pos
+        candidates = [pos for pos in positions if pos > left_pos]
 
-        # Split candidates into groups based on proximity to target
-        # Prefer bars close to the target, even if after it, over bars far before it
-        candidates_at_or_before = [pos for pos in positions
-                                    if pos > left_pos and pos <= target_pos]
-        candidates_after = [pos for pos in positions
-                           if pos > target_pos and pos <= target_pos + 10]
+        if not candidates:
+            # No bars found after left border (shouldn't happen)
+            return line
 
-        right_pos = None
+        # Working left to right: find bars after left_pos, prefer bars at or
+        # before target (inner box borders) over bars after target (outer box borders)
+        candidates_before = [pos for pos in candidates if pos <= target_pos]
+        candidates_after = [pos for pos in candidates if pos > target_pos]
 
-        # Filter candidates_at_or_before to only include bars close to target
-        # (within 10 positions). This prevents selecting inner box borders
-        # when processing outer boxes.
-        close_candidates_before = [pos for pos in candidates_at_or_before
-                                   if target_pos - pos <= 10]
-
-        if close_candidates_before:
-            # Prefer bars close to and at/before target
-            right_pos = min(close_candidates_before,
-                           key=lambda p: abs(p - target_pos))
-        elif candidates_after:
-            # Use bars after target if no close bars before
-            right_pos = min(candidates_after,
-                           key=lambda p: abs(p - target_pos))
-        elif candidates_at_or_before:
-            # Fall back to any bar before target (even if far away)
-            right_pos = min(candidates_at_or_before,
-                           key=lambda p: abs(p - target_pos))
+        if candidates_before:
+            # Pick the one closest to target among bars at/before target
+            right_pos = min(candidates_before, key=lambda p: abs(p - target_pos))
         else:
-            # If no suitable bar found (shouldn't happen), fall back to rightmost
-            right_pos = positions[-1]
+            # No bars before target, use the closest bar after target
+            right_pos = min(candidates_after, key=lambda p: abs(p - target_pos))
 
         if right_pos == target_pos:
             # Already aligned
