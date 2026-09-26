@@ -1174,6 +1174,7 @@ static int litepcie_pci_probe(struct pci_dev *dev, const struct pci_device_id *i
 	int i;
 	char fpga_identifier[256];
 	struct litepcie_device *litepcie_dev = NULL;
+	struct pci_dev *bridge;
 #ifdef CSR_UART_XOVER_RXTX_ADDR
 	struct resource *tty_res = NULL;
 #endif
@@ -1241,6 +1242,16 @@ static int litepcie_pci_probe(struct pci_dev *dev, const struct pci_device_id *i
 	for (i = 0; i < 256; i++)
 		fpga_identifier[i] = litepcie_readl(litepcie_dev, CSR_IDENTIFIER_MEM_BASE + i * 4);
 	dev_info(&dev->dev, "Version %s\n", fpga_identifier);
+
+	/* The PCIe core drops received TLPs larger than its MPS as malformed
+	 * (and the upstream port drops ours), which stalls DMA. The kernel does
+	 * not always match MPS (e.g. after a bitstream reload and rescan with
+	 * pci=pcie_bus_safe), so report it.
+	 */
+	bridge = pci_upstream_bridge(dev);
+	if (bridge && pcie_get_mps(dev) != pcie_get_mps(bridge))
+		dev_warn(&dev->dev, "Max_Payload_Size %d, but upstream %s set to %d, DMA may stall\n",
+			 pcie_get_mps(dev), pci_name(bridge), pcie_get_mps(bridge));
 
 	pci_set_master(dev);
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 18, 0)
