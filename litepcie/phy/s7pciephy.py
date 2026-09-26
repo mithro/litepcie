@@ -667,7 +667,7 @@ class S7PCIEPHY(LiteXModule):
             })
             if self.msi_type in ["msi", "msi-multi-vector"]:
                 config.update({
-                    "MSI_64b"                  : False,
+                    "MSI_64b"                  : True,
                     "Multiple_Message_Capable" : "1_vector",  # FIXME for multi-vector.
                 })
             if self.msi_type == "msi-x":
