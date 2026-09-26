@@ -1067,6 +1067,9 @@ static long litepcie_ioctl(struct file *file, unsigned int cmd,
 static const struct file_operations litepcie_fops = {
 	.owner = THIS_MODULE,
 	.unlocked_ioctl = litepcie_ioctl,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 5, 0)
+	.compat_ioctl = compat_ptr_ioctl,
+#endif
 	.open = litepcie_open,
 	.release = litepcie_release,
 	.read = litepcie_read,
