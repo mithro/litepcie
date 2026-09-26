@@ -436,7 +436,7 @@ static void dma_test(uint8_t zero_copy, uint8_t external_loopback, int data_widt
                     }
                 }
                 if (!run) {
-                    printf("Unable to find DMA RX_DELAY (min errors: %d/%ld), exiting.\n",
+                    printf("Unable to find DMA RX_DELAY (min errors: %d/%zu), exiting.\n",
                         errors_min,
                         DMA_BUFFER_SIZE / sizeof(uint32_t));
                     goto end;

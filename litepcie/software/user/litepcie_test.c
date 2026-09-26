@@ -177,7 +177,7 @@ static void litepcie_play(const char *device_name, const char *filename, uint32_
                 printf("\e[1mSPEED(Gbps)   BUFFERS   SIZE(MB)   LOOP UNDERFLOWS\e[0m\n");
             i++;
             /* Print statistics. */
-            printf("%10.2f %10" PRIu64 " %10" PRIu64 " %6d %10ld\n",
+            printf("%10.2f %10" PRIu64 " %10" PRIu64 " %6d %10" PRIu64 "\n",
                    (double)(dma.reader_sw_count - reader_sw_count_last) * DMA_BUFFER_SIZE * 8 / ((double)duration * 1e6),
                    dma.reader_sw_count,
                    (dma.reader_sw_count * DMA_BUFFER_SIZE) / 1024 / 1024,
